@@ -38,9 +38,9 @@ export function EventsList() {
   const showEmpty = filtered.length === 0;
 
   return (
-    <div className="space-y-10">
+    <div className="min-w-0 space-y-10">
       {savedUpcoming.length > 0 && (
-        <section aria-labelledby="saved-heading">
+        <section className="min-w-0" aria-labelledby="saved-heading">
           <h2
             id="saved-heading"
             className="font-display text-xl font-semibold text-ink-900 dark:text-sand-50"
@@ -56,25 +56,20 @@ export function EventsList() {
           <p className="mt-1 text-sm text-ink-500 dark:text-ink-300">
             Stored in this browser for 7 days. Past events drop off automatically.
           </p>
-          <div className="scroll-shadow -mx-4 mt-4 overflow-x-auto overflow-y-visible px-4 pb-1 md:mx-0 md:px-0">
-            <div className="flex w-max min-w-0 gap-4 md:grid md:w-full md:grid-cols-2 md:overflow-visible lg:grid-cols-3">
-              {savedUpcoming.map((e) => (
-                <div
-                  key={e.id}
-                  className="w-[min(100vw-3rem,22rem)] shrink-0 md:w-auto"
-                >
-                  <EventCard
-                    event={e}
-                    bookmark={{ isSaved: true, onToggle: () => toggleSaved(e) }}
-                    plan={{
-                      inPlan: planOrder.includes(e.id),
-                      onToggle: () => togglePlan(e.id),
-                    }}
-                    initialInPlan={planOrder.includes(e.id)}
-                  />
-                </div>
-              ))}
-            </div>
+          <div className="mt-4 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {savedUpcoming.map((e) => (
+              <div key={e.id} className="min-w-0">
+                <EventCard
+                  event={e}
+                  bookmark={{ isSaved: true, onToggle: () => toggleSaved(e) }}
+                  plan={{
+                    inPlan: planOrder.includes(e.id),
+                    onToggle: () => togglePlan(e.id),
+                  }}
+                  initialInPlan={planOrder.includes(e.id)}
+                />
+              </div>
+            ))}
           </div>
         </section>
       )}
@@ -87,7 +82,7 @@ export function EventsList() {
       )}
 
       {!showEmpty && featured && (
-        <div>
+        <div className="min-w-0">
           <h2 className="font-display text-2xl font-semibold text-ink-900 dark:text-sand-50">
             Featured pick
           </h2>
@@ -120,7 +115,7 @@ export function EventsList() {
             : group.events;
           if (list.length === 0) return null;
           return (
-            <section key={group.key} aria-labelledby={`day-${group.key}`}>
+            <section className="min-w-0" key={group.key} aria-labelledby={`day-${group.key}`}>
               <h2
                 id={`day-${group.key}`}
                 className="sticky top-[57px] z-20 -mx-4 bg-sand-50/85 px-4 py-2 font-display text-xl font-semibold text-ink-900 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:p-0 sm:text-2xl dark:bg-ink-900/80 dark:text-sand-50"
@@ -130,21 +125,22 @@ export function EventsList() {
                   {list.length} event{list.length === 1 ? "" : "s"}
                 </span>
               </h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-4 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {list.map((event) => (
-                  <EventCard
-                    key={event.id}
-                    event={event}
-                    bookmark={{
-                      isSaved: savedIds.has(event.id),
-                      onToggle: () => toggleSaved(event),
-                    }}
-                    plan={{
-                      inPlan: planOrder.includes(event.id),
-                      onToggle: () => togglePlan(event.id),
-                    }}
-                    initialInPlan={planOrder.includes(event.id)}
-                  />
+                  <div key={event.id} className="min-w-0">
+                    <EventCard
+                      event={event}
+                      bookmark={{
+                        isSaved: savedIds.has(event.id),
+                        onToggle: () => toggleSaved(event),
+                      }}
+                      plan={{
+                        inPlan: planOrder.includes(event.id),
+                        onToggle: () => togglePlan(event.id),
+                      }}
+                      initialInPlan={planOrder.includes(event.id)}
+                    />
+                  </div>
                 ))}
               </div>
             </section>

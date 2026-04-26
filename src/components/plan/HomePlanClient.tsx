@@ -24,13 +24,13 @@ function HomeWithPlanLayout({
   const { drawerOpen, mobileView, showFeed } = useHomePlan();
 
   return (
-    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden">
       <HomePlanHeaderBar />
 
-      <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col md:flex-row">
+      <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden md:flex-row">
         <div
           className={cn(
-            "min-h-0 w-full min-w-0 max-w-6xl flex-1 overflow-y-auto px-4 pb-20 sm:px-0 md:pb-0",
+            "min-h-0 w-full min-w-0 max-w-6xl flex-1 overflow-x-hidden overflow-y-auto px-4 pb-20 sm:px-0 md:pb-0",
             mobileView === "plan" && "max-md:hidden",
           )}
         >
@@ -117,22 +117,10 @@ function HomePlanHeaderBar() {
             </span>
           </span>
         </Link>
-        <nav className="flex min-w-0 items-center justify-end gap-1.5 text-sm sm:gap-4">
-          <button
-            type="button"
-            onClick={onPlanClick}
-            className={cn(
-              "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium sm:px-0 sm:py-0 sm:text-sm",
-              planIsActive
-                ? "text-gulf-700 sm:bg-gulf-100/90 sm:px-3 sm:py-1.5 dark:text-gulf-200 dark:sm:bg-gulf-800/50"
-                : "text-ink-500 hover:text-ink-900 dark:text-ink-300 dark:hover:text-sand-50",
-            )}
-            aria-pressed={planIsActive}
-          >
-            <ListOrdered className="size-3.5 sm:size-4" />
-            <span className="max-sm:sr-only">My plan</span>
-            <span className="sm:hidden">Plan</span>
-          </button>
+        <nav
+          className="flex min-w-0 items-center justify-end gap-1.5 text-sm sm:gap-4"
+          aria-label="Primary"
+        >
           <Link
             href="/?window=tonight"
             className="hidden text-ink-500 hover:text-ink-900 sm:inline dark:text-ink-300 dark:hover:text-sand-50"
@@ -151,6 +139,24 @@ function HomePlanHeaderBar() {
           >
             All week
           </Link>
+          <button
+            type="button"
+            onClick={onPlanClick}
+            className={cn(
+              "inline-flex shrink-0 items-center gap-1.5 rounded-full text-xs font-medium sm:text-sm",
+              planIsActive
+                ? "bg-gulf-200 px-2.5 py-1.5 text-ink-900 sm:px-3 sm:py-1.5 dark:bg-gulf-600 dark:text-sand-50"
+                : "px-2.5 py-1.5 text-ink-500 hover:text-ink-900 sm:px-0 sm:py-0 dark:text-ink-300 dark:hover:text-sand-50",
+            )}
+            aria-pressed={planIsActive}
+          >
+            <span className="max-sm:sr-only">My plan</span>
+            <span className="sm:hidden">Plan</span>
+            <ListOrdered
+              className="size-3.5 shrink-0 sm:size-4"
+              aria-hidden
+            />
+          </button>
         </nav>
       </div>
     </header>

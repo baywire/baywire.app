@@ -110,7 +110,7 @@ export async function MainColumn({
           </div>
         </section>
 
-        <div className="mt-8" id="weekend">
+        <div className="mt-8 min-w-0" id="weekend">
           {eventRows.length === 0 ? (
             <EmptyState
               title="No events found yet"

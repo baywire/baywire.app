@@ -42,8 +42,8 @@ export function EventCard({
   return (
     <article
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-(--radius-card) border border-ink-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-ink-700 dark:bg-ink-900/80",
-        isFeature && "lg:flex-row",
+        "group relative flex min-w-0 max-w-full flex-col overflow-hidden rounded-(--radius-card) border border-ink-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-ink-700 dark:bg-ink-900/80",
+        isFeature && "lg:min-h-0 lg:flex-row",
       )}
     >
       <button
@@ -130,7 +130,7 @@ export function EventCard({
         </div>
       )}
 
-      <div className="flex flex-1 flex-col gap-3 p-5">
+      <div className="flex min-w-0 flex-1 flex-col gap-3 p-5">
         <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wide text-gulf-600 dark:text-gulf-200">
           <span className="inline-flex items-center gap-1 rounded-full bg-gulf-50 px-2 py-0.5 dark:bg-gulf-700/40">
             <MapPin className="size-3" />
@@ -152,7 +152,7 @@ export function EventCard({
 
         <h3
           className={cn(
-            "font-display text-lg font-semibold leading-snug text-ink-900 group-hover:text-gulf-600 dark:text-sand-50 dark:group-hover:text-gulf-200",
+            "min-w-0 break-words font-display text-lg font-semibold leading-snug text-ink-900 group-hover:text-gulf-600 dark:text-sand-50 dark:group-hover:text-gulf-200",
             isFeature && "text-2xl lg:text-3xl",
           )}
         >
