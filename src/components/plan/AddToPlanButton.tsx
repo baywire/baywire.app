@@ -48,7 +48,7 @@ export function AddToPlanButton({
             ? "border-gulf-300/80 bg-gulf-500/20 px-3 py-1.5 text-xs text-sand-50 hover:bg-gulf-500/30 focus-visible:outline-gulf-200 sm:text-sm"
             : "border-white/30 bg-white/5 px-3 py-1.5 text-xs text-sand-100 hover:border-white/50 hover:bg-white/10 focus-visible:outline-sand-200 sm:text-sm"
           : inPlan
-            ? "border-gulf-500 bg-gulf-50 px-4 py-2 text-sm text-ink-900 focus-visible:outline-gulf-400 dark:border-gulf-400 dark:bg-gulf-800/50 dark:text-sand-50"
+            ? "border-gulf-500 bg-gulf-50 px-4 py-2 text-sm text-ink-900 focus-visible:outline-gulf-400 dark:border-gulf-400 dark:bg-gulf-800 dark:text-sand-50"
             : "border-ink-200 bg-white px-4 py-2 text-sm text-ink-700 hover:border-ink-300 focus-visible:outline-gulf-400 dark:border-ink-600 dark:bg-ink-900/60 dark:text-ink-200",
         classNameProp,
       )}

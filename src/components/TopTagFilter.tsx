@@ -65,7 +65,9 @@ export function TopTagFilter({ options, selected, onChange }: TopTagFilterProps)
               <span
                 className={cn(
                   "ml-1.5 tabular-nums",
-                  isOn ? "text-ink-600 dark:text-ink-200" : "text-ink-400",
+                  isOn
+                    ? "text-ink-800 dark:text-sand-100"
+                    : "text-ink-500 dark:text-ink-400",
                 )}
               >
                 {count}

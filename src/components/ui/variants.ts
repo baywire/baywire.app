@@ -63,7 +63,7 @@ export function filterChipClasses({ selected, tone, className }: FilterChipOptio
       "rounded-full border px-3 py-1.5 text-sm font-medium capitalize transition",
       focusRing,
       selected
-        ? "border-gulf-500 bg-gulf-100 text-ink-900 dark:border-gulf-300 dark:bg-gulf-800/50 dark:text-sand-50"
+        ? "border-gulf-500 bg-gulf-100 text-ink-900 dark:border-gulf-400 dark:bg-gulf-800 dark:text-sand-50"
         : "border-ink-200/80 bg-white/60 text-ink-600 hover:border-ink-300 dark:border-ink-600 dark:bg-ink-900/50 dark:text-ink-200",
       className,
     );
