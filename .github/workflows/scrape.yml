@@ -1,0 +1,59 @@
+name: Scrape Baywire
+
+# Pings the production scrape endpoint every 6 hours. The route is idempotent —
+# unchanged event pages are detected by content hash and skip the LLM call —
+# so even runs that overlap Vercel's daily cron are essentially free.
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Optional source slug to scrape (eventbrite, visitTampaBay, visitStPete, tampaBayTimes). Leave blank to run all."
+        required: false
+        default: ""
+
+concurrency:
+  group: baywire-scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger scrape
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          SOURCE: ${{ github.event.inputs.source }}
+        run: |
+          if [ -z "$SITE_URL" ]; then
+            echo "::error::SITE_URL repository variable is not set"
+            exit 1
+          fi
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET repository secret is not set"
+            exit 1
+          fi
+
+          URL="${SITE_URL%/}/api/cron/scrape"
+          if [ -n "$SOURCE" ]; then
+            URL="${URL}?source=${SOURCE}"
+          fi
+
+          echo "Pinging $URL"
+          response=$(curl --fail-with-body --silent --show-error \
+            --max-time 90 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "User-Agent: Baywire-GH-Action" \
+            "$URL")
+
+          echo "$response" | jq .
+          {
+            echo "## Scrape result"
+            echo ''
+            echo '```json'
+            echo "$response" | jq .
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
