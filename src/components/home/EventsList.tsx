@@ -70,6 +70,7 @@ export function EventsList() {
                       inPlan: planOrder.includes(e.id),
                       onToggle: () => togglePlan(e.id),
                     }}
+                    initialInPlan={planOrder.includes(e.id)}
                   />
                 </div>
               ))}
@@ -106,6 +107,7 @@ export function EventsList() {
                 inPlan: planOrder.includes(featured.id),
                 onToggle: () => togglePlan(featured.id),
               }}
+              initialInPlan={planOrder.includes(featured.id)}
             />
           </div>
         </div>
@@ -141,6 +143,7 @@ export function EventsList() {
                       inPlan: planOrder.includes(event.id),
                       onToggle: () => togglePlan(event.id),
                     }}
+                    initialInPlan={planOrder.includes(event.id)}
                   />
                 ))}
               </div>

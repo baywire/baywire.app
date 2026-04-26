@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 import { EmptyState } from "@/components/EmptyState";
+import { EventDialog } from "@/components/event/EventDialog";
 
 import type { Event } from "@/generated/prisma/client";
 
@@ -32,6 +33,7 @@ export function PlanView({ orderIds: initialOrder, events: initialEvents }: Plan
   );
 
   const [order, setOrder] = useState<string[]>(() => [...initialOrder]);
+  const [viewer, setViewer] = useState<Event | null>(null);
 
   useEffect(() => {
     setPlanOrderCookie(order);
@@ -121,6 +123,7 @@ export function PlanView({ orderIds: initialOrder, events: initialEvents }: Plan
                       onUp={() => move(e.id, "up")}
                       onDown={() => move(e.id, "down")}
                       onRemove={() => remove(e.id)}
+                      onViewDetails={() => setViewer(e)}
                     />
                   </li>
                 );
@@ -129,6 +132,15 @@ export function PlanView({ orderIds: initialOrder, events: initialEvents }: Plan
           </section>
         );
       })}
+
+      {viewer && (
+        <EventDialog
+          event={viewer}
+          open
+          onClose={() => setViewer(null)}
+          initialInPlan
+        />
+      )}
     </div>
   );
 }
@@ -141,6 +153,7 @@ function PlanEventRow({
   onUp,
   onDown,
   onRemove,
+  onViewDetails,
 }: {
   event: Event;
   hasConflict: boolean;
@@ -149,6 +162,7 @@ function PlanEventRow({
   onUp: () => void;
   onDown: () => void;
   onRemove: () => void;
+  onViewDetails: () => void;
 }) {
   const time = formatTimeRange(event.startAt, event.endAt, event.allDay);
   return (
@@ -162,12 +176,13 @@ function PlanEventRow({
         <p className="text-xs font-medium text-gulf-600 dark:text-gulf-200">
           {time} · {cityLabel(event.city)}
         </p>
-        <Link
-          href={`/event/${event.id}`}
-          className="mt-0.5 block font-display text-lg font-semibold text-ink-900 hover:text-gulf-600 dark:text-sand-50 dark:hover:text-gulf-200"
+        <button
+          type="button"
+          onClick={onViewDetails}
+          className="mt-0.5 block w-full text-left font-display text-lg font-semibold text-ink-900 hover:text-gulf-600 dark:text-sand-50 dark:hover:text-gulf-200"
         >
           {event.title}
-        </Link>
+        </button>
         {hasConflict && (
           <p className="mt-1 text-xs font-medium text-sunset-600 dark:text-sunset-300">
             Time overlaps another plan item

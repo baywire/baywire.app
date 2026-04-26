@@ -1,6 +1,10 @@
+"use client";
+
 import Image from "next/image";
-import Link from "next/link";
+import { useState } from "react";
 import { ArrowUpRight, Bookmark, Clock, ListOrdered, MapPin, Tag } from "lucide-react";
+
+import { EventDialog } from "@/components/event/EventDialog";
 
 import type { Event } from "@/generated/prisma/client";
 
@@ -19,6 +23,7 @@ interface EventCardProps {
     inPlan: boolean;
     onToggle: (e: React.MouseEvent) => void;
   };
+  initialInPlan?: boolean;
 }
 
 export function EventCard({
@@ -26,7 +31,9 @@ export function EventCard({
   variant = "default",
   bookmark,
   plan,
+  initialInPlan = false,
 }: EventCardProps) {
+  const [dialogOpen, setDialogOpen] = useState(false);
   const price = formatPrice(event.priceMin, event.priceMax, event.isFree);
   const time = formatTimeRange(event.startAt, event.endAt, event.allDay);
   const city = cityLabel(event.city);
@@ -39,10 +46,17 @@ export function EventCard({
         isFeature && "lg:flex-row",
       )}
     >
-      <Link
-        href={`/event/${event.id}`}
-        className="absolute inset-0 z-10"
-        aria-label={event.title}
+      <button
+        type="button"
+        onClick={() => setDialogOpen(true)}
+        className="absolute inset-0 z-10 cursor-pointer rounded-(--radius-card) border-0 bg-transparent p-0 text-left"
+        aria-label={`Open details: ${event.title}`}
+      />
+      <EventDialog
+        event={event}
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        initialInPlan={initialInPlan}
       />
 
       {bookmark && (
