@@ -1,4 +1,4 @@
-import type { City, Event } from "@prisma/client";
+import type { City, Event } from "@/generated/prisma/client";
 
 import type { CityKey } from "@/lib/cities";
 import { getWindow, type WindowKey } from "@/lib/time/window";

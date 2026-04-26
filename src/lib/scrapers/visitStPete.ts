@@ -1,6 +1,5 @@
-import * as cheerio from "cheerio";
-
 import { politeFetch } from "./fetch";
+import { loadHtml } from "./parse";
 import { reduceHtml } from "./reduce";
 import type { ListingItem, SourceAdapter } from "./types";
 
@@ -30,7 +29,7 @@ export const visitStPeteAdapter: SourceAdapter = {
 };
 
 function parseListing(html: string): ListingItem[] {
-  const $ = cheerio.load(html);
+  const $ = loadHtml(html);
   const out = new Map<string, ListingItem>();
 
   $("a[href*='/event']").each((_, el) => {

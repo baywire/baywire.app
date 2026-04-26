@@ -7,7 +7,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { WindowToggle } from "@/components/WindowToggle";
 
-import type { Event } from "@prisma/client";
+import type { Event } from "@/generated/prisma/client";
 
 import { CITY_KEYS, isCityKey, type CityKey } from "@/lib/cities";
 import { countEventsByCity, listEvents } from "@/lib/db/queries";

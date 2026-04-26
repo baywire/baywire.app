@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, Clock, MapPin, Tag } from "lucide-react";
 
-import type { Event } from "@prisma/client";
+import type { Event } from "@/generated/prisma/client";
 
 import { cityLabel } from "@/lib/cities";
 import { formatTimeRange } from "@/lib/time/window";

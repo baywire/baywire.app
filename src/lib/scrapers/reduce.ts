@@ -1,4 +1,4 @@
-import * as cheerio from "cheerio";
+import { loadHtml } from "./parse";
 
 const STRIP_SELECTORS = [
   "script",
@@ -47,7 +47,7 @@ const MAX_REDUCED_LENGTH = 16_000;
  * output so the LLM gets the high-signal data first.
  */
 export function reduceHtml(html: string, baseUrl: string): string {
-  const $ = cheerio.load(html);
+  const $ = loadHtml(html);
 
   const jsonLdBlobs: string[] = [];
   $("script[type='application/ld+json']").each((_, el) => {

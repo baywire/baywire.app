@@ -1,8 +1,7 @@
-import * as cheerio from "cheerio";
-
 import { CITIES } from "@/lib/cities";
 
 import { politeFetch } from "./fetch";
+import { loadHtml } from "./parse";
 import { reduceHtml } from "./reduce";
 import type { ListingItem, SourceAdapter } from "./types";
 
@@ -52,7 +51,7 @@ export const eventbriteAdapter: SourceAdapter = {
 };
 
 function parseListingHtml(html: string): ListingItem[] {
-  const $ = cheerio.load(html);
+  const $ = loadHtml(html);
   const out = new Map<string, ListingItem>();
 
   $("a[href*='/e/']").each((_, el) => {

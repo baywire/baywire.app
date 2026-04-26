@@ -1,34 +1,64 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
 
 import { runScrape } from "@/lib/pipeline/run";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+// `after()` work runs within the same invocation, so this still caps the
+// background scrape. Bump per Vercel plan if scrapes need longer.
+export const maxDuration = 300;
 
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get("authorization");
   const expected = process.env.CRON_SECRET;
-  if (expected && auth !== `Bearer ${expected}`) {
+  if (!expected) {
+    return NextResponse.json(
+      { error: "Server misconfigured: CRON_SECRET unset" },
+      { status: 500 },
+    );
+  }
+  if (req.headers.get("authorization") !== `Bearer ${expected}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const only = req.nextUrl.searchParams.get("source") ?? undefined;
-  const stats = await runScrape({ only });
-  const totals = stats.reduce(
-    (acc, s) => {
-      acc.seen += s.seen;
-      acc.inserted += s.inserted;
-      acc.updated += s.updated;
-      acc.skipped += s.skipped;
-      return acc;
-    },
-    { seen: 0, inserted: 0, updated: 0, skipped: 0 },
-  );
+  const startedAt = new Date().toISOString();
 
-  return NextResponse.json({
-    ok: stats.every((s) => s.ok),
-    totals,
-    sources: stats,
+  // Fire-and-forget: return 202 immediately, let Vercel keep the invocation
+  // alive to finish the scrape after the response is flushed.
+  after(async () => {
+    try {
+      const stats = await runScrape({ only });
+      const totals = stats.reduce(
+        (acc, s) => {
+          acc.seen += s.seen;
+          acc.inserted += s.inserted;
+          acc.updated += s.updated;
+          acc.skipped += s.skipped;
+          return acc;
+        },
+        { seen: 0, inserted: 0, updated: 0, skipped: 0 },
+      );
+      console.log("[scrape] completed", {
+        only: only ?? "all",
+        totals,
+        sources: stats,
+      });
+    } catch (err) {
+      console.error(
+        "[scrape] failed",
+        err instanceof Error ? err.stack ?? err.message : err,
+      );
+    }
   });
+
+  return NextResponse.json(
+    {
+      ok: true,
+      accepted: true,
+      only: only ?? null,
+      startedAt,
+      message: "Scrape started; results will appear in function logs.",
+    },
+    { status: 202 },
+  );
 }

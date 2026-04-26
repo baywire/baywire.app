@@ -1,15 +1,21 @@
 import pLimit from "p-limit";
 
 const USER_AGENT =
-  "BaywireBot/0.1 (+https://baywire.app; aggregator)";
+  "Mozilla/5.0 (X11; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0";
 
 const DEFAULT_HEADERS: Readonly<Record<string, string>> = {
   "User-Agent": USER_AGENT,
   Accept:
-    "text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.8,*/*;q=0.5",
+    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
   "Accept-Language": "en-US,en;q=0.9",
   "Accept-Encoding": "gzip, deflate, br",
   "Cache-Control": "no-cache",
+  "Sec-Fetch-Dest": "document",
+  "Sec-Fetch-Mode": "navigate",
+  "Sec-Fetch-Site": "none",
+  "Sec-Fetch-User": "?1",
+  "Upgrade-Insecure-Requests": "1",
+  "X-Aggregator": "baywire/0.1 (+https://baywire.app)",
 };
 
 /** Per-host concurrency limiter (1 in flight, ~1 req/s on average). */

@@ -1,9 +1,9 @@
 import crypto from "node:crypto";
 
 import pLimit from "p-limit";
-import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/client";
+import type { Prisma } from "@/generated/prisma/client";
 import { extractEvent } from "@/lib/extract/openai";
 import { ADAPTERS, getAdapter } from "@/lib/scrapers";
 import type { SourceAdapter } from "@/lib/scrapers";

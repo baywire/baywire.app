@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "@/generated/prisma/client";
 
 import type { CityKey } from "@/lib/cities";
 import type { ExtractedEvent } from "@/lib/extract/schema";
@@ -57,7 +57,7 @@ export function normalizeExtractedEvent(args: NormalizeArgs): NormalizeResult | 
     priceMax: extracted.priceMax == null ? null : extracted.priceMax.toFixed(2),
     isFree: extracted.isFree,
     categories,
-    imageUrl: extracted.imageUrl ?? null,
+    imageUrl: sanitizeHttpUrl(extracted.imageUrl),
     eventUrl: args.eventUrl,
     contentHash: args.contentHash,
   };
@@ -71,6 +71,16 @@ function refineCity(initial: CityKey, locationText: string): CityKey {
     if (matchers.some((m) => m.test(locationText))) return key;
   }
   return "other";
+}
+
+function sanitizeHttpUrl(input: string | null | undefined): string | null {
+  if (!input) return null;
+  try {
+    const u = new URL(input);
+    return u.protocol === "http:" || u.protocol === "https:" ? u.toString() : null;
+  } catch {
+    return null;
+  }
 }
 
 function dedupeCategories(input: string[]): string[] {

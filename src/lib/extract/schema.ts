@@ -52,9 +52,10 @@ export const ExtractedEventSchema = z.object({
     ),
   imageUrl: z
     .string()
-    .url()
     .nullable()
-    .describe("Absolute URL of the hero image, or null."),
+    .describe(
+      "Absolute http(s) URL of the hero image, or null. Do not include relative paths or data URIs.",
+    ),
 });
 
 export type ExtractedEvent = z.infer<typeof ExtractedEventSchema>;

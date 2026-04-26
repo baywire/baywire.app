@@ -1,6 +1,7 @@
-import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { withAccelerate } from "@prisma/extension-accelerate";
+
+import { PrismaClient } from "@/generated/prisma/client";
 
 /**
  * Singleton Prisma client.

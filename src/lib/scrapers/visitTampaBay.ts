@@ -1,19 +1,28 @@
-import * as cheerio from "cheerio";
-
 import { politeFetch } from "./fetch";
+import { loadHtml } from "./parse";
 import { reduceHtml } from "./reduce";
 import type { ListingItem, SourceAdapter } from "./types";
 
-const LISTING_URL = "https://www.visittampabay.com/events/";
+const ORIGIN = "https://www.visittampabay.com";
+const LISTING_URL = `${ORIGIN}/events/`;
 
 /**
- * Visit Tampa Bay is the official tourism site. Their /events/ index links to
- * event detail pages with rich descriptions and structured venue data.
+ * Visit Tampa Bay (Simpleview CMS). The dynamic event calendar is JS-rendered,
+ * but server-rendered detail pages live at `/tampa-events/{section}/{slug}/`
+ * (e.g. festival pages with year-specific dates). Category indexes and utility
+ * paths under `/tampa-events/` are excluded.
  */
+const SKIP_SECTIONS = new Set([
+  "all-events",
+  "submit-an-event",
+  "tampa-music-festivals",
+]);
+const SECTION_INDEX_RE = /-events$/i;
+
 export const visitTampaBayAdapter: SourceAdapter = {
   slug: "visit_tampa_bay",
   label: "Visit Tampa Bay",
-  baseUrl: "https://www.visittampabay.com",
+  baseUrl: ORIGIN,
 
   async listEvents({ signal }) {
     const html = await politeFetch(LISTING_URL, { signal });
@@ -30,25 +39,30 @@ export const visitTampaBayAdapter: SourceAdapter = {
 };
 
 function parseListing(html: string): ListingItem[] {
-  const $ = cheerio.load(html);
+  const $ = loadHtml(html);
   const out = new Map<string, ListingItem>();
 
-  $("a[href*='/event/']").each((_, el) => {
+  $("a[href]").each((_, el) => {
     const href = $(el).attr("href");
     if (!href) return;
-    const absolute = href.startsWith("http")
-      ? href
-      : new URL(href, "https://www.visittampabay.com").toString();
-    const url = stripTrailingSlash(absolute.split("?")[0]);
-    if (!/\/event\/[a-z0-9-]+\/?[a-z0-9-]+/i.test(url)) return;
-    const id = url.split("/").filter(Boolean).pop();
-    if (!id) return;
-    if (!out.has(url)) out.set(url, { sourceEventId: id, url });
+    let absolute: URL;
+    try {
+      absolute = new URL(href, ORIGIN);
+    } catch {
+      return;
+    }
+    if (absolute.host !== "www.visittampabay.com") return;
+    const segments = absolute.pathname.split("/").filter(Boolean);
+    if (segments.length < 3) return;
+    if (segments[0] !== "tampa-events") return;
+    const [, section, slug] = segments;
+    if (SKIP_SECTIONS.has(section)) return;
+    if (SECTION_INDEX_RE.test(section) && segments.length === 2) return;
+    if (!slug || !/^[a-z0-9-]+$/i.test(slug)) return;
+
+    const url = `${ORIGIN}/${segments.join("/")}`;
+    if (!out.has(url)) out.set(url, { sourceEventId: `${section}-${slug}`, url });
   });
 
   return Array.from(out.values());
-}
-
-function stripTrailingSlash(url: string): string {
-  return url.endsWith("/") ? url.slice(0, -1) : url;
 }

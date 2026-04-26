@@ -13,7 +13,8 @@
 // The `datasource` block declares the database flavor and the schema(s) Prisma
 // is allowed to manage.
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
