@@ -3,20 +3,37 @@ import { loadHtml } from "./parse";
 import { reduceHtml } from "./reduce";
 import type { ListingItem, SourceAdapter } from "./types";
 
-const LISTING_URL = "https://www.visitstpeteclearwater.com/events";
+const ORIGIN = "https://www.visitstpeteclearwater.com";
 
 /**
- * Visit St. Pete / Clearwater. Their events index uses a similar pattern to
- * Visit Tampa Bay — list of cards linking to /events/{slug} detail pages.
+ * Visit St. Pete / Clearwater. Two listing pages share the same /event/{slug}/{id}
+ * detail-page format, so we crawl both and dedupe on URL: the general events
+ * index plus the curated festivals page.
  */
+const LISTING_URLS = [
+  `${ORIGIN}/events`,
+  `${ORIGIN}/events-festivals`,
+];
+
 export const visitStPeteAdapter: SourceAdapter = {
   slug: "visit_st_pete_clearwater",
   label: "Visit St. Pete/Clearwater",
-  baseUrl: "https://www.visitstpeteclearwater.com",
+  baseUrl: ORIGIN,
 
   async listEvents({ signal }) {
-    const html = await politeFetch(LISTING_URL, { signal });
-    return parseListing(html);
+    const merged = new Map<string, ListingItem>();
+    for (const url of LISTING_URLS) {
+      let html: string;
+      try {
+        html = await politeFetch(url, { signal });
+      } catch {
+        continue;
+      }
+      for (const item of parseListing(html)) {
+        if (!merged.has(item.url)) merged.set(item.url, item);
+      }
+    }
+    return Array.from(merged.values());
   },
 
   async fetchAndReduce(item, signal) {
@@ -35,9 +52,7 @@ function parseListing(html: string): ListingItem[] {
   $("a[href*='/event']").each((_, el) => {
     const href = $(el).attr("href");
     if (!href) return;
-    const absolute = href.startsWith("http")
-      ? href
-      : new URL(href, "https://www.visitstpeteclearwater.com").toString();
+    const absolute = href.startsWith("http") ? href : new URL(href, ORIGIN).toString();
     const clean = absolute.split("?")[0].replace(/\/$/, "");
     if (!/\/events?\/[a-z0-9-]+/i.test(clean)) return;
     if (/\/events?\/?$/i.test(clean)) return;

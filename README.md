@@ -4,7 +4,7 @@
 
 A modern, AI-curated guide to live music, festivals, food, and family fun across the Tampa Bay area — Tampa, St. Petersburg, Clearwater, Brandon, and Bradenton. Lives at [baywire.app](https://baywire.app).
 
-Baywire pulls candidate events from four high-signal sources every six hours, hands the raw HTML to OpenAI for structured extraction, and serves the deduplicated, normalized result as a mobile-first browsing experience.
+Baywire pulls candidate events from nine high-signal sources every six hours, hands the raw HTML (or synthesized JSON-LD for sites with public APIs) to OpenAI for structured extraction, and serves the deduplicated, normalized result as a mobile-first browsing experience.
 
 ```text
    Vercel Cron ─▶ /api/cron/scrape ─▶ source adapters ─▶ HTML reducer
@@ -27,12 +27,24 @@ Baywire pulls candidate events from four high-signal sources every six hours, ha
 
 ## Sources
 
-| Slug                       | Site                                | Notes                                  |
-| -------------------------- | ----------------------------------- | -------------------------------------- |
-| `eventbrite`               | eventbrite.com                      | Geo-search across all 5 cities, 2 pages each |
-| `visit_tampa_bay`          | visittampabay.com/events            | Official tourism, curated              |
-| `visit_st_pete_clearwater` | visitstpeteclearwater.com/events    | Covers St Pete, Clearwater, outskirts  |
-| `tampa_bay_times`          | tampabay.com/things-to-do           | Editorial weekend picks                |
+| Slug                       | Site                                | Notes                                                |
+| -------------------------- | ----------------------------------- | ---------------------------------------------------- |
+| `eventbrite`               | eventbrite.com                      | Geo-search across all 7 cities, 2 pages each         |
+| `visit_tampa_bay`          | visittampabay.com/events            | Official tourism, curated                            |
+| `visit_st_pete_clearwater` | visitstpeteclearwater.com           | Both `/events` and `/events-festivals` listings      |
+| `tampa_bay_times`          | tampabay.com/things-to-do           | Editorial weekend picks                              |
+| `tampa_bay_markets`        | tampabaymarkets.com                 | Recurring farmers' markets across the bay            |
+| `tampa_gov`                | tampa.gov/calendar                  | City of Tampa public events calendar                 |
+| `safety_harbor`            | cityofsafetyharbor.com              | CivicPlus RSS feed → SSR detail pages                |
+| `ilovetheburg`             | ilovetheburg.com                    | St. Pete blog (Tribe Events JSON API)                |
+| `thats_so_tampa`           | thatssotampa.com                    | Tampa-side blog (Tribe Events JSON API)              |
+
+**Deferred (need a headless browser):** `feverup.com/en/tampa` (JS SPA),
+`unation.com` (Cloudflare bot challenge), and `dunedin.gov/Community/City-Calendar`
+(Akamai edge block). These are gated by anti-bot infrastructure that
+defeats simple HTTP fetches; tracked by a TODO in
+[`src/lib/scrapers/index.ts`](src/lib/scrapers/index.ts) to revisit once we
+add a Playwright-backed fetcher.
 
 ## Local setup
 

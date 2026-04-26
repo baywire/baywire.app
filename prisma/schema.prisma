@@ -28,6 +28,8 @@ enum City {
   clearwater
   brandon
   bradenton
+  safety_harbor
+  dunedin
   other
 
   @@schema("baywire")

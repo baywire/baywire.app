@@ -25,9 +25,11 @@ export interface NormalizeError {
 const CITY_HINTS: Array<{ key: CityKey; matchers: RegExp[] }> = [
   { key: "tampa", matchers: [/\btampa\b/i, /\bybor\b/i] },
   { key: "st_petersburg", matchers: [/st\.?\s*pete(rsburg)?/i, /\bgulfport\b/i] },
-  { key: "clearwater", matchers: [/clearwater/i, /dunedin/i, /palm harbor/i] },
+  { key: "clearwater", matchers: [/clearwater/i] },
   { key: "brandon", matchers: [/\bbrandon\b/i, /valrico/i, /riverview/i] },
   { key: "bradenton", matchers: [/bradenton/i, /palmetto/i, /anna maria/i] },
+  { key: "safety_harbor", matchers: [/safety\s*harbor/i] },
+  { key: "dunedin", matchers: [/\bdunedin\b/i, /palm\s*harbor/i] },
 ];
 
 export function normalizeExtractedEvent(args: NormalizeArgs): NormalizeResult | NormalizeError {

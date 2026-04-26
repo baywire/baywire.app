@@ -9,6 +9,8 @@ export const CITY_KEYS = [
   "clearwater",
   "brandon",
   "bradenton",
+  "safety_harbor",
+  "dunedin",
   "other",
 ] as const;
 
@@ -60,6 +62,20 @@ export const CITIES: readonly CityMeta[] = [
     lng: -82.5748,
     eventbriteSlug: "fl--bradenton",
   },
+  {
+    key: "safety_harbor",
+    label: "Safety Harbor",
+    lat: 28.0108,
+    lng: -82.6929,
+    eventbriteSlug: "fl--safety-harbor",
+  },
+  {
+    key: "dunedin",
+    label: "Dunedin",
+    lat: 28.0197,
+    lng: -82.7720,
+    eventbriteSlug: "fl--dunedin",
+  },
 ] as const;
 
 const CITY_LABEL_MAP: Record<CityKey, string> = {
@@ -68,6 +84,8 @@ const CITY_LABEL_MAP: Record<CityKey, string> = {
   clearwater: "Clearwater",
   brandon: "Brandon",
   bradenton: "Bradenton",
+  safety_harbor: "Safety Harbor",
+  dunedin: "Dunedin",
   other: "Other",
 };
 
