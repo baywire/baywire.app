@@ -3,6 +3,7 @@ import { EventsList } from "@/components/home/EventsList";
 import { EmptyState } from "@/components/EmptyState";
 import { HeroIntro } from "@/components/HeroIntro";
 import { WindowToggle } from "@/components/WindowToggle";
+import { HomePlanClient } from "@/components/plan/HomePlanClient";
 
 import { COOKIE_PLAN, COOKIE_SAVED_EVENTS, COOKIE_TOP_TAGS } from "@/lib/cookies/constants";
 import { parsePlanOrderCookie, parseSavedEventIdsCookie, parseTopTagsCookie } from "@/lib/cookies/parse";
@@ -18,6 +19,7 @@ interface MainColumnProps {
   window: WindowKey;
   city: CityKey | "all";
   freeOnly: boolean;
+  defaultOpenFromQuery: boolean;
 }
 
 export function SectionSkeleton({ title }: { title: string }) {
@@ -38,7 +40,12 @@ export function SectionSkeleton({ title }: { title: string }) {
   );
 }
 
-export async function MainColumn({ window, city, freeOnly }: MainColumnProps) {
+export async function MainColumn({
+  window,
+  city,
+  freeOnly,
+  defaultOpenFromQuery,
+}: MainColumnProps) {
   let eventRows: Event[] = [];
   let dbError: string | null = null;
   try {
@@ -81,33 +88,39 @@ export async function MainColumn({ window, city, freeOnly }: MainColumnProps) {
   for (const key of CITY_KEYS) facetMap[key] ??= 0;
 
   return (
-    <HomeProvider
-      events={eventRows}
-      tagOptions={tagOptions}
-      initialTopTags={initialTop}
-      initialSavedIds={initialSaved}
-      initialPlanOrder={initialPlanOrder}
-      savedFromServer={savedFromServer}
-      window={window}
+    <HomePlanClient
+      orderIds={initialPlanOrder}
+      planEvents={planUpcoming}
+      defaultOpenFromQuery={defaultOpenFromQuery}
     >
-      <section className="gradient-hero -mx-4 rounded-b-3xl px-4 pb-8 pt-10 sm:-mx-6 sm:rounded-b-[2rem] sm:px-8 sm:pb-12 sm:pt-14">
-        <HeroIntro />
-        <div className="mx-auto mt-8 flex max-w-3xl flex-col items-center gap-4">
-          <WindowToggle selected={window} />
-          <HomeFilterRow selected={city} facets={facetMap} tagOptions={tagOptions} />
-        </div>
-      </section>
+      <HomeProvider
+        events={eventRows}
+        tagOptions={tagOptions}
+        initialTopTags={initialTop}
+        initialSavedIds={initialSaved}
+        initialPlanOrder={initialPlanOrder}
+        savedFromServer={savedFromServer}
+        window={window}
+      >
+        <section className="gradient-hero -mx-4 rounded-b-3xl px-4 pb-8 pt-10 sm:-mx-6 sm:rounded-b-[2rem] sm:px-8 sm:pb-12 sm:pt-14">
+          <HeroIntro />
+          <div className="mx-auto mt-8 flex max-w-3xl flex-col items-center gap-4">
+            <WindowToggle selected={window} />
+            <HomeFilterRow selected={city} facets={facetMap} tagOptions={tagOptions} />
+          </div>
+        </section>
 
-      <div className="mt-8" id="weekend">
-        {eventRows.length === 0 ? (
-          <EmptyState
-            title="No events found yet"
-            description="Try a different time window or city, or wait a few minutes for the next scrape to land."
-          />
-        ) : (
-          <EventsList />
-        )}
-      </div>
-    </HomeProvider>
+        <div className="mt-8" id="weekend">
+          {eventRows.length === 0 ? (
+            <EmptyState
+              title="No events found yet"
+              description="Try a different time window or city, or wait a few minutes for the next scrape to land."
+            />
+          ) : (
+            <EventsList />
+          )}
+        </div>
+      </HomeProvider>
+    </HomePlanClient>
   );
 }

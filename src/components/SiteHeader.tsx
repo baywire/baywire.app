@@ -23,7 +23,7 @@ export function SiteHeader() {
         </Link>
         <nav className="hidden gap-6 text-sm text-ink-500 sm:flex dark:text-ink-300">
           <a
-            href="/plan"
+            href="/?view=plan"
             className="font-medium text-gulf-600 hover:text-ink-900 dark:text-gulf-200 dark:hover:text-sand-50"
           >
             My plan

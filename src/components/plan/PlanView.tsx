@@ -20,13 +20,19 @@ import { cn } from "@/lib/utils";
 interface PlanViewProps {
   orderIds: string[];
   events: Event[];
+  /** In slide-in or mobile, empty-state “browse” can switch to events without navigation. */
+  onBrowseEvents?: () => void;
 }
 
 function groupPlanEvents(ordered: Event[]): DayGroup[] {
   return groupEventsByDay(ordered);
 }
 
-export function PlanView({ orderIds: initialOrder, events: initialEvents }: PlanViewProps) {
+export function PlanView({
+  orderIds: initialOrder,
+  events: initialEvents,
+  onBrowseEvents,
+}: PlanViewProps) {
   const eventById = useMemo(
     () => new Map<string, Event>(initialEvents.map((e) => [e.id, e])),
     [initialEvents],
@@ -78,12 +84,22 @@ export function PlanView({ orderIds: initialOrder, events: initialEvents }: Plan
           description="Add events from the home feed, then build your day here again."
         />
         <div className="text-center">
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center rounded-full border border-ink-200 bg-white px-5 py-2.5 text-sm font-medium text-ink-800 shadow-sm transition hover:border-ink-300 dark:border-ink-600 dark:bg-ink-900/80 dark:text-sand-100"
-          >
-            Browse events
-          </Link>
+          {onBrowseEvents ? (
+            <button
+              type="button"
+              onClick={onBrowseEvents}
+              className="inline-flex items-center justify-center rounded-full border border-ink-200 bg-white px-5 py-2.5 text-sm font-medium text-ink-800 shadow-sm transition hover:border-ink-300 dark:border-ink-600 dark:bg-ink-900/80 dark:text-sand-100"
+            >
+              Browse events
+            </button>
+          ) : (
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center rounded-full border border-ink-200 bg-white px-5 py-2.5 text-sm font-medium text-ink-800 shadow-sm transition hover:border-ink-300 dark:border-ink-600 dark:bg-ink-900/80 dark:text-sand-100"
+            >
+              Browse events
+            </Link>
+          )}
         </div>
       </div>
     );
