@@ -15,7 +15,7 @@ import type { Event } from "@/generated/prisma/client";
 
 import { cityLabel } from "@/lib/cities";
 import { formatLocal, formatTimeRange } from "@/lib/time/window";
-import { formatPrice, safeUrl } from "@/lib/utils";
+import { cn, formatPrice, safeUrl } from "@/lib/utils";
 
 function DetailRow({
   icon,
@@ -41,12 +41,15 @@ export function EventDetailBody({
   event,
   priorityImage,
   hideTitle = false,
+  imageLayout = "default",
 }: {
   event: Event;
   /** Next/Image priority (full page or first open). */
   priorityImage?: boolean;
   /** When the title is already shown in a dialog header (or elsewhere). */
   hideTitle?: boolean;
+  /** `dialog` caps image height so the modal stays scannable. */
+  imageLayout?: "default" | "dialog";
 }) {
   const dayLabel = formatLocal(event.startAt, {
     weekday: "long",
@@ -62,21 +65,40 @@ export function EventDetailBody({
     : null;
 
   return (
-    <article className="overflow-hidden rounded-(--radius-card) border border-ink-100 bg-white shadow-sm dark:border-ink-700 dark:bg-ink-900/80">
+    <article
+      className={cn(
+        "overflow-hidden bg-white dark:bg-ink-900/80",
+        imageLayout === "dialog"
+          ? "border-0 shadow-none"
+          : "rounded-(--radius-card) border border-ink-100 shadow-sm dark:border-ink-700",
+      )}
+    >
       {event.imageUrl ? (
-        <div className="relative aspect-[16/9] w-full bg-sand-100">
+        <div
+          className={cn(
+            "relative w-full overflow-hidden bg-sand-100",
+            imageLayout === "dialog"
+              ? "h-36 max-h-36 min-h-0 sm:h-40 sm:max-h-40"
+              : "aspect-[16/9]",
+          )}
+        >
           <Image
             src={event.imageUrl}
             alt=""
             fill
             priority={priorityImage}
-            sizes="(min-width: 1024px) 960px, 100vw"
+            sizes={imageLayout === "dialog" ? "560px" : "(min-width: 1024px) 960px, 100vw"}
             className="object-cover"
             unoptimized
           />
         </div>
       ) : (
-        <div className="flex aspect-[16/9] items-center justify-center bg-gradient-to-br from-gulf-100 via-sand-100 to-sunset-100 font-display text-3xl text-ink-500">
+        <div
+          className={cn(
+            "flex items-center justify-center bg-gradient-to-br from-gulf-100 via-sand-100 to-sunset-100 font-display text-3xl text-ink-500",
+            imageLayout === "dialog" ? "h-32 max-h-32 sm:h-36" : "aspect-[16/9]",
+          )}
+        >
           {cityLabel(event.city)}
         </div>
       )}

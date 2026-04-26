@@ -67,7 +67,7 @@ export function EventDialog({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-100 flex items-end justify-center p-3 pb-5 sm:items-center sm:p-4"
       role="presentation"
     >
       <button
@@ -81,32 +81,37 @@ export function EventDialog({
         aria-modal
         aria-labelledby={titleId}
         onKeyDown={onKeyDown}
+        onClick={(e) => e.stopPropagation()}
         className={cn(
-          "relative z-[101] flex max-h-[100dvh] w-full max-w-4xl flex-col overflow-hidden bg-sand-50 shadow-2xl dark:bg-ink-900",
-          "sm:max-h-[min(100dvh,48rem)] sm:rounded-2xl",
+          "relative z-101 flex w-full max-w-lg max-h-dvh flex-col overflow-hidden",
+          "bg-sand-50 shadow-2xl sm:max-h-[min(100dvh,40rem)] sm:max-w-xl sm:rounded-2xl dark:bg-ink-900",
         )}
       >
-        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-ink-200/80 bg-sand-50/95 px-3 py-2 backdrop-blur sm:px-4 dark:border-ink-700/80 dark:bg-ink-900/95">
+        <div className="flex shrink-0 items-start justify-between gap-2 border-b border-ink-800 bg-ink-900 px-3 py-2.5 sm:items-center sm:gap-3 sm:px-4 sm:py-3">
           <h2
             id={titleId}
-            className="min-w-0 truncate pr-2 font-display text-sm font-semibold text-ink-900 sm:text-base dark:text-sand-50"
+            className="line-clamp-2 min-w-0 flex-1 pr-1 text-left font-display text-sm font-semibold leading-snug text-sand-50 sm:text-base"
           >
             {event.title}
           </h2>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <AddToPlanButton eventId={event.id} initialInPlan={initialInPlan} />
+            <AddToPlanButton
+              eventId={event.id}
+              initialInPlan={initialInPlan}
+              surface="onDark"
+            />
             <Link
               href={`/event/${event.id}`}
-              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-ink-200 bg-white px-2.5 text-xs font-medium text-ink-800 hover:border-ink-300 dark:border-ink-600 dark:bg-ink-800/80 dark:text-sand-100 dark:hover:border-ink-500 sm:px-3 sm:text-sm"
+              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-sand-200/90 bg-sand-50 px-2.5 text-xs font-semibold text-gulf-700 shadow-sm transition hover:border-sand-100 hover:bg-white sm:px-3 sm:text-sm"
             >
               <span className="max-sm:sr-only">Page</span>
-              <ExternalLink className="size-3.5 sm:size-4" />
+              <ExternalLink className="size-3.5 text-gulf-600 sm:size-4" />
             </Link>
             <button
               ref={closeRef}
               type="button"
               onClick={onClose}
-              className="flex size-9 items-center justify-center rounded-full text-ink-500 transition hover:bg-ink-100 hover:text-ink-900 dark:hover:bg-ink-800 dark:hover:text-sand-50"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full text-sand-200 transition hover:bg-white/10 hover:text-sand-50"
               aria-label="Close"
             >
               <X className="size-5" />
@@ -114,9 +119,7 @@ export function EventDialog({
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">
-          <div className="p-0 sm:p-0">
-            <EventDetailBody event={event} hideTitle />
-          </div>
+          <EventDetailBody event={event} hideTitle imageLayout="dialog" />
         </div>
       </div>
     </div>,
