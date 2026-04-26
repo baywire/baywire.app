@@ -24,8 +24,12 @@ export function CityFilter({ selected, facets }: CityFilterProps) {
   }
 
   return (
-    <div className="scroll-shadow -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-      <div className="flex gap-2 pb-1" role="tablist" aria-label="Filter by city">
+    <div className="scroll-shadow -mx-4 overflow-x-auto px-4 md:mx-0 md:overflow-x-visible md:px-0">
+      <div
+        className="flex w-max min-w-0 max-md:flex-nowrap max-md:gap-2 md:w-full md:flex-wrap md:justify-center md:gap-2 md:pb-0"
+        role="tablist"
+        aria-label="Filter by city"
+      >
         <Pill
           active={selected === "all"}
           pending={pending && selected !== "all"}

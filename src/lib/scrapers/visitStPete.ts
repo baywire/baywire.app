@@ -22,17 +22,20 @@ export const visitStPeteAdapter: SourceAdapter = {
 
   async listEvents({ signal }) {
     const merged = new Map<string, ListingItem>();
+    let lastError: unknown = null;
+    let anyOk = false;
     for (const url of LISTING_URLS) {
-      let html: string;
       try {
-        html = await politeFetch(url, { signal });
-      } catch {
-        continue;
-      }
-      for (const item of parseListing(html)) {
-        if (!merged.has(item.url)) merged.set(item.url, item);
+        const html = await politeFetch(url, { signal });
+        anyOk = true;
+        for (const item of parseListing(html)) {
+          if (!merged.has(item.url)) merged.set(item.url, item);
+        }
+      } catch (err) {
+        lastError = err;
       }
     }
+    if (!anyOk) throw lastError instanceof Error ? lastError : new Error(String(lastError));
     return Array.from(merged.values());
   },
 

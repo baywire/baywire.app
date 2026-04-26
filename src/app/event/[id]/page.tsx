@@ -11,10 +11,14 @@ import {
   Ticket,
 } from "lucide-react";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 
+import { AddToPlanButton } from "@/components/plan/AddToPlanButton";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 
+import { COOKIE_PLAN } from "@/lib/cookies/constants";
+import { parsePlanOrderCookie } from "@/lib/cookies/parse";
 import { cityLabel } from "@/lib/cities";
 import { getEventById } from "@/lib/db/queries";
 import { formatLocal, formatTimeRange } from "@/lib/time/window";
@@ -58,18 +62,24 @@ export default async function EventDetailPage({ params }: RouteParams) {
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address)}`
     : null;
 
+  const jar = await cookies();
+  const initialInPlan = parsePlanOrderCookie(jar.get(COOKIE_PLAN)?.value).includes(id);
+
   return (
     <div className="flex min-h-dvh flex-col">
       <SiteHeader />
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-16 pt-6 sm:px-6">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-900 dark:text-ink-300 dark:hover:text-sand-50"
-        >
-          <ArrowLeft className="size-4" />
-          Back to events
-        </Link>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-900 dark:text-ink-300 dark:hover:text-sand-50"
+          >
+            <ArrowLeft className="size-4" />
+            Back to events
+          </Link>
+          <AddToPlanButton eventId={id} initialInPlan={initialInPlan} />
+        </div>
 
         <article className="mt-6 overflow-hidden rounded-(--radius-card) border border-ink-100 bg-white shadow-sm dark:border-ink-700 dark:bg-ink-900/80">
           {event.imageUrl ? (

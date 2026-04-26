@@ -22,14 +22,20 @@ export function SiteHeader() {
           </span>
         </Link>
         <nav className="hidden gap-6 text-sm text-ink-500 sm:flex dark:text-ink-300">
-          <a href="#tonight" className="hover:text-ink-900 dark:hover:text-sand-50">
+          <a
+            href="/plan"
+            className="font-medium text-gulf-600 hover:text-ink-900 dark:text-gulf-200 dark:hover:text-sand-50"
+          >
+            My plan
+          </a>
+          <a href="/?window=tonight" className="hover:text-ink-900 dark:hover:text-sand-50">
             Tonight
           </a>
-          <a href="#weekend" className="hover:text-ink-900 dark:hover:text-sand-50">
+          <a href="/?window=weekend" className="hover:text-ink-900 dark:hover:text-sand-50">
             Weekend
           </a>
-          <a href="#week" className="hover:text-ink-900 dark:hover:text-sand-50">
-            All Week
+          <a href="/?window=week" className="hover:text-ink-900 dark:hover:text-sand-50">
+            All week
           </a>
         </nav>
       </div>

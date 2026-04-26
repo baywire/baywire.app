@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, Clock, MapPin, Tag } from "lucide-react";
+import { ArrowUpRight, Bookmark, Clock, ListOrdered, MapPin, Tag } from "lucide-react";
 
 import type { Event } from "@/generated/prisma/client";
 
@@ -11,9 +11,22 @@ import { cn, formatPrice } from "@/lib/utils";
 interface EventCardProps {
   event: Event;
   variant?: "default" | "feature";
+  bookmark?: {
+    isSaved: boolean;
+    onToggle: (e: React.MouseEvent) => void;
+  };
+  plan?: {
+    inPlan: boolean;
+    onToggle: (e: React.MouseEvent) => void;
+  };
 }
 
-export function EventCard({ event, variant = "default" }: EventCardProps) {
+export function EventCard({
+  event,
+  variant = "default",
+  bookmark,
+  plan,
+}: EventCardProps) {
   const price = formatPrice(event.priceMin, event.priceMax, event.isFree);
   const time = formatTimeRange(event.startAt, event.endAt, event.allDay);
   const city = cityLabel(event.city);
@@ -31,6 +44,50 @@ export function EventCard({ event, variant = "default" }: EventCardProps) {
         className="absolute inset-0 z-10"
         aria-label={event.title}
       />
+
+      {bookmark && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            bookmark.onToggle(e);
+          }}
+          className="absolute left-4 top-4 z-30 flex size-9 items-center justify-center rounded-full bg-white/90 text-ink-600 shadow transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gulf-400 dark:bg-ink-800/90 dark:text-sand-100"
+          aria-pressed={bookmark.isSaved}
+          aria-label={bookmark.isSaved ? "Remove from saved" : "Save event"}
+        >
+          <Bookmark
+            className={cn(
+              "size-4",
+              bookmark.isSaved && "fill-sunset-500 text-sunset-600 dark:fill-sunset-400",
+            )}
+            strokeWidth={bookmark.isSaved ? 0 : 2}
+          />
+        </button>
+      )}
+
+      {plan && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            plan.onToggle(e);
+          }}
+          className={cn(
+            "absolute z-30 flex size-9 items-center justify-center rounded-full bg-white/90 text-ink-600 shadow transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gulf-400 dark:bg-ink-800/90 dark:text-sand-100",
+            bookmark ? "left-4 top-14" : "left-4 top-4",
+          )}
+          aria-pressed={plan.inPlan}
+          aria-label={plan.inPlan ? "Remove from My plan" : "Add to My plan"}
+        >
+          <ListOrdered
+            className={cn("size-4", plan.inPlan && "text-gulf-600 dark:text-gulf-200")}
+            strokeWidth={2}
+          />
+        </button>
+      )}
 
       {event.imageUrl ? (
         <div

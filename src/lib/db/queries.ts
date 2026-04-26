@@ -62,3 +62,13 @@ export async function totalEventsInWindow(window: WindowKey): Promise<number> {
     cacheStrategy: READ_CACHE,
   });
 }
+
+export async function listUpcomingEventsByIds(ids: string[]): Promise<Event[]> {
+  if (ids.length === 0) return [];
+  const now = new Date();
+  return prisma.event.findMany({
+    where: { id: { in: ids }, startAt: { gte: now } },
+    orderBy: { startAt: "asc" },
+    cacheStrategy: READ_CACHE,
+  });
+}
