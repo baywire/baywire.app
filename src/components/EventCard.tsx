@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ArrowUpRight, Bookmark, Clock, ListOrdered, MapPin, Tag } from "lucide-react";
 
 import { EventDialog } from "@/components/event/EventDialog";
+import { IconButton } from "@/components/ui";
 
 import type { Event } from "@/generated/prisma/client";
 
@@ -60,14 +61,14 @@ export function EventCard({
       />
 
       {bookmark && (
-        <button
+        <IconButton
           type="button"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             bookmark.onToggle(e);
           }}
-          className="absolute left-4 top-4 z-30 flex size-9 items-center justify-center rounded-full bg-white/90 text-ink-600 shadow transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gulf-400 dark:bg-ink-800/90 dark:text-sand-100"
+          className="absolute left-4 top-4"
           aria-pressed={bookmark.isSaved}
           aria-label={bookmark.isSaved ? "Remove from saved" : "Save event"}
         >
@@ -78,11 +79,11 @@ export function EventCard({
             )}
             strokeWidth={bookmark.isSaved ? 0 : 2}
           />
-        </button>
+        </IconButton>
       )}
 
       {plan && (
-        <button
+        <IconButton
           type="button"
           onClick={(e) => {
             e.preventDefault();
@@ -90,7 +91,7 @@ export function EventCard({
             plan.onToggle(e);
           }}
           className={cn(
-            "absolute z-30 flex size-9 items-center justify-center rounded-full bg-white/90 text-ink-600 shadow transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gulf-400 dark:bg-ink-800/90 dark:text-sand-100",
+            "absolute",
             bookmark ? "left-4 top-14" : "left-4 top-4",
           )}
           aria-pressed={plan.inPlan}
@@ -100,7 +101,7 @@ export function EventCard({
             className={cn("size-4", plan.inPlan && "text-gulf-600 dark:text-gulf-200")}
             strokeWidth={2}
           />
-        </button>
+        </IconButton>
       )}
 
       {event.imageUrl ? (

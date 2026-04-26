@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ListOrdered, Radio } from "lucide-react";
 
+import { TextLink } from "@/components/ui";
+
 import { PlanView } from "@/components/plan/PlanView";
 import { HomePlanProvider, useHomePlan } from "@/components/plan/homePlanContext";
 
@@ -121,24 +123,24 @@ function HomePlanHeaderBar() {
           className="flex min-w-0 items-center justify-end gap-1.5 text-sm sm:gap-4"
           aria-label="Primary"
         >
-          <Link
+          <TextLink
             href="/?window=tonight"
-            className="hidden text-ink-500 hover:text-ink-900 sm:inline dark:text-ink-300 dark:hover:text-sand-50"
+            className="hidden sm:inline"
           >
             Tonight
-          </Link>
-          <Link
+          </TextLink>
+          <TextLink
             href="/?window=weekend"
-            className="hidden text-ink-500 hover:text-ink-900 sm:inline dark:text-ink-300 dark:hover:text-sand-50"
+            className="hidden sm:inline"
           >
             Weekend
-          </Link>
-          <Link
+          </TextLink>
+          <TextLink
             href="/?window=week"
-            className="hidden text-ink-500 hover:text-ink-900 sm:inline dark:text-ink-300 dark:hover:text-sand-50"
+            className="hidden sm:inline"
           >
             All week
-          </Link>
+          </TextLink>
           <button
             type="button"
             onClick={onPlanClick}

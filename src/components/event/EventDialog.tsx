@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { ExternalLink, X } from "lucide-react";
-import Link from "next/link";
-
+import type { Route } from "next";
 import { AddToPlanButton } from "@/components/plan/AddToPlanButton";
 import { EventDetailBody } from "@/components/event/EventDetailBody";
+import { IconButton, PillLink } from "@/components/ui";
 
 import type { Event } from "@/generated/prisma/client";
 
@@ -29,7 +29,9 @@ export function EventDialog({
   const prevActive = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    setMounted(true);
+    queueMicrotask(() => {
+      setMounted(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -100,22 +102,20 @@ export function EventDialog({
               initialInPlan={initialInPlan}
               surface="onDark"
             />
-            <Link
-              href={`/event/${event.id}`}
-              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-sand-200/90 bg-sand-50 px-2.5 text-xs font-semibold text-gulf-700 shadow-sm transition hover:border-sand-100 hover:bg-white sm:px-3 sm:text-sm"
-            >
+            <PillLink href={`/event/${event.id}` as Route}>
               <span className="max-sm:sr-only">Page</span>
               <ExternalLink className="size-3.5 text-gulf-600 sm:size-4" />
-            </Link>
-            <button
+            </PillLink>
+            <IconButton
               ref={closeRef}
               type="button"
+              size="sm"
+              surface="onDark"
               onClick={onClose}
-              className="flex size-8 shrink-0 items-center justify-center rounded-full text-sand-200 transition hover:bg-white/10 hover:text-sand-50"
               aria-label="Close"
             >
               <X className="size-5" />
-            </button>
+            </IconButton>
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">

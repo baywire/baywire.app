@@ -1,5 +1,7 @@
 "use client";
 
+import { FilterChip } from "@/components/ui";
+
 import { cn } from "@/lib/utils";
 
 import type { TagOption } from "@/lib/events/tagOptions";
@@ -52,17 +54,12 @@ export function TopTagFilter({ options, selected, onChange }: TopTagFilterProps)
         {options.map(({ tag, count }) => {
           const isOn = selected.has(tag);
           return (
-            <button
+            <FilterChip
               key={tag}
               type="button"
+              tone="gulf"
+              selected={isOn}
               onClick={() => toggle(tag)}
-              className={cn(
-                "rounded-full border px-3 py-1.5 text-sm font-medium capitalize transition",
-                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gulf-400",
-                isOn
-                  ? "border-gulf-500 bg-gulf-100 text-ink-900 dark:border-gulf-300 dark:bg-gulf-800/50 dark:text-sand-50"
-                  : "border-ink-200/80 bg-white/60 text-ink-600 hover:border-ink-300 dark:border-ink-600 dark:bg-ink-900/50 dark:text-ink-200",
-              )}
             >
               {tag}
               <span
@@ -73,7 +70,7 @@ export function TopTagFilter({ options, selected, onChange }: TopTagFilterProps)
               >
                 {count}
               </span>
-            </button>
+            </FilterChip>
           );
         })}
       </div>

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Radio } from "lucide-react";
 
+import { TextLink } from "@/components/ui";
+
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-ink-100/60 bg-sand-50/80 backdrop-blur-md dark:border-ink-700/60 dark:bg-ink-900/70">
@@ -21,22 +23,13 @@ export function SiteHeader() {
             </span>
           </span>
         </Link>
-        <nav className="hidden gap-6 text-sm text-ink-500 sm:flex dark:text-ink-300">
-          <a
-            href="/?view=plan"
-            className="font-medium text-gulf-600 hover:text-ink-900 dark:text-gulf-200 dark:hover:text-sand-50"
-          >
+        <nav className="hidden gap-6 text-sm sm:flex">
+          <TextLink href="/?view=plan" emphasize>
             My plan
-          </a>
-          <a href="/?window=tonight" className="hover:text-ink-900 dark:hover:text-sand-50">
-            Tonight
-          </a>
-          <a href="/?window=weekend" className="hover:text-ink-900 dark:hover:text-sand-50">
-            Weekend
-          </a>
-          <a href="/?window=week" className="hover:text-ink-900 dark:hover:text-sand-50">
-            All week
-          </a>
+          </TextLink>
+          <TextLink href="/?window=tonight">Tonight</TextLink>
+          <TextLink href="/?window=weekend">Weekend</TextLink>
+          <TextLink href="/?window=week">All week</TextLink>
         </nav>
       </div>
     </header>

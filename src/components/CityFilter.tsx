@@ -3,6 +3,8 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 
+import { FilterChip } from "@/components/ui";
+
 import { CITIES, isCityKey, type CityKey } from "@/lib/cities";
 import { cn } from "@/lib/utils";
 
@@ -64,19 +66,14 @@ interface PillProps {
 
 function Pill({ children, active, pending, onClick, count }: PillProps) {
   return (
-    <button
+    <FilterChip
       type="button"
       role="tab"
+      tone="ink"
+      selected={active}
       aria-selected={active}
       onClick={onClick}
-      className={cn(
-        "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gulf-400",
-        active
-          ? "border-ink-900 bg-ink-900 text-sand-50 shadow-sm dark:border-sand-50 dark:bg-sand-50 dark:text-ink-900"
-          : "border-ink-200 bg-white/70 text-ink-700 backdrop-blur hover:border-ink-300 dark:border-ink-700 dark:bg-ink-900/60 dark:text-sand-100",
-        pending && "opacity-60",
-      )}
+      className={cn(pending && "opacity-60")}
     >
       <span>{children}</span>
       {typeof count === "number" && (
@@ -89,7 +86,7 @@ function Pill({ children, active, pending, onClick, count }: PillProps) {
           {count}
         </span>
       )}
-    </button>
+    </FilterChip>
   );
 }
 

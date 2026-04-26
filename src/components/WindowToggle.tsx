@@ -3,7 +3,8 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 
-import { cn } from "@/lib/utils";
+import { SegmentedList, SegmentedTab } from "@/components/ui";
+
 import type { WindowKey } from "@/lib/time/window";
 
 const OPTIONS: Array<{ key: WindowKey; label: string }> = [
@@ -24,33 +25,22 @@ export function WindowToggle({ selected }: { selected: WindowKey }) {
   }
 
   return (
-    <div
-      role="tablist"
-      aria-label="Time window"
-      className="inline-flex items-center rounded-full border border-ink-200 bg-white/80 p-1 shadow-sm backdrop-blur dark:border-ink-700 dark:bg-ink-900/60"
-    >
+    <SegmentedList role="tablist" aria-label="Time window">
       {OPTIONS.map((opt) => {
         const active = selected === opt.key;
         return (
-          <button
+          <SegmentedTab
             key={opt.key}
-            type="button"
             role="tab"
             aria-selected={active}
+            active={active}
+            pending={pending}
             onClick={() => setWindow(opt.key)}
-            className={cn(
-              "rounded-full px-4 py-1.5 text-sm font-medium transition",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gulf-400",
-              active
-                ? "bg-ink-900 text-sand-50 dark:bg-sand-50 dark:text-ink-900"
-                : "text-ink-500 hover:text-ink-900 dark:text-ink-300 dark:hover:text-sand-50",
-              pending && !active && "opacity-60",
-            )}
           >
             {opt.label}
-          </button>
+          </SegmentedTab>
         );
       })}
-    </div>
+    </SegmentedList>
   );
 }

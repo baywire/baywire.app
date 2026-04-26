@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import Link from "next/link";
 
+import { Button, buttonClasses } from "@/components/ui";
 import { EmptyState } from "@/components/EmptyState";
 import { EventDialog } from "@/components/event/EventDialog";
 
@@ -85,17 +86,17 @@ export function PlanView({
         />
         <div className="text-center">
           {onBrowseEvents ? (
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={onBrowseEvents}
-              className="inline-flex items-center justify-center rounded-full border border-ink-200 bg-white px-5 py-2.5 text-sm font-medium text-ink-800 shadow-sm transition hover:border-ink-300 dark:border-ink-600 dark:bg-ink-900/80 dark:text-sand-100"
             >
               Browse events
-            </button>
+            </Button>
           ) : (
             <Link
               href="/"
-              className="inline-flex items-center justify-center rounded-full border border-ink-200 bg-white px-5 py-2.5 text-sm font-medium text-ink-800 shadow-sm transition hover:border-ink-300 dark:border-ink-600 dark:bg-ink-900/80 dark:text-sand-100"
+              className={buttonClasses({ variant: "secondary", size: "md" })}
             >
               Browse events
             </Link>

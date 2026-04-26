@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 
+import { Button } from "@/components/ui";
+
 export default function GlobalError({
   error,
   reset,
@@ -21,13 +23,14 @@ export default function GlobalError({
       <p className="mt-2 text-sm text-ink-500 dark:text-ink-300">
         We couldn&apos;t load events right now. Try again in a moment.
       </p>
-      <button
+      <Button
         type="button"
+        variant="primary"
+        className="mt-6"
         onClick={reset}
-        className="mt-6 rounded-full bg-ink-900 px-5 py-2.5 text-sm font-semibold text-sand-50 hover:bg-ink-700 dark:bg-sand-50 dark:text-ink-900"
       >
         Reload
-      </button>
+      </Button>
     </div>
   );
 }

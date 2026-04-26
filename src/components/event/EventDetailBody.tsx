@@ -13,6 +13,8 @@ import type { ReactNode } from "react";
 
 import type { Event } from "@/generated/prisma/client";
 
+import { ExternalPillLink } from "@/components/ui";
+
 import { cityLabel } from "@/lib/cities";
 import { formatLocal, formatTimeRange } from "@/lib/time/window";
 import { cn, formatPrice, safeUrl } from "@/lib/utils";
@@ -181,25 +183,15 @@ export function EventDetailBody({
 
         {sourceUrl && (
           <div className="flex flex-wrap gap-3 border-t border-ink-100 pt-6 dark:border-ink-700">
-            <a
-              href={sourceUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-ink-900 px-5 py-2.5 text-sm font-semibold text-sand-50 transition hover:bg-ink-700 dark:bg-sand-50 dark:text-ink-900 dark:hover:bg-sand-200"
-            >
+            <ExternalPillLink href={sourceUrl} variant="primary">
               View on source
               <ExternalLink className="size-4" />
-            </a>
+            </ExternalPillLink>
             {mapUrl && (
-              <a
-                href={mapUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-ink-200 px-5 py-2.5 text-sm font-semibold text-ink-700 transition hover:border-ink-400 dark:border-ink-700 dark:text-sand-100 dark:hover:border-ink-500"
-              >
+              <ExternalPillLink href={mapUrl} variant="outline">
                 Open in Maps
                 <MapPin className="size-4" />
-              </a>
+              </ExternalPillLink>
             )}
           </div>
         )}
