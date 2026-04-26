@@ -1,0 +1,103 @@
+// Baywire — Prisma schema.
+//
+// Database:  Prisma Postgres (managed)
+// Pooler:    Prisma Accelerate (set DATABASE_URL to the prisma+postgres:// URL)
+// Schema:    All Baywire tables live in the `baywire` Postgres schema.
+//
+// To apply this schema after editing:
+//   npm run db:push          # dev: shove schema into DB without a migration
+//   npm run db:migrate:dev   # dev: generate + apply a migration
+//   npm run db:migrate       # prod: apply existing migrations
+
+// Prisma 7: connection URL lives in `prisma.config.ts`, not here.
+// The `datasource` block declares the database flavor and the schema(s) Prisma
+// is allowed to manage.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["baywire"]
+}
+
+enum City {
+  tampa
+  st_petersburg
+  clearwater
+  brandon
+  bradenton
+  other
+
+  @@schema("baywire")
+}
+
+model Source {
+  id         String      @id @default(uuid()) @db.Uuid
+  slug       String      @unique
+  label      String
+  baseUrl    String      @map("base_url")
+  enabled    Boolean     @default(true)
+  lastRunAt  DateTime?   @map("last_run_at") @db.Timestamptz()
+  lastStatus String?     @map("last_status")
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+
+  scrapeRuns ScrapeRun[]
+  events     Event[]
+
+  @@map("sources")
+  @@schema("baywire")
+}
+
+model ScrapeRun {
+  id             String    @id @default(uuid()) @db.Uuid
+  sourceId       String    @map("source_id") @db.Uuid
+  startedAt      DateTime  @default(now()) @map("started_at") @db.Timestamptz()
+  finishedAt     DateTime? @map("finished_at") @db.Timestamptz()
+  eventsSeen     Int       @default(0) @map("events_seen")
+  eventsInserted Int       @default(0) @map("events_inserted")
+  eventsUpdated  Int       @default(0) @map("events_updated")
+  eventsSkipped  Int       @default(0) @map("events_skipped")
+  error          String?
+
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([sourceId, startedAt], map: "scrape_runs_source_started_idx")
+  @@map("scrape_runs")
+  @@schema("baywire")
+}
+
+model Event {
+  id            String    @id @default(uuid()) @db.Uuid
+  sourceId      String    @map("source_id") @db.Uuid
+  sourceEventId String    @map("source_event_id")
+  title         String
+  description   String?
+  startAt       DateTime  @map("start_at") @db.Timestamptz()
+  endAt         DateTime? @map("end_at") @db.Timestamptz()
+  allDay        Boolean   @default(false) @map("all_day")
+  venueName     String?   @map("venue_name")
+  address       String?
+  city          City      @default(other)
+  lat           Float?
+  lng           Float?
+  priceMin      Decimal?  @map("price_min") @db.Decimal(10, 2)
+  priceMax      Decimal?  @map("price_max") @db.Decimal(10, 2)
+  isFree        Boolean   @default(false) @map("is_free")
+  categories    String[]  @default([])
+  imageUrl      String?   @map("image_url")
+  eventUrl      String    @map("event_url")
+  contentHash   String    @map("content_hash")
+  lastSeenAt    DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz()
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, sourceEventId], map: "events_source_source_event_id_uidx")
+  @@index([startAt], map: "events_start_at_idx")
+  @@index([city, startAt], map: "events_city_start_at_idx")
+  @@index([isFree, startAt], map: "events_is_free_start_at_idx")
+  @@map("events")
+  @@schema("baywire")
+}

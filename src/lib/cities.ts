@@ -1,0 +1,80 @@
+/**
+ * Cities covered by the aggregator. The "city" enum is shared between the DB
+ * schema, the LLM extraction schema, and the UI filter so changes propagate
+ * automatically.
+ */
+export const CITY_KEYS = [
+  "tampa",
+  "st_petersburg",
+  "clearwater",
+  "brandon",
+  "bradenton",
+  "other",
+] as const;
+
+export type CityKey = (typeof CITY_KEYS)[number];
+
+export interface CityMeta {
+  key: CityKey;
+  label: string;
+  /** Approximate center used by geo-aware adapters such as Eventbrite. */
+  lat: number;
+  lng: number;
+  /** Eventbrite "place" slug. */
+  eventbriteSlug: string;
+}
+
+export const CITIES: readonly CityMeta[] = [
+  {
+    key: "tampa",
+    label: "Tampa",
+    lat: 27.9506,
+    lng: -82.4572,
+    eventbriteSlug: "fl--tampa",
+  },
+  {
+    key: "st_petersburg",
+    label: "St. Petersburg",
+    lat: 27.7676,
+    lng: -82.6403,
+    eventbriteSlug: "fl--saint-petersburg",
+  },
+  {
+    key: "clearwater",
+    label: "Clearwater",
+    lat: 27.9659,
+    lng: -82.8001,
+    eventbriteSlug: "fl--clearwater",
+  },
+  {
+    key: "brandon",
+    label: "Brandon",
+    lat: 27.9378,
+    lng: -82.2859,
+    eventbriteSlug: "fl--brandon",
+  },
+  {
+    key: "bradenton",
+    label: "Bradenton",
+    lat: 27.4989,
+    lng: -82.5748,
+    eventbriteSlug: "fl--bradenton",
+  },
+] as const;
+
+const CITY_LABEL_MAP: Record<CityKey, string> = {
+  tampa: "Tampa",
+  st_petersburg: "St. Petersburg",
+  clearwater: "Clearwater",
+  brandon: "Brandon",
+  bradenton: "Bradenton",
+  other: "Other",
+};
+
+export function cityLabel(key: CityKey): string {
+  return CITY_LABEL_MAP[key];
+}
+
+export function isCityKey(value: string): value is CityKey {
+  return (CITY_KEYS as readonly string[]).includes(value);
+}

@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sand-50: #fdf9f3;
+  --color-sand-100: #f7eedf;
+  --color-sand-200: #ecd9b8;
+  --color-sand-300: #ddbf8a;
+  --color-sand-400: #c69d5b;
+  --color-sand-500: #a87c3d;
+  --color-sand-600: #875e2a;
+  --color-sand-700: #62421d;
+
+  --color-gulf-50: #ecf8fb;
+  --color-gulf-100: #c7eaf2;
+  --color-gulf-200: #8fd2e2;
+  --color-gulf-300: #51b5cb;
+  --color-gulf-400: #2c97b0;
+  --color-gulf-500: #1c7c93;
+  --color-gulf-600: #155f72;
+  --color-gulf-700: #0f4351;
+
+  --color-sunset-50: #fff4ec;
+  --color-sunset-100: #ffe2cd;
+  --color-sunset-200: #ffbf94;
+  --color-sunset-300: #ff9a59;
+  --color-sunset-400: #ff7a2b;
+  --color-sunset-500: #ec5b0a;
+  --color-sunset-600: #b94406;
+
+  --color-ink-50: #f7f5f1;
+  --color-ink-100: #ecebe6;
+  --color-ink-200: #d6d3cb;
+  --color-ink-300: #aaa69a;
+  --color-ink-500: #5b574e;
+  --color-ink-700: #2d2b25;
+  --color-ink-900: #14130f;
+
+  --font-sans: "InterVariable", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+
+  --radius-card: 1.25rem;
+}
+
+:root {
+  color-scheme: light dark;
+  --background: var(--color-sand-50);
+  --foreground: var(--color-ink-900);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: var(--color-ink-900);
+    --foreground: var(--color-sand-50);
+  }
+}
+
+html, body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.gradient-hero {
+  background-image:
+    radial-gradient(80% 60% at 20% 0%, rgba(255, 154, 89, 0.35), transparent 60%),
+    radial-gradient(60% 50% at 90% 10%, rgba(81, 181, 203, 0.45), transparent 65%),
+    linear-gradient(180deg, var(--color-sand-50) 0%, var(--color-sand-100) 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gradient-hero {
+    background-image:
+      radial-gradient(80% 60% at 20% 0%, rgba(255, 122, 43, 0.25), transparent 60%),
+      radial-gradient(60% 50% at 90% 10%, rgba(44, 151, 176, 0.35), transparent 65%),
+      linear-gradient(180deg, var(--color-ink-900) 0%, #1c1a16 100%);
+  }
+}
+
+.scroll-shadow {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+}
