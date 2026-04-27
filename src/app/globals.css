@@ -63,6 +63,45 @@ html, body {
   text-rendering: optimizeLegibility;
 }
 
+@layer base {
+  :where(
+    button:not(:disabled),
+    input[type="button"]:not(:disabled),
+    input[type="submit"]:not(:disabled),
+    input[type="reset"]:not(:disabled),
+    input[type="checkbox"]:not(:disabled),
+    input[type="radio"]:not(:disabled),
+    input[type="file"]:not(:disabled),
+    input[type="image"]:not(:disabled),
+    input[type="range"]:not(:disabled),
+    a[href],
+    [role="button"]:not([aria-disabled="true"]),
+    [role="tab"]:not([aria-disabled="true"]),
+    [role="link"],
+    [role="switch"],
+    [role="menuitem"],
+    [role="option"],
+    label:where([for], :has(input, select, textarea, button)),
+    select:not(:disabled),
+    summary
+  ) {
+    cursor: pointer;
+  }
+
+  :where(
+    button:disabled,
+    input:disabled,
+    select:disabled,
+    textarea:disabled
+  ) {
+    cursor: not-allowed;
+  }
+
+  :where(a[aria-disabled="true"], [aria-disabled="true"][role="button"], [aria-disabled="true"][role="tab"]) {
+    cursor: not-allowed;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
