@@ -176,7 +176,7 @@ function PlanEventRow({
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 rounded-(--radius-card) border border-ink-100 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-ink-700 dark:bg-ink-900/80",
+        "flex flex-col gap-2 rounded-card border border-ink-100 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-ink-700 dark:bg-ink-900/80",
         hasConflict && "border-sunset-300/80 ring-1 ring-sunset-200/60 dark:border-sunset-500/50 dark:ring-sunset-500/30",
       )}
     >

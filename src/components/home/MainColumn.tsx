@@ -119,6 +119,8 @@ export async function MainColumn({
         initialSavedIds={initialSaved}
         savedFromServer={savedFromServer}
         window={window}
+        selectedCity={city}
+        freeOnly={freeOnly}
       >
         <HomeWithPlanLayout>
           <section className="gradient-hero -mx-4 rounded-b-3xl px-4 pb-6 pt-8 sm:-mx-5 sm:rounded-b-4xl sm:px-8 sm:pb-10 sm:pt-10">

@@ -75,7 +75,7 @@ export function EventDetailBody({
         "overflow-hidden bg-white dark:bg-ink-900/80",
         imageLayout === "dialog"
           ? "border-0 shadow-none"
-          : "rounded-(--radius-card) border border-ink-100 shadow-sm dark:border-ink-700",
+          : "rounded-card border border-ink-100 shadow-sm dark:border-ink-700",
       )}
     >
       {event.imageUrl ? (
@@ -84,7 +84,7 @@ export function EventDetailBody({
             "relative w-full overflow-hidden bg-sand-100",
             imageLayout === "dialog"
               ? "h-36 max-h-36 min-h-0 sm:h-40 sm:max-h-40"
-              : "aspect-[16/9]",
+              : "aspect-video",
           )}
         >
           <Image
@@ -100,8 +100,8 @@ export function EventDetailBody({
       ) : (
         <div
           className={cn(
-            "flex items-center justify-center bg-gradient-to-br from-gulf-100 via-sand-100 to-sunset-100 font-display text-3xl text-ink-500",
-            imageLayout === "dialog" ? "h-32 max-h-32 sm:h-36" : "aspect-[16/9]",
+            "flex items-center justify-center bg-linear-to-br from-gulf-100 via-sand-100 to-sunset-100 font-display text-3xl text-ink-500",
+            imageLayout === "dialog" ? "h-32 max-h-32 sm:h-36" : "aspect-video",
           )}
         >
           {cityLabel(event.city)}

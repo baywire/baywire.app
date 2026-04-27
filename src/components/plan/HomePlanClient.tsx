@@ -3,10 +3,12 @@
 import { useCallback, Suspense, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ListOrdered, Radio } from "lucide-react";
+import { ListOrdered, Radio, Search } from "lucide-react";
 
 import { PlanView } from "@/components/plan/PlanView";
 import { HomePlanProvider, useHomePlan } from "@/components/plan/homePlanContext";
+import { SearchDialog } from "@/components/search/SearchDialog";
+import { useHomeOptional } from "@/components/home/homeState";
 
 import type { AppEvent } from "@/lib/events/types";
 
@@ -18,6 +20,7 @@ export function HomeWithPlanLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex w-full min-w-0 flex-1 flex-col">
       <HomePlanHeaderBar />
+      <SearchDialog />
 
       <div className="relative flex w-full min-w-0 flex-1 flex-col md:flex-row">
         <div
@@ -67,6 +70,7 @@ export function HomeWithPlanLayout({ children }: { children: ReactNode }) {
 
 function HomePlanHeaderBar() {
   const { toggleDrawer, showPlan, showFeed, drawerOpen, mobileView } = useHomePlan();
+  const home = useHomeOptional();
 
   const onPlanClick = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -92,7 +96,7 @@ function HomePlanHeaderBar() {
           className="group flex min-w-0 items-center gap-2 font-display text-lg font-semibold tracking-tight"
           aria-label="Baywire — Tampa Bay events"
         >
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sunset-400 to-gulf-400 text-white shadow-sm transition group-hover:rotate-6">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-sunset-400 to-gulf-400 text-white shadow-sm transition group-hover:rotate-6">
             <Radio className="size-4" />
           </span>
           <span className="min-w-0 leading-none">
@@ -105,21 +109,32 @@ function HomePlanHeaderBar() {
             </span>
           </span>
         </Link>
-        <button
-          type="button"
-          onClick={onPlanClick}
-          className={cn(
-            "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition",
-            planIsActive
-              ? "bg-gulf-200 text-ink-900 dark:bg-gulf-600 dark:text-sand-50"
-              : "text-ink-500 hover:bg-ink-100/80 hover:text-ink-900 dark:text-ink-300 dark:hover:bg-ink-800/80 dark:hover:text-sand-50",
-          )}
-          aria-pressed={planIsActive}
-          aria-label="My plan"
-        >
-          <ListOrdered className="size-4 shrink-0" aria-hidden />
-          <span className="max-sm:sr-only">My plan</span>
-        </button>
+        <div className="inline-flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => home?.openSearch()}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-ink-500 transition hover:bg-ink-100/80 hover:text-ink-900 dark:text-ink-300 dark:hover:bg-ink-800/80 dark:hover:text-sand-50"
+            aria-label="Search events"
+          >
+            <Search className="size-4 shrink-0" aria-hidden />
+            <span className="max-sm:sr-only">Search</span>
+          </button>
+          <button
+            type="button"
+            onClick={onPlanClick}
+            className={cn(
+              "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition",
+              planIsActive
+                ? "bg-gulf-200 text-ink-900 dark:bg-gulf-600 dark:text-sand-50"
+                : "text-ink-500 hover:bg-ink-100/80 hover:text-ink-900 dark:text-ink-300 dark:hover:bg-ink-800/80 dark:hover:text-sand-50",
+            )}
+            aria-pressed={planIsActive}
+            aria-label="My plan"
+          >
+            <ListOrdered className="size-4 shrink-0" aria-hidden />
+            <span className="max-sm:sr-only">My plan</span>
+          </button>
+        </div>
       </div>
     </header>
   );

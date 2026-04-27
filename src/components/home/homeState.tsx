@@ -3,6 +3,8 @@
 import { createContext, useContext, type ReactNode } from "react";
 
 import type { AppEvent } from "@/lib/events/types";
+import type { CityKey } from "@/lib/cities";
+import type { SearchMode, SearchResponse } from "@/lib/search/types";
 
 import type { WindowKey } from "@/lib/time/window";
 
@@ -10,6 +12,8 @@ export interface HomeContextValue {
   events: AppEvent[];
   savedFromServer: AppEvent[];
   window: WindowKey;
+  selectedCity: CityKey | "all";
+  freeOnly: boolean;
   topTags: Set<string>;
   setTopTags: (next: Set<string>) => void;
   savedIds: Set<string>;
@@ -23,6 +27,15 @@ export interface HomeContextValue {
   filtered: AppEvent[];
   planOrder: string[];
   togglePlan: (event: AppEvent) => void;
+  isSearchOpen: boolean;
+  openSearch: () => void;
+  closeSearch: () => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  searchMode: SearchMode;
+  setSearchMode: (mode: SearchMode) => void;
+  searchResponse: SearchResponse | null;
+  setSearchResponse: (response: SearchResponse | null) => void;
 }
 
 const HomeContext = createContext<HomeContextValue | null>(null);
