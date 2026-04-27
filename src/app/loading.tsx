@@ -30,7 +30,7 @@ export default function Loading() {
 
       <main className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col px-0 sm:px-0">
         <div className="w-full min-w-0 flex-1 px-4 pb-20 sm:px-5 md:pb-0">
-          <section className="gradient-hero -mx-4 rounded-b-3xl px-4 pb-6 pt-8 sm:-mx-5 sm:rounded-b-[2rem] sm:px-8 sm:pb-10 sm:pt-10">
+          <section className="gradient-hero -mx-4 rounded-b-3xl px-4 pb-6 pt-8 sm:-mx-5 sm:rounded-b-4xl sm:px-8 sm:pb-10 sm:pt-10">
             <HeroIntro />
             <div className="mx-auto mt-6 w-full max-w-5xl px-1 sm:px-0">
               <div className="motion-safe:animate-pulse h-11 w-full rounded-full bg-ink-100/60 dark:bg-ink-800/50" />

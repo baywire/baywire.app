@@ -24,17 +24,17 @@ function createClient() {
   const log: ("warn" | "error")[] =
     process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"];
 
-  if (url.startsWith("prisma://") || url.startsWith("prisma+postgres://")) {
-    return new PrismaClient({
-      accelerateUrl: url,
-      log,
-    }).$extends(withAccelerate());
-  }
+  const client =
+    url.startsWith("prisma://") || url.startsWith("prisma+postgres://")
+      ? new PrismaClient({ accelerateUrl: url, log })
+      : new PrismaClient({
+          adapter: new PrismaPg({ connectionString: url }),
+          log,
+        });
 
-  const adapter = new PrismaPg({ connectionString: url });
   // Accelerate-cache hints become no-ops with a direct adapter, so we still
   // extend with `withAccelerate()` to keep one query API everywhere.
-  return new PrismaClient({ adapter, log }).$extends(withAccelerate());
+  return client.$extends(withAccelerate());
 }
 
 export type AppPrismaClient = ReturnType<typeof createClient>;

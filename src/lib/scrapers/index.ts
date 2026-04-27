@@ -5,6 +5,7 @@ import { tampaBayMarketsAdapter } from "./tampaBayMarkets";
 import { tampaBayTimesAdapter } from "./tampaBayTimes";
 import { tampaGovAdapter } from "./tampaGov";
 import { thatsSoTampaAdapter } from "./thatsSoTampa";
+import { ticketmasterAdapter } from "./ticketmaster";
 import { visitStPeteAdapter } from "./visitStPete";
 import { visitTampaBayAdapter } from "./visitTampaBay";
 
@@ -22,6 +23,7 @@ import type { SourceAdapter } from "./types";
 // Playwright/headless browsers (see plan).
 export const ADAPTERS: readonly SourceAdapter[] = [
   eventbriteAdapter,
+  ticketmasterAdapter,
   visitTampaBayAdapter,
   visitStPeteAdapter,
   tampaBayTimesAdapter,

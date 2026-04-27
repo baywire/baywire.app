@@ -120,6 +120,9 @@ export function EventCard({
             fill
             sizes="(min-width: 1024px) 480px, (min-width: 640px) 50vw, 100vw"
             className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            loading={isFeature ? "eager" : "lazy"}
+            fetchPriority={isFeature ? "high" : "auto"}
+            priority={isFeature}
             unoptimized
           />
           <div
@@ -193,7 +196,7 @@ export function EventCard({
         {event.categories.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 text-xs text-ink-500 dark:text-ink-300">
             <Tag className="size-3" />
-            {event.categories.slice(0, 4).map((tag) => (
+            {event.categories.slice(0, 3).map((tag) => (
               <span
                 key={tag}
                 className="rounded-full bg-ink-50 px-2 py-0.5 capitalize dark:bg-ink-700/60"

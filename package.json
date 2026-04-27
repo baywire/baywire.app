@@ -7,13 +7,14 @@
     "build": "prisma generate --no-hints && next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
     "postinstall": "prisma generate --no-hints",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "scrape:local": "tsx scripts/scrape-local.ts"
+    "scrape:local": "tsx scripts/scrape-local.ts",
+    "canonical:backfill": "tsx scripts/backfill-canonical.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

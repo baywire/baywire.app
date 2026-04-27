@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Baywire — Tampa Bay events, this week & weekend",
     description:
-      "The live wire for Tampa Bay. Real-time, AI-curated things to do across the Bay this week.",
+      "The live wire for Tampa Bay. Daily, AI-curated things to do across the Bay this week.",
     url: SITE_URL,
     siteName: "Baywire",
     type: "website",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Baywire — Tampa Bay events",
     description:
-      "Real-time, AI-curated things to do across the Bay this week.",
+      "Daily, AI-curated things to do across the Bay this week.",
   },
   applicationName: "Baywire",
   robots: { index: true, follow: true },

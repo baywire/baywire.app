@@ -5,8 +5,8 @@ export function SiteFooter() {
         <p>
           <span className="font-semibold text-ink-700 dark:text-sand-50">Baywire</span>{" "}
           — the live wire for Tampa Bay. Events aggregated and AI-summarized from
-          Eventbrite, Visit Tampa Bay, Visit St. Pete/Clearwater, and the Tampa
-          Bay Times.
+          Eventbrite, Ticketmaster, Visit Tampa Bay, Visit St. Pete/Clearwater,
+          and the Tampa Bay Times.
         </p>
         <p>
           All event details belong to their original sources. Please verify time

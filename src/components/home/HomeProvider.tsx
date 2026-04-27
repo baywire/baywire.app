@@ -125,6 +125,7 @@ interface HomeFilterRowProps {
   selected: CityKey | "all";
   facets: Record<string, number>;
   tagOptions: TagOption[];
+  showTags?: boolean;
 }
 
 export function HomeFilterRow({
@@ -132,6 +133,7 @@ export function HomeFilterRow({
   selected,
   facets,
   tagOptions,
+  showTags = true,
 }: HomeFilterRowProps) {
   const {
     topTags,
@@ -152,7 +154,7 @@ export function HomeFilterRow({
         onToggleSaved={() => setShowSavedOnly(!showSavedOnly)}
       />
       <CityFilter selected={selected} facets={facets} />
-      {tagOptions.length > 0 && (
+      {showTags && tagOptions.length > 0 && (
         <TopTagFilter options={tagOptions} selected={topTags} onChange={setTopTags} />
       )}
       {upcomingSavedCount === 0 && savedIds.size > 0 && (
@@ -161,6 +163,20 @@ export function HomeFilterRow({
           different time window, city, or fewer tags.
         </p>
       )}
+    </div>
+  );
+}
+
+interface HomeTagFilterRowProps {
+  tagOptions: TagOption[];
+}
+
+export function HomeTagFilterRow({ tagOptions }: HomeTagFilterRowProps) {
+  const { topTags, setTopTags } = useHome();
+  if (tagOptions.length === 0) return null;
+  return (
+    <div className="mx-auto flex w-full flex-col items-center gap-3 ">
+      <TopTagFilter options={tagOptions} selected={topTags} onChange={setTopTags} />
     </div>
   );
 }

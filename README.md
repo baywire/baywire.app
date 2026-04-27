@@ -4,7 +4,7 @@
 
 A modern, AI-curated guide to live music, festivals, food, and family fun across the Tampa Bay area — Tampa, St. Petersburg, Clearwater, Brandon, and Bradenton. Lives at [baywire.app](https://baywire.app).
 
-Baywire pulls candidate events from nine high-signal sources daily. Each source runs as its own GitHub Actions matrix job: adapters first try a structured surface (JSON-LD on detail pages, the WordPress Tribe Events JSON API, iCal exports) and only fall back to OpenAI extraction when no structured data is available. Vercel hosts the read-only Next.js app — it no longer runs scrapes.
+Baywire pulls candidate events from ten high-signal sources daily. Each source runs as its own GitHub Actions matrix job: adapters first try a structured surface (JSON-LD on detail pages, the WordPress Tribe Events JSON API, the Ticketmaster Discovery API, iCal exports) and only fall back to OpenAI extraction when no structured data is available. Vercel hosts the read-only Next.js app — it no longer runs scrapes.
 
 ```text
    GHA cron (daily 12:00 UTC)
@@ -35,6 +35,7 @@ Baywire pulls candidate events from nine high-signal sources daily. Each source 
 | Slug                       | Site                                | Path                | Notes                                                |
 | -------------------------- | ----------------------------------- | ------------------- | ---------------------------------------------------- |
 | `eventbrite`               | eventbrite.com                      | JSON-LD             | Geo-search across all 7 cities, 2 pages each         |
+| `ticketmaster`             | ticketmaster.com/discover/tampa     | Discovery API       | Official Discovery API, DMA 635 (Tampa-St. Pete-Sarasota) |
 | `visit_tampa_bay`          | visittampabay.com/events            | JSON-LD             | Official tourism, curated                            |
 | `visit_st_pete_clearwater` | visitstpeteclearwater.com           | JSON-LD             | Both `/events` and `/events-festivals` listings      |
 | `tampa_gov`                | tampa.gov/calendar                  | JSON-LD + ICS       | City of Tampa public events calendar                 |
@@ -129,6 +130,7 @@ Required repo secrets:
 | `OPENAI_API_KEY`        | yes      | Used only by HTML+LLM fallbacks                    |
 | `OPENAI_BASE_URL`       | optional | OpenAI-compatible proxy (Poe / Groq / …)           |
 | `OPENAI_EXTRACT_MODEL`  | optional | Override default `gpt-4.1-mini`                    |
+| `TICKETMASTER_API_KEY`  | optional | Free Discovery API key. Without it the `ticketmaster` adapter errors and the rest of the matrix continues |
 
 Notes:
 

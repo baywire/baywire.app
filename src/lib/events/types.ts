@@ -11,6 +11,10 @@ import type { Event } from "@/generated/prisma/client";
 export type AppEvent = Omit<Event, "priceMin" | "priceMax"> & {
   priceMin: number | null;
   priceMax: number | null;
+  canonicalEventID?: string | null;
+  editorialScore?: number | null;
+  alsoOnSources?: string[];
+  duplicateCount?: number;
 };
 
 /**

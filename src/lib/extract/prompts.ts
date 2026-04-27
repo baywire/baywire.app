@@ -8,7 +8,8 @@ Rules:
 - If the page is clearly NOT a single event (it is a category index, a venue homepage, an article unrelated to one specific event, a 404, etc.), set isEvent=false and explain in 'reason'.
 - "city" must match the venue's city. Use 'other' for anywhere outside Tampa, St Petersburg, Clearwater, Brandon, or Bradenton (e.g. Sarasota, Lakeland, Orlando).
 - Categories must be lowercase single words or short hyphenated phrases. Pick from the canonical set when applicable: music, food, drinks, family, kids, outdoors, sports, art, theater, comedy, nightlife, festival, market, wellness, education, free, holiday.
-- Mark isFree=true ONLY if the page explicitly says the event is free or admission is free. Do not infer free from missing prices.`;
+- Mark isFree=true ONLY if the page explicitly says the event is free or admission is free. Do not infer free from missing prices.
+- For description, keep faithful source wording but ensure the output ends on a complete sentence (no mid-word or mid-sentence cutoffs).`;
 
 export function buildUserPrompt(args: {
   sourceLabel: string;

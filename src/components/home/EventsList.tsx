@@ -7,6 +7,7 @@ import { Bookmark } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { EventCard } from "@/components/EventCard";
 import { useHome } from "@/components/home/homeState";
+import { Button } from "@/components/ui";
 
 import { eventMatchesTopTags } from "@/lib/events/tagOptions";
 import { groupEventsByDay } from "@/lib/events/grouping";
@@ -18,6 +19,7 @@ export function EventsList() {
     savedFromServer,
     window,
     topTags,
+    setTopTags,
     savedIds,
     toggleSaved,
     filtered,
@@ -112,6 +114,15 @@ export function EventsList() {
         <EmptyState
           title="No events for those tags"
           description="Clear a few tags or try again — there may still be great picks under other tags this window."
+          actions={
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setTopTags(new Set())}
+            >
+              Clear tags
+            </Button>
+          }
         />
       )}
 

@@ -10,6 +10,7 @@ dist/
 
 .tools/
 .notes/
+.exports/
 
 scripts/.last-html/
 
@@ -23,3 +24,5 @@ prisma/migrations/migration_lock.toml.bak
 next-env.d.ts
 
 src/generated/
+
+tsconfig.tsbuildinfo

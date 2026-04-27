@@ -31,25 +31,8 @@ export function TopTagFilter({ options, selected, onChange }: TopTagFilterProps)
   }
 
   return (
-    <div className="w-full max-w-3xl text-left">
+    <div className="w-full text-left">
       <div className="mb-2 flex items-baseline justify-between gap-3">
-        <p className="text-xs text-ink-500 dark:text-ink-300">
-          Filter by tag
-          {selected.size > 0 && (
-            <span className="ml-1.5 tabular-nums text-ink-400 dark:text-ink-400">
-              · {selected.size} on
-            </span>
-          )}
-        </p>
-        {selected.size > 0 && (
-          <button
-            type="button"
-            onClick={clearAll}
-            className="text-xs font-medium text-gulf-600 underline-offset-2 hover:underline dark:text-gulf-300"
-          >
-            Clear
-          </button>
-        )}
       </div>
       <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
         {options.map(({ tag, count }) => {
@@ -76,6 +59,15 @@ export function TopTagFilter({ options, selected, onChange }: TopTagFilterProps)
             </FilterChip>
           );
         })}
+        {selected.size > 0 && (
+          <button
+            type="button"
+            onClick={clearAll}
+            className="ml-2 text-sm font-medium text-gulf-600 underline-offset-2 hover:underline dark:text-gulf-300"
+          >
+            Clear
+          </button>
+        )}
       </div>
     </div>
   );

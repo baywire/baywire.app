@@ -1,6 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client";
 
 import type { CityKey } from "@/lib/cities";
+import { normalizeCategoryTags as normalizeCategoryTagsShared } from "@/lib/events/tagCanonical";
 import type { ExtractedEvent } from "@/lib/extract/schema";
 import { cleanInlineText, stripHtmlToText } from "@/lib/scrapers/text";
 import { parseLocalDate } from "@/lib/time/window";
@@ -94,14 +95,9 @@ function sanitizeHttpUrl(input: string | null | undefined): string | null {
 }
 
 function dedupeCategories(input: string[]): string[] {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const raw of input) {
-    const tag = raw.trim().toLowerCase();
-    if (!tag || seen.has(tag)) continue;
-    seen.add(tag);
-    out.push(tag);
-    if (out.length >= 6) break;
-  }
-  return out;
+  return normalizeCategoryTags(input, 6);
+}
+
+export function normalizeCategoryTags(input: readonly string[], limit = 6): string[] {
+  return normalizeCategoryTagsShared(input, limit);
 }

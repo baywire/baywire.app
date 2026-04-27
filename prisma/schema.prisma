@@ -72,6 +72,7 @@ model ScrapeRun {
 
 model Event {
   id            String    @id @default(uuid()) @db.Uuid
+  canonicalId   String?   @map("canonical_id") @db.Uuid
   sourceId      String    @map("source_id") @db.Uuid
   sourceEventId String    @map("source_event_id")
   title         String
@@ -95,12 +96,39 @@ model Event {
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
 
+  canonical CanonicalEvent? @relation("EventCanonicalGroup", fields: [canonicalId], references: [id], onDelete: SetNull)
+  primaryOf CanonicalEvent? @relation("CanonicalPrimaryEvent")
   source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
 
   @@unique([sourceId, sourceEventId], map: "events_source_source_event_id_uidx")
+  @@index([canonicalId], map: "events_canonical_id_idx")
   @@index([startAt], map: "events_start_at_idx")
   @@index([city, startAt], map: "events_city_start_at_idx")
   @@index([isFree, startAt], map: "events_is_free_start_at_idx")
   @@map("events")
+  @@schema("baywire")
+}
+
+model CanonicalEvent {
+  id               String    @id @default(uuid()) @db.Uuid
+  primaryEventId   String?   @unique @map("primary_event_id") @db.Uuid
+  dedupedTitle     String?   @map("deduped_title")
+  summary          String?
+  vibes            String[]  @default([])
+  audience         String?
+  indoorOutdoor    String?   @map("indoor_outdoor")
+  tags             String[]  @default([])
+  whyItsCool       String?   @map("why_its_cool")
+  editorialScore   Float?    @map("editorial_score")
+  editorialHash    String?   @map("editorial_hash")
+  editorialUpdatedAt DateTime? @map("editorial_updated_at") @db.Timestamptz()
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  primaryEvent Event?  @relation("CanonicalPrimaryEvent", fields: [primaryEventId], references: [id], onDelete: SetNull)
+  events       Event[] @relation("EventCanonicalGroup")
+
+  @@index([editorialScore], map: "canonical_events_editorial_score_idx")
+  @@map("canonical_events")
   @@schema("baywire")
 }

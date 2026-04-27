@@ -1,28 +1,13 @@
 import type { AppEvent } from "@/lib/events/types";
+import { normalizeCategoryTags } from "@/lib/events/tagCanonical";
 
 export interface TagOption {
   tag: string;
   count: number;
 }
 
-/** Hand-tuned aliases to collapse near-duplicate tags from upstream sources. */
-const TAG_ALIASES: Record<string, string> = {
-  arts: "art",
-  films: "film",
-  movies: "film",
-  movie: "film",
-  kids: "family",
-  outdoor: "outdoors",
-  drink: "drinks",
-  foods: "food",
-  markets: "market",
-  festivals: "festival",
-  musics: "music",
-};
-
 function canonicalTag(raw: string): string {
-  const t = raw.trim().toLowerCase();
-  return TAG_ALIASES[t] ?? t;
+  return normalizeCategoryTags([raw], 1)[0] ?? "";
 }
 
 /**

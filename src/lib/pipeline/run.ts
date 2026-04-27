@@ -11,6 +11,7 @@ import type { SourceAdapter } from "@/lib/scrapers";
 import { getScrapeWindow, overlapsWindow } from "@/lib/time/window";
 
 import { normalizeExtractedEvent } from "./normalize";
+import { resolveCanonicalEventForEvent } from "./canonical";
 
 const EXTRACTION_CONCURRENCY = 4;
 const MAX_EVENTS_PER_SOURCE = 60;
@@ -295,8 +296,18 @@ async function processItem(args: ProcessArgs): Promise<ProcessResult> {
   }
 
   const data: Prisma.EventUncheckedCreateInput = normalized.row;
+  const writeResult = await writeEvent(sourceId, item.sourceEventId, data, existing);
+  try {
+    await resolveCanonicalEventForEvent(writeResult.eventID);
+  } catch (err) {
+    console.warn(
+      `[canonical] slug=${adapter.slug} eventId=${writeResult.eventID} failed: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+    );
+  }
   return {
-    outcome: await writeEvent(sourceId, item.sourceEventId, data, existing),
+    outcome: writeResult.outcome,
     structured: false,
   };
 }
@@ -348,7 +359,17 @@ async function persistStructured(
     return "skipped";
   }
 
-  return writeEvent(sourceId, item.sourceEventId, normalized.row, existing);
+  const writeResult = await writeEvent(sourceId, item.sourceEventId, normalized.row, existing);
+  try {
+    await resolveCanonicalEventForEvent(writeResult.eventID);
+  } catch (err) {
+    console.warn(
+      `[canonical] slug=${args.adapter.slug} eventId=${writeResult.eventID} failed: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+    );
+  }
+  return writeResult.outcome;
 }
 
 async function writeEvent(
@@ -356,7 +377,7 @@ async function writeEvent(
   sourceEventId: string,
   data: Prisma.EventUncheckedCreateInput,
   existing: { id: string } | null,
-): Promise<ProcessOutcome> {
+): Promise<{ outcome: ProcessOutcome; eventID: string }> {
   if (existing) {
     await prisma.event.update({
       where: { id: existing.id },
@@ -365,13 +386,16 @@ async function writeEvent(
         lastSeenAt: new Date(),
       },
     });
-    return "updated";
+    return { outcome: "updated", eventID: existing.id };
   }
 
-  await prisma.event.create({ data });
+  const created = await prisma.event.create({
+    data,
+    select: { id: true },
+  });
   void sourceId;
   void sourceEventId;
-  return "inserted";
+  return { outcome: "inserted", eventID: created.id };
 }
 
 function stripIdentity(

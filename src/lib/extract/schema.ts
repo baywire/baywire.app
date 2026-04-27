@@ -18,7 +18,7 @@ export const ExtractedEventSchema = z.object({
     .string()
     .max(2000)
     .nullable()
-    .describe("1-3 sentence summary, plain text. null if not present."),
+    .describe("Raw plain-text event description from the page. Keep sentence boundaries; null if absent."),
   startLocal: z
     .string()
     .describe(
