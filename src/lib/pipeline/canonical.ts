@@ -3,6 +3,7 @@ import { prisma, type AppPrismaClient } from "@/lib/db/client";
 
 import { refreshEditorialForCanonical } from "./editorial";
 import { isLikelySameEvent } from "./canonicalMatch";
+import { buildCandidateEventWhere } from "./canonicalWhere";
 
 const SOURCE_PRIORITY = [
   "eventbrite",
@@ -19,12 +20,10 @@ const SOURCE_PRIORITY = [
 
 const SOURCE_RANK = new Map<string, number>(SOURCE_PRIORITY.map((slug, idx) => [slug, idx]));
 
-const MATCH_WINDOW_HOURS = 12;
-const ALLDAY_MATCH_WINDOW_HOURS = 48;
 type CanonicalTx = Pick<AppPrismaClient, "event" | "canonicalEvent">;
 
 type EventWithSource = Prisma.EventGetPayload<{
-  include: { source: { select: { slug: true } } };
+  include: { source: { select: { slug: true; enabled: true } } };
 }>;
 
 export async function resolveCanonicalEventForEvent(eventID: string): Promise<string | null> {
@@ -46,9 +45,10 @@ export async function resolveCanonicalEventForEventTx(
 } | null> {
   const event = await tx.event.findUnique({
     where: { id: eventID },
-    include: { source: { select: { slug: true } } },
+    include: { source: { select: { slug: true, enabled: true } } },
   });
   if (!event) return null;
+  if (!event.source.enabled) return null;
 
   const candidates = await findCandidateEvents(tx, event);
   const matched = candidates.filter((candidate) => isLikelySameEvent(event, candidate));
@@ -95,36 +95,10 @@ async function findCandidateEvents(
   tx: CanonicalTx,
   event: EventWithSource,
 ): Promise<EventWithSource[]> {
-  const shortWindowStart = new Date(
-    event.startAt.getTime() - MATCH_WINDOW_HOURS * 60 * 60 * 1000,
-  );
-  const shortWindowEnd = new Date(
-    event.startAt.getTime() + MATCH_WINDOW_HOURS * 60 * 60 * 1000,
-  );
-  const longWindowStart = new Date(
-    event.startAt.getTime() - ALLDAY_MATCH_WINDOW_HOURS * 60 * 60 * 1000,
-  );
-  const longWindowEnd = new Date(
-    event.startAt.getTime() + ALLDAY_MATCH_WINDOW_HOURS * 60 * 60 * 1000,
-  );
-
-  const where: Prisma.EventWhereInput = {
-    id: { not: event.id },
-    ...(event.city !== "other" ? { city: event.city } : {}),
-  };
-
-  if (isLongSpanCandidate(event)) {
-    where.startAt = { gte: longWindowStart, lte: longWindowEnd };
-  } else {
-    where.OR = [
-      { startAt: { gte: shortWindowStart, lte: shortWindowEnd } },
-      { allDay: true, startAt: { gte: longWindowStart, lte: longWindowEnd } },
-    ];
-  }
-
+  const where = buildCandidateEventWhere(event);
   const rows = await tx.event.findMany({
     where,
-    include: { source: { select: { slug: true } } },
+    include: { source: { select: { slug: true, enabled: true } } },
     orderBy: [{ startAt: "asc" }, { id: "asc" }],
     take: 2000,
   });
@@ -136,8 +110,8 @@ async function recomputeCanonicalPrimaryTx(
   canonicalID: string,
 ): Promise<{ canonicalID: string; events: EventWithSource[]; primary: EventWithSource } | null> {
   const events = await tx.event.findMany({
-    where: { canonicalId: canonicalID },
-    include: { source: { select: { slug: true } } },
+    where: { canonicalId: canonicalID, source: { enabled: true } },
+    include: { source: { select: { slug: true, enabled: true } } },
   });
   if (events.length === 0) {
     await tx.canonicalEvent.delete({ where: { id: canonicalID } });
@@ -180,17 +154,4 @@ function sourcePriorityRank(slug: string): number {
 
 function hasImage(imageUrl: string | null): boolean {
   return typeof imageUrl === "string" && imageUrl.trim().length > 0;
-}
-
-function chooseCandidateWindowHours(event: EventWithSource): number {
-  if (event.allDay) return ALLDAY_MATCH_WINDOW_HOURS;
-  if (event.endAt) {
-    const spanHours = Math.abs(event.endAt.getTime() - event.startAt.getTime()) / (60 * 60 * 1000);
-    if (spanHours >= 20) return ALLDAY_MATCH_WINDOW_HOURS;
-  }
-  return MATCH_WINDOW_HOURS;
-}
-
-function isLongSpanCandidate(event: EventWithSource): boolean {
-  return chooseCandidateWindowHours(event) === ALLDAY_MATCH_WINDOW_HOURS;
 }

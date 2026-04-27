@@ -3,7 +3,12 @@ import { Radio } from "lucide-react";
 
 import { TextLink } from "@/components/ui";
 
-export function SiteHeader() {
+interface SiteHeaderProps {
+  showPlanLink?: boolean;
+  showNavLinks?: boolean;
+}
+
+export function SiteHeader({ showPlanLink = true, showNavLinks = true }: SiteHeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-ink-100/60 bg-sand-50/80 backdrop-blur-md dark:border-ink-700/60 dark:bg-ink-900/70">
       <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4 sm:px-5">
@@ -23,14 +28,18 @@ export function SiteHeader() {
             </span>
           </span>
         </Link>
-        <nav className="hidden gap-6 text-sm sm:flex">
-          <TextLink href="/?view=plan" emphasize>
-            My plan
-          </TextLink>
-          <TextLink href="/?window=tonight">Tonight</TextLink>
-          <TextLink href="/?window=weekend">Weekend</TextLink>
-          <TextLink href="/?window=week">All week</TextLink>
-        </nav>
+        {showNavLinks && (
+          <nav className="hidden gap-6 text-sm sm:flex">
+            {showPlanLink && (
+              <TextLink href="/?view=plan" emphasize>
+                My plan
+              </TextLink>
+            )}
+            <TextLink href="/?window=tonight">Tonight</TextLink>
+            <TextLink href="/?window=weekend">Weekend</TextLink>
+            <TextLink href="/?window=week">All week</TextLink>
+          </nav>
+        )}
       </div>
     </header>
   );

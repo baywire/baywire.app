@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     template: "%s • Baywire",
   },
   description:
-    "Baywire is the live wire for Tampa Bay. AI-curated music, festivals, food, and family fun across Tampa, St. Pete, Clearwater, Brandon, and Bradenton — refreshed every few hours.",
+    "Baywire is the live wire for Tampa Bay. AI-curated, deduplicated picks for music, festivals, food, and family fun across Tampa, St. Pete, Clearwater, Brandon, and Bradenton — refreshed every few hours.",
   metadataBase: new URL(SITE_URL),
   alternates: { canonical: "/" },
   openGraph: {
     title: "Baywire — Tampa Bay events, this week & weekend",
     description:
-      "The live wire for Tampa Bay. Daily, AI-curated things to do across the Bay this week.",
+      "The live wire for Tampa Bay. Daily AI-curated and deduplicated things to do across the Bay this week.",
     url: SITE_URL,
     siteName: "Baywire",
     type: "website",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Baywire — Tampa Bay events",
     description:
-      "Daily, AI-curated things to do across the Bay this week.",
+      "Daily AI-curated and deduplicated things to do across the Bay this week.",
   },
   applicationName: "Baywire",
   robots: { index: true, follow: true },

@@ -39,18 +39,20 @@ export function EventCard({
   const time = formatTimeRange(event.startAt, event.endAt, event.allDay);
   const city = cityLabel(event.city);
   const isFeature = variant === "feature";
+  const corroboratingSources = event.alsoOnSources ?? [];
+  const sourceCount = 1 + corroboratingSources.length;
 
   return (
     <article
       className={cn(
-        "group relative flex min-w-0 max-w-full flex-col overflow-hidden rounded-(--radius-card) border border-ink-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-ink-700 dark:bg-ink-900/80",
+        "group relative flex min-w-0 max-w-full flex-col overflow-hidden rounded-card border border-ink-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-ink-700 dark:bg-ink-900/80",
         isFeature && "lg:min-h-0 lg:flex-row",
       )}
     >
       <button
         type="button"
         onClick={() => setDialogOpen(true)}
-        className="absolute inset-0 z-10 cursor-pointer rounded-(--radius-card) border-0 bg-transparent p-0 text-left"
+        className="absolute inset-0 z-10 cursor-pointer rounded-card border-0 bg-transparent p-0 text-left"
         aria-label={`Open details: ${event.title}`}
       />
       <EventDialog
@@ -110,7 +112,7 @@ export function EventCard({
       {event.imageUrl ? (
         <div
           className={cn(
-            "relative aspect-[16/9] w-full overflow-hidden bg-sand-100",
+            "relative aspect-video w-full overflow-hidden bg-sand-100",
             isFeature && "lg:aspect-auto lg:w-2/5",
           )}
         >
@@ -126,20 +128,20 @@ export function EventCard({
             unoptimized
           />
           <div
-            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[42%] bg-gradient-to-b from-black/45 to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[42%] bg-linear-to-b from-black/45 to-transparent"
             aria-hidden
           />
         </div>
       ) : (
         <div
           className={cn(
-            "relative flex aspect-[16/9] w-full items-center justify-center bg-gradient-to-br from-gulf-100 via-sand-100 to-sunset-100 text-ink-500",
+            "relative flex aspect-video w-full items-center justify-center bg-linear-to-br from-gulf-100 via-sand-100 to-sunset-100 text-ink-500",
             isFeature && "lg:aspect-auto lg:w-2/5",
           )}
         >
           <span className="font-display text-2xl">{city}</span>
           <div
-            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[46%] bg-gradient-to-b from-black/35 to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[46%] bg-linear-to-b from-black/35 to-transparent"
             aria-hidden
           />
         </div>
@@ -167,7 +169,7 @@ export function EventCard({
 
         <h3
           className={cn(
-            "min-w-0 break-words font-display text-lg font-semibold leading-snug text-ink-900 group-hover:text-gulf-600 dark:text-sand-50 dark:group-hover:text-gulf-200",
+            "min-w-0 wrap-break-word font-display text-lg font-semibold leading-snug text-ink-900 group-hover:text-gulf-600 dark:text-sand-50 dark:group-hover:text-gulf-200",
             isFeature && "text-2xl lg:text-3xl",
           )}
         >
@@ -177,6 +179,23 @@ export function EventCard({
         {event.description && (
           <p className="line-clamp-3 text-sm text-ink-500 dark:text-ink-300">
             {event.description}
+          </p>
+        )}
+        {isFeature && event.whyItsCool && (
+          <p className="rounded-card border border-ink-200 bg-white/80 px-3 py-2 text-sm text-ink-700 dark:border-ink-600 dark:bg-ink-900/70 dark:text-sand-100">
+            <span className="font-semibold text-gulf-700 dark:text-gulf-200">Why this pick:</span>{" "}
+            {event.whyItsCool}
+          </p>
+        )}
+        {sourceCount > 1 && (
+          <p className="text-xs text-ink-500 dark:text-ink-300">
+            Also listed on {sourceCount} sources
+            {corroboratingSources.length > 0
+              ? ` (${corroboratingSources
+                  .slice(0, 2)
+                  .map((slug) => slug.replaceAll("_", " "))
+                  .join(", ")}${corroboratingSources.length > 2 ? ", ..." : ""})`
+              : ""}
           </p>
         )}
 

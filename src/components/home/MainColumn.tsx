@@ -9,7 +9,12 @@ import { COOKIE_PLAN, COOKIE_SAVED_EVENTS, COOKIE_TOP_TAGS } from "@/lib/cookies
 import { parsePlanOrderCookie, parseSavedEventIdsCookie, parseTopTagsCookie } from "@/lib/cookies/parse";
 import { CITY_KEYS, type CityKey } from "@/lib/cities";
 import { buildTagOptions } from "@/lib/events/tagOptions";
-import { countEventsByCity, listEvents, listUpcomingEventsByIds } from "@/lib/db/queries";
+import {
+  countEventsByCity,
+  getCurationCoverage,
+  listEvents,
+  listUpcomingEventsByIds,
+} from "@/lib/db/queries";
 import type { AppEvent } from "@/lib/events/types";
 import type { WindowKey } from "@/lib/time/window";
 
@@ -45,14 +50,23 @@ export async function MainColumn({
   }
 
   let eventRows: AppEvent[] = [];
+  let curation = {
+    visibleCount: 0,
+    curatedCount: 0,
+    coveragePct: 0,
+    refreshedAt: null as Date | null,
+  };
   let dbError = false;
   try {
-    eventRows = await listEvents({
+    const filters = {
       window,
       cities: city === "all" ? undefined : [city],
       freeOnly,
       limit: 200,
-    });
+    };
+    const [rows, coverage] = await Promise.all([listEvents(filters), getCurationCoverage(filters)]);
+    eventRows = rows;
+    curation = coverage;
   } catch (err) {
     dbError = true;
     console.error("listEvents failed", { window, city, freeOnly, err });
@@ -108,7 +122,7 @@ export async function MainColumn({
       >
         <HomeWithPlanLayout>
           <section className="gradient-hero -mx-4 rounded-b-3xl px-4 pb-6 pt-8 sm:-mx-5 sm:rounded-b-4xl sm:px-8 sm:pb-10 sm:pt-10">
-            <HeroIntro />
+            <HeroIntro curation={curation} />
             <div className="mx-auto mt-6 w-full max-w-5xl px-1 sm:px-0">
               <HomeFilterRow
                 window={window}

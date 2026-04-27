@@ -4,6 +4,7 @@ import { type AppEvent, serializeEvent, serializeEvents } from "@/lib/events/typ
 import { getWindow, type WindowKey } from "@/lib/time/window";
 
 import { prisma } from "./client";
+import { buildVisibleEventWhere } from "./eventWhere";
 
 const READ_CACHE = { ttl: 60, swr: 300 };
 const SOURCE_PRIORITY = [
@@ -23,10 +24,40 @@ type EventWithSourceSlug = Prisma.EventGetPayload<{
   include: { source: { select: { slug: true } } };
 }>;
 
-type CanonicalWithEvents = Prisma.CanonicalEventGetPayload<{
+interface CanonicalWithEvents {
+  id: string;
+  dedupedTitle: string | null;
+  summary: string | null;
+  vibes: string[];
+  audience: string | null;
+  indoorOutdoor: string | null;
+  tags: string[];
+  whyItsCool: string | null;
+  editorialScore: number | null;
+  editorialUpdatedAt: Date | null;
+  events: EventWithSourceSlug[];
+}
+
+type EventByIDRow = Prisma.EventGetPayload<{
   include: {
-    events: {
-      include: { source: { select: { slug: true } } };
+    source: {
+      select: {
+        enabled: true;
+      };
+    };
+    canonical: {
+      select: {
+        id: true;
+        dedupedTitle: true;
+        summary: true;
+        tags: true;
+        vibes: true;
+        audience: true;
+        indoorOutdoor: true;
+        whyItsCool: true;
+        editorialScore: true;
+        editorialUpdatedAt: true;
+      };
     };
   };
 }>;
@@ -38,20 +69,35 @@ export interface EventListFilters {
   limit?: number;
 }
 
+const FRESH_EDITORIAL_WINDOW_HOURS = 48;
+
+function withReadCache<T extends object>(args: T): T {
+  return { ...args, cacheStrategy: READ_CACHE } as T;
+}
+
 export async function listEvents(filters: EventListFilters): Promise<AppEvent[]> {
   const window = getWindow(filters.window);
-  const scopedWhere = buildEventWhere(window.startAt, window.endAt, filters);
+  const scopedWhere = buildVisibleEventWhere(window.startAt, window.endAt, filters);
 
-  const canonicalRows: CanonicalWithEvents[] = await prisma.canonicalEvent.findMany({
+  const canonicalRows = (await prisma.canonicalEvent.findMany(withReadCache({
     where: { events: { some: scopedWhere } },
-    include: {
+    select: {
+      id: true,
+      dedupedTitle: true,
+      summary: true,
+      vibes: true,
+      audience: true,
+      indoorOutdoor: true,
+      tags: true,
+      whyItsCool: true,
+      editorialScore: true,
+      editorialUpdatedAt: true,
       events: {
         where: scopedWhere,
         include: { source: { select: { slug: true } } },
       },
     },
-    cacheStrategy: READ_CACHE,
-  });
+  }))) as CanonicalWithEvents[];
 
   const out: AppEvent[] = [];
   for (const row of canonicalRows) {
@@ -60,16 +106,20 @@ export async function listEvents(filters: EventListFilters): Promise<AppEvent[]>
     out.push(applyCanonicalOverlay(serializeEvent(display), row, display.id, row.events));
   }
 
-  const legacyRows = await prisma.event.findMany({
+  const legacyRows = await prisma.event.findMany(withReadCache({
     where: { ...scopedWhere, canonicalId: null },
-    orderBy: [{ startAt: "asc" }, { id: "asc" }],
-    cacheStrategy: READ_CACHE,
-  });
+    orderBy: [{ startAt: "asc" as const }, { id: "asc" as const }],
+  }));
   for (const row of legacyRows) {
     out.push({
       ...serializeEvent(row),
       canonicalEventID: null,
       editorialScore: null,
+      editorialUpdatedAt: null,
+      whyItsCool: null,
+      vibes: [],
+      audience: null,
+      indoorOutdoor: null,
       alsoOnSources: [],
       duplicateCount: 1,
     });
@@ -80,31 +130,43 @@ export async function listEvents(filters: EventListFilters): Promise<AppEvent[]>
 }
 
 export async function getEventById(id: string): Promise<AppEvent | null> {
-  const row = await prisma.event.findUnique({
+  const row = (await prisma.event.findUnique(withReadCache({
     where: { id },
     include: {
+      source: { select: { enabled: true } },
       canonical: {
         select: {
           id: true,
           dedupedTitle: true,
           summary: true,
           tags: true,
+          vibes: true,
+          audience: true,
+          indoorOutdoor: true,
+          whyItsCool: true,
           editorialScore: true,
+          editorialUpdatedAt: true,
         },
       },
     },
-    cacheStrategy: READ_CACHE,
-  });
+  }))) as EventByIDRow | null;
   if (!row) return null;
+  if (!row.source.enabled) return null;
   const serialized = serializeEvent(row);
-  if (!row.canonical) return serialized;
+  const canonical = row.canonical;
+  if (!canonical) return serialized;
   return {
     ...serialized,
-    title: row.canonical.dedupedTitle ?? serialized.title,
-    description: row.canonical.summary ?? serialized.description,
-    categories: row.canonical.tags.length > 0 ? row.canonical.tags : serialized.categories,
-    canonicalEventID: row.canonical.id,
-    editorialScore: row.canonical.editorialScore ?? null,
+    title: canonical.dedupedTitle ?? serialized.title,
+    description: canonical.summary ?? serialized.description,
+    categories: canonical.tags.length > 0 ? canonical.tags : serialized.categories,
+    canonicalEventID: canonical.id,
+    editorialScore: canonical.editorialScore ?? null,
+    editorialUpdatedAt: canonical.editorialUpdatedAt ?? null,
+    whyItsCool: canonical.whyItsCool ?? null,
+    vibes: canonical.vibes,
+    audience: canonical.audience ?? null,
+    indoorOutdoor: canonical.indoorOutdoor ?? null,
   };
 }
 
@@ -127,29 +189,43 @@ export async function totalEventsInWindow(window: WindowKey): Promise<number> {
   return rows.length;
 }
 
+export interface CurationCoverage {
+  visibleCount: number;
+  curatedCount: number;
+  coveragePct: number;
+  refreshedAt: Date | null;
+}
+
+export async function getCurationCoverage(filters: EventListFilters): Promise<CurationCoverage> {
+  const rows = await listEvents({ ...filters, limit: 10000 });
+  let curatedCount = 0;
+  let refreshedAt: Date | null = null;
+  for (const row of rows) {
+    const updatedAt = row.editorialUpdatedAt ?? null;
+    if (updatedAt && (!refreshedAt || updatedAt.getTime() > refreshedAt.getTime())) {
+      refreshedAt = updatedAt;
+    }
+    if (isEditorialFresh(updatedAt) && typeof row.editorialScore === "number") {
+      curatedCount += 1;
+    }
+  }
+  const visibleCount = rows.length;
+  const coveragePct = visibleCount === 0 ? 0 : Math.round((curatedCount / visibleCount) * 100);
+  return { visibleCount, curatedCount, coveragePct, refreshedAt };
+}
+
 export async function listUpcomingEventsByIds(ids: string[]): Promise<AppEvent[]> {
   if (ids.length === 0) return [];
   const now = new Date();
-  const rows = await prisma.event.findMany({
-    where: { id: { in: ids }, startAt: { gte: now } },
-    orderBy: { startAt: "asc" },
-    cacheStrategy: READ_CACHE,
-  });
+  const rows = await prisma.event.findMany(withReadCache({
+    where: {
+      id: { in: ids },
+      startAt: { gte: now },
+      source: { enabled: true },
+    },
+    orderBy: { startAt: "asc" as const },
+  }));
   return serializeEvents(rows);
-}
-
-function buildEventWhere(
-  startAt: Date,
-  endAt: Date,
-  filters: EventListFilters,
-): Prisma.EventWhereInput {
-  return {
-    startAt: { gte: startAt, lte: endAt },
-    ...(filters.cities && filters.cities.length > 0
-      ? { city: { in: filters.cities } }
-      : {}),
-    ...(filters.freeOnly ? { isFree: true } : {}),
-  };
 }
 
 function sourceRank(slug: string): number {
@@ -195,8 +271,13 @@ function applyCanonicalOverlay(
     id: string;
     dedupedTitle: string | null;
     summary: string | null;
+    vibes: string[];
+    audience: string | null;
+    indoorOutdoor: string | null;
+    whyItsCool: string | null;
     tags: string[];
     editorialScore: number | null;
+    editorialUpdatedAt: Date | null;
   },
   displayEventID: string,
   groupedEvents: Array<{ id: string; source: { slug: string } }>,
@@ -213,14 +294,19 @@ function applyCanonicalOverlay(
     categories: canonical.tags.length > 0 ? canonical.tags : event.categories,
     canonicalEventID: canonical.id,
     editorialScore: canonical.editorialScore ?? null,
+    editorialUpdatedAt: canonical.editorialUpdatedAt ?? null,
+    whyItsCool: canonical.whyItsCool ?? null,
+    vibes: canonical.vibes,
+    audience: canonical.audience ?? null,
+    indoorOutdoor: canonical.indoorOutdoor ?? null,
     alsoOnSources: Array.from(sources).sort((a, b) => a.localeCompare(b)),
     duplicateCount: groupedEvents.length,
   };
 }
 
 function compareEvents(a: AppEvent, b: AppEvent): number {
-  const scoreA = a.editorialScore ?? -1;
-  const scoreB = b.editorialScore ?? -1;
+  const scoreA = effectiveEditorialScore(a);
+  const scoreB = effectiveEditorialScore(b);
   if (scoreA !== scoreB) return scoreB - scoreA;
   const timeA = a.startAt.getTime();
   const timeB = b.startAt.getTime();
@@ -230,4 +316,26 @@ function compareEvents(a: AppEvent, b: AppEvent): number {
 
 function hasImage(imageUrl: string | null): boolean {
   return typeof imageUrl === "string" && imageUrl.trim().length > 0;
+}
+
+function effectiveEditorialScore(event: AppEvent): number {
+  if (typeof event.editorialScore !== "number") return -1;
+  let score = event.editorialScore;
+  if (!isEditorialFresh(event.editorialUpdatedAt ?? null)) {
+    score -= 0.2;
+  }
+  if (isLikelyLowConfidenceEditorial(event)) {
+    score -= 0.1;
+  }
+  return score;
+}
+
+function isLikelyLowConfidenceEditorial(event: AppEvent): boolean {
+  return (event.editorialScore ?? 0) <= 0.55 && !event.whyItsCool;
+}
+
+function isEditorialFresh(updatedAt: Date | null): boolean {
+  if (!updatedAt) return false;
+  const ageMs = Date.now() - updatedAt.getTime();
+  return ageMs <= FRESH_EDITORIAL_WINDOW_HOURS * 60 * 60 * 1000;
 }

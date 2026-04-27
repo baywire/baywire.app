@@ -8,6 +8,7 @@ import type { ExtractedEvent } from "@/lib/extract/schema";
 import { extractEvent } from "@/lib/extract/openai";
 import { ADAPTERS, getAdapter } from "@/lib/scrapers";
 import type { SourceAdapter } from "@/lib/scrapers";
+import { filterEnabledAdapters } from "@/lib/sources/enabled";
 import { getScrapeWindow, overlapsWindow } from "@/lib/time/window";
 
 import { normalizeExtractedEvent } from "./normalize";
@@ -39,7 +40,7 @@ export interface RunOptions {
 export async function runScrape(opts: RunOptions = {}): Promise<SourceStats[]> {
   const targets: SourceAdapter[] = opts.only
     ? [getAdapter(opts.only)].filter((a): a is SourceAdapter => Boolean(a))
-    : Array.from(ADAPTERS);
+    : await defaultEnabledAdapters();
 
   if (targets.length === 0) return [];
 
@@ -63,6 +64,16 @@ export async function runScrape(opts: RunOptions = {}): Promise<SourceStats[]> {
       durationMs: 0,
     } satisfies SourceStats;
   });
+}
+
+async function defaultEnabledAdapters(): Promise<SourceAdapter[]> {
+  const adapters = Array.from(ADAPTERS);
+  if (adapters.length === 0) return [];
+  const rows = await prisma.source.findMany({
+    where: { slug: { in: adapters.map((adapter) => adapter.slug) } },
+    select: { slug: true, enabled: true },
+  });
+  return filterEnabledAdapters(adapters, rows);
 }
 
 async function runSingleSource(

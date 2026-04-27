@@ -1,7 +1,16 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { withAccelerate } from "@prisma/extension-accelerate";
 
+import type { CanonicalEventDelegate } from "@/generated/prisma/models/CanonicalEvent";
+import type { EventDelegate } from "@/generated/prisma/models/Event";
+import type { SourceDelegate } from "@/generated/prisma/models/Source";
 import { PrismaClient } from "@/generated/prisma/client";
+
+export type AppPrismaClient = PrismaClient & {
+  source: SourceDelegate;
+  event: EventDelegate;
+  canonicalEvent: CanonicalEventDelegate;
+};
 
 /**
  * Singleton Prisma client.
@@ -13,7 +22,7 @@ import { PrismaClient } from "@/generated/prisma/client";
  * - Otherwise we assume a plain Postgres URL and use the `@prisma/adapter-pg`
  *   driver adapter. Same query API; no Accelerate cache.
  */
-function createClient() {
+function createClient(): AppPrismaClient {
   const url = process.env.DATABASE_URL;
   if (!url) {
     throw new Error(
@@ -24,20 +33,19 @@ function createClient() {
   const log: ("warn" | "error")[] =
     process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"];
 
-  const client =
+  const client: PrismaClient =
     url.startsWith("prisma://") || url.startsWith("prisma+postgres://")
       ? new PrismaClient({ accelerateUrl: url, log })
       : new PrismaClient({
-          adapter: new PrismaPg({ connectionString: url }),
-          log,
-        });
+        adapter: new PrismaPg({ connectionString: url }),
+        log,
+      });
 
   // Accelerate-cache hints become no-ops with a direct adapter, so we still
   // extend with `withAccelerate()` to keep one query API everywhere.
-  return client.$extends(withAccelerate());
+  const acceleratedClient = client.$extends(withAccelerate());
+  return acceleratedClient as unknown as AppPrismaClient;
 }
-
-export type AppPrismaClient = ReturnType<typeof createClient>;
 
 declare global {
   var __prisma: AppPrismaClient | undefined;

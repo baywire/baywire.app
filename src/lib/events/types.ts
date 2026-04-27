@@ -13,6 +13,11 @@ export type AppEvent = Omit<Event, "priceMin" | "priceMax"> & {
   priceMax: number | null;
   canonicalEventID?: string | null;
   editorialScore?: number | null;
+  editorialUpdatedAt?: Date | null;
+  whyItsCool?: string | null;
+  vibes?: string[];
+  audience?: string | null;
+  indoorOutdoor?: string | null;
   alsoOnSources?: string[];
   duplicateCount?: number;
 };

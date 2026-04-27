@@ -14,7 +14,8 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:studio": "prisma studio",
     "scrape:local": "tsx scripts/scrape-local.ts",
-    "canonical:backfill": "tsx scripts/backfill-canonical.ts"
+    "canonical:backfill": "tsx scripts/backfill-canonical.ts",
+    "editorial:backfill": "tsx scripts/backfill-editorial.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

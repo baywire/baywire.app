@@ -11,6 +11,7 @@ async function main() {
   for (;;) {
     const rows: Array<{ id: string }> = await prisma.event.findMany({
       select: { id: true },
+      where: { source: { enabled: true } },
       orderBy: [{ startAt: "asc" }, { id: "asc" }],
       ...(cursor
         ? {
