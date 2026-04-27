@@ -37,7 +37,7 @@ export function HeroIntro({ curation }: HeroIntroProps) {
         Clearwater, Brandon, and Bradenton.
       </p>
       {trustLine && (
-        <p className="mx-auto mt-3 inline-flex max-w-fit items-center rounded-full border border-gulf-200/80 bg-white/80 px-3 py-1 text-xs text-ink-600 shadow-sm dark:border-gulf-700/70 dark:bg-ink-900/70 dark:text-ink-200">
+        <p className="mx-auto mt-3 hidden max-w-fit items-center rounded-full border border-gulf-200/80 bg-white/80 px-3 py-1 text-xs text-ink-600 shadow-sm dark:border-gulf-700/70 dark:bg-ink-900/70 dark:text-ink-200">
           {trustLine}
         </p>
       )}
