@@ -2,6 +2,7 @@ import * as cheerio from "cheerio";
 
 import { politeFetch } from "./fetch";
 import { reduceHtml } from "./reduce";
+import { cleanInlineText, stripHtmlToText } from "./text";
 import type { ListingItem, SourceAdapter } from "./types";
 
 const ORIGIN = "https://cityofsafetyharbor.com";
@@ -81,9 +82,8 @@ function parseFeed(xml: string): RssItem[] {
     const eid = eidMatch[1];
     if (out.has(eid)) return;
 
-    const title = item.find("title").first().text().trim();
-    const description = decodeEntities(item.find("description").first().text());
-    const hint = formatHint(description);
+    const title = cleanInlineText(item.find("title").first().text());
+    const hint = stripHtmlToText(item.find("description").first().text());
 
     out.set(eid, {
       eid,
@@ -94,30 +94,4 @@ function parseFeed(xml: string): RssItem[] {
   });
 
   return Array.from(out.values());
-}
-
-function formatHint(htmlDescription: string): string {
-  const text = htmlDescription
-    .replace(/<\s*br\s*\/?>/gi, "\n")
-    .replace(/<\/?strong>/gi, "")
-    .replace(/<[^>]+>/g, "")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n{2,}/g, "\n")
-    .trim();
-  return text;
-}
-
-const ENTITIES: Record<string, string> = {
-  "&amp;": "&",
-  "&lt;": "<",
-  "&gt;": ">",
-  "&quot;": '"',
-  "&#39;": "'",
-  "&nbsp;": " ",
-};
-
-function decodeEntities(input: string): string {
-  let out = input;
-  for (const [k, v] of Object.entries(ENTITIES)) out = out.split(k).join(v);
-  return out.replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)));
 }

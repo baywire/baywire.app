@@ -7,14 +7,14 @@ import { ArrowUpRight, Bookmark, Clock, ListOrdered, MapPin, Tag } from "lucide-
 import { EventDialog } from "@/components/event/EventDialog";
 import { IconButton } from "@/components/ui";
 
-import type { Event } from "@/generated/prisma/client";
+import type { AppEvent } from "@/lib/events/types";
 
 import { cityLabel } from "@/lib/cities";
 import { formatTimeRange } from "@/lib/time/window";
 import { cn, formatPrice } from "@/lib/utils";
 
 interface EventCardProps {
-  event: Event;
+  event: AppEvent;
   variant?: "default" | "feature";
   bookmark?: {
     isSaved: boolean;
@@ -74,10 +74,10 @@ export function EventCard({
         >
           <Bookmark
             className={cn(
-              "size-4",
-              bookmark.isSaved && "fill-sunset-500 text-sunset-600 dark:fill-sunset-400",
+              "size-4 text-sand-100",
+              bookmark.isSaved && "fill-sunset-400 text-sunset-100",
             )}
-            strokeWidth={bookmark.isSaved ? 0 : 2}
+            strokeWidth={bookmark.isSaved ? 0 : 2.25}
           />
         </IconButton>
       )}
@@ -98,8 +98,11 @@ export function EventCard({
           aria-label={plan.inPlan ? "Remove from My plan" : "Add to My plan"}
         >
           <ListOrdered
-            className={cn("size-4", plan.inPlan && "text-gulf-600 dark:text-gulf-200")}
-            strokeWidth={2}
+            className={cn(
+              "size-4 text-sand-100",
+              plan.inPlan && "text-gulf-200",
+            )}
+            strokeWidth={2.25}
           />
         </IconButton>
       )}
@@ -119,6 +122,10 @@ export function EventCard({
             className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             unoptimized
           />
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[42%] bg-gradient-to-b from-black/45 to-transparent"
+            aria-hidden
+          />
         </div>
       ) : (
         <div
@@ -128,6 +135,10 @@ export function EventCard({
           )}
         >
           <span className="font-display text-2xl">{city}</span>
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[46%] bg-gradient-to-b from-black/35 to-transparent"
+            aria-hidden
+          />
         </div>
       )}
 
@@ -195,7 +206,7 @@ export function EventCard({
 
         <span
           aria-hidden
-          className="pointer-events-none absolute right-4 top-4 z-20 flex size-9 items-center justify-center rounded-full bg-white/85 text-ink-700 opacity-0 shadow transition group-hover:opacity-100 dark:bg-ink-900/80 dark:text-sand-50"
+          className="pointer-events-none absolute right-4 top-4 z-20 flex size-9 items-center justify-center rounded-full bg-ink-900 text-sand-100 opacity-0 shadow-[0_2px_12px_rgba(0,0,0,0.55),0_0_0_1px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.1)] transition group-hover:opacity-100"
         >
           <ArrowUpRight className="size-4" />
         </span>

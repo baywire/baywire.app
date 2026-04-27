@@ -9,7 +9,7 @@ import { getPlanOrderFromBrowser, setPlanOrderCookie } from "@/lib/cookies/brows
 import { appendOrMoveToEnd } from "@/lib/plan/order";
 import { cn } from "@/lib/utils";
 
-import type { Event } from "@/generated/prisma/client";
+import type { AppEvent } from "@/lib/events/types";
 
 export function AddToPlanButton({
   event,
@@ -17,7 +17,7 @@ export function AddToPlanButton({
   surface = "default",
   className: classNameProp,
 }: {
-  event: Event;
+  event: AppEvent;
   initialInPlan: boolean;
   /** `onDark` = event dialog header (ink background). */
   surface?: "default" | "onDark";

@@ -32,9 +32,14 @@ export function TopTagFilter({ options, selected, onChange }: TopTagFilterProps)
 
   return (
     <div className="w-full max-w-3xl text-left">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.15em] text-ink-500 dark:text-ink-300">
-          My top tags
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <p className="text-xs text-ink-500 dark:text-ink-300">
+          Filter by tag
+          {selected.size > 0 && (
+            <span className="ml-1.5 tabular-nums text-ink-400 dark:text-ink-400">
+              · {selected.size} on
+            </span>
+          )}
         </p>
         {selected.size > 0 && (
           <button
@@ -46,10 +51,6 @@ export function TopTagFilter({ options, selected, onChange }: TopTagFilterProps)
           </button>
         )}
       </div>
-      <p className="mb-3 text-xs text-ink-500 dark:text-ink-300">
-        Pick tags you care about; the list below only shows matching events. Your
-        choices are saved in this browser.
-      </p>
       <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
         {options.map(({ tag, count }) => {
           const isOn = selected.has(tag);

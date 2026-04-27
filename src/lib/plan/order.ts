@@ -1,12 +1,12 @@
-import type { Event } from "@/generated/prisma/client";
+import type { AppEvent } from "@/lib/events/types";
 
 /**
  * Reorders `events` to follow `orderedIds`, dropping unknown UUIDs. Order is
  * the user's plan order (e.g. route order, not wall-clock time).
  */
-export function sortEventsByPlanOrder(orderedIds: string[], events: Event[]): Event[] {
-  const map = new Map(events.map((e) => [e.id, e] as [string, Event]));
-  const out: Event[] = [];
+export function sortEventsByPlanOrder(orderedIds: string[], events: AppEvent[]): AppEvent[] {
+  const map = new Map(events.map((e) => [e.id, e] as [string, AppEvent]));
+  const out: AppEvent[] = [];
   for (const id of orderedIds) {
     const e = map.get(id);
     if (e) out.push(e);

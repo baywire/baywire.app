@@ -2,21 +2,27 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 
-import type { Event } from "@/generated/prisma/client";
+import type { AppEvent } from "@/lib/events/types";
 
 import type { WindowKey } from "@/lib/time/window";
 
 export interface HomeContextValue {
-  events: Event[];
-  savedFromServer: Event[];
+  events: AppEvent[];
+  savedFromServer: AppEvent[];
   window: WindowKey;
   topTags: Set<string>;
   setTopTags: (next: Set<string>) => void;
   savedIds: Set<string>;
-  toggleSaved: (event: Event) => void;
-  filtered: Event[];
+  /** Upcoming saved events in current window+tag view (for counts). */
+  upcomingSavedCount: number;
+  /** Upcoming saved with start in the next 24 hours. */
+  savedStartingWithin24hCount: number;
+  toggleSaved: (event: AppEvent) => void;
+  showSavedOnly: boolean;
+  setShowSavedOnly: (v: boolean) => void;
+  filtered: AppEvent[];
   planOrder: string[];
-  togglePlan: (event: Event) => void;
+  togglePlan: (event: AppEvent) => void;
 }
 
 const HomeContext = createContext<HomeContextValue | null>(null);
@@ -25,6 +31,10 @@ export function useHome(): HomeContextValue {
   const v = useContext(HomeContext);
   if (!v) throw new Error("useHome must be used within HomeProvider");
   return v;
+}
+
+export function useHomeOptional(): HomeContextValue | null {
+  return useContext(HomeContext);
 }
 
 export function HomeStateProvider({

@@ -13,12 +13,12 @@ import {
 import { setPlanOrderCookie } from "@/lib/cookies/browser";
 import { appendOrMoveToEnd } from "@/lib/plan/order";
 
-import type { Event } from "@/generated/prisma/client";
+import type { AppEvent } from "@/lib/events/types";
 
 export type HomeMobileView = "feed" | "plan";
 
-function eventMapFromList(events: Event[]): Map<string, Event> {
-  const m = new Map<string, Event>();
+function eventMapFromList(events: AppEvent[]): Map<string, AppEvent> {
+  const m = new Map<string, AppEvent>();
   for (const e of events) m.set(e.id, e);
   return m;
 }
@@ -35,8 +35,8 @@ export interface HomePlanContextValue {
   showPlan: () => void;
   planOrder: string[];
   setPlanOrder: (next: string[] | ((p: string[]) => string[])) => void;
-  planEventsById: ReadonlyMap<string, Event>;
-  togglePlan: (e: Event) => void;
+  planEventsById: ReadonlyMap<string, AppEvent>;
+  togglePlan: (e: AppEvent) => void;
 }
 
 const HomePlanContext = createContext<HomePlanContextValue | null>(null);
@@ -62,7 +62,7 @@ export function HomePlanProvider({
   children: ReactNode;
   defaultOpenPlan?: boolean;
   initialPlanOrder: string[];
-  initialPlanEvents: Event[];
+  initialPlanEvents: AppEvent[];
 }) {
   const [drawerOpen, setDrawerOpen] = useState(() => defaultOpenPlan);
   const [mobileView, setMobileView] = useState<HomeMobileView>(() =>
@@ -85,7 +85,7 @@ export function HomePlanProvider({
     setMobileView("plan");
   }, []);
 
-  const togglePlan = useCallback((e: Event) => {
+  const togglePlan = useCallback((e: AppEvent) => {
     setPlanOrder((prev) => {
       if (prev.includes(e.id)) return prev.filter((x) => x !== e.id);
       return appendOrMoveToEnd(prev, e.id);

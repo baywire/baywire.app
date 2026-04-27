@@ -1,7 +1,7 @@
 import { addHours, endOfDay, startOfDay } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 
-import type { Event } from "@/generated/prisma/client";
+import type { AppEvent } from "@/lib/events/types";
 
 import { TZ } from "@/lib/time/window";
 
@@ -10,7 +10,7 @@ import { TZ } from "@/lib/time/window";
  * - All-day: local calendar day in America/New_York (start inclusive, end inclusive wall-clock, compared as [start, end) using end = next ms after EOD to avoid false overlap with next day).
  * - Timed: `endAt` if set, else `startAt + 1h` so bare listings still participate in conflict detection.
  */
-export function getEffectiveInterval(event: Event): { start: Date; end: Date } {
+export function getEffectiveInterval(event: AppEvent): { start: Date; end: Date } {
   if (event.allDay) {
     const local = toZonedTime(event.startAt, TZ);
     const s = startOfDay(local);
@@ -33,14 +33,14 @@ export function halfOpenRangesOverlap(
   return a.getTime() < d.getTime() && c.getTime() < b.getTime();
 }
 
-export function eventsTimeOverlap(e1: Event, e2: Event): boolean {
+export function eventsTimeOverlap(e1: AppEvent, e2: AppEvent): boolean {
   if (e1.id === e2.id) return false;
   const A = getEffectiveInterval(e1);
   const B = getEffectiveInterval(e2);
   return halfOpenRangesOverlap(A.start, A.end, B.start, B.end);
 }
 
-export function findConflictingEventIds(ordered: Event[]): Set<string> {
+export function findConflictingEventIds(ordered: AppEvent[]): Set<string> {
   const byDay = groupIdsByLocalDay(ordered);
   const conflicts = new Set<string>();
   for (const list of byDay) {
@@ -56,14 +56,14 @@ export function findConflictingEventIds(ordered: Event[]): Set<string> {
   return conflicts;
 }
 
-function groupIdsByLocalDay(events: Event[]): Event[][] {
+function groupIdsByLocalDay(events: AppEvent[]): AppEvent[][] {
   const fmt = new Intl.DateTimeFormat("en-CA", {
     timeZone: TZ,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   });
-  const map = new Map<string, Event[]>();
+  const map = new Map<string, AppEvent[]>();
   for (const e of events) {
     const k = fmt.format(e.startAt);
     let a = map.get(k);

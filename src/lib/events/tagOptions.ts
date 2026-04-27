@@ -1,19 +1,41 @@
-import type { Event } from "@/generated/prisma/client";
+import type { AppEvent } from "@/lib/events/types";
 
 export interface TagOption {
   tag: string;
   count: number;
 }
 
+/** Hand-tuned aliases to collapse near-duplicate tags from upstream sources. */
+const TAG_ALIASES: Record<string, string> = {
+  arts: "art",
+  films: "film",
+  movies: "film",
+  movie: "film",
+  kids: "family",
+  outdoor: "outdoors",
+  drink: "drinks",
+  foods: "food",
+  markets: "market",
+  festivals: "festival",
+  musics: "music",
+};
+
+function canonicalTag(raw: string): string {
+  const t = raw.trim().toLowerCase();
+  return TAG_ALIASES[t] ?? t;
+}
+
 /**
- * Counts non-empty, lowercased category tags across a list of events.
+ * Counts canonical category tags across a list of events.
  */
-export function buildTagOptions(events: Event[]): TagOption[] {
+export function buildTagOptions(events: AppEvent[]): TagOption[] {
   const map = new Map<string, number>();
   for (const e of events) {
+    const seen = new Set<string>();
     for (const raw of e.categories) {
-      const t = raw.trim().toLowerCase();
-      if (!t) continue;
+      const t = canonicalTag(raw);
+      if (!t || seen.has(t)) continue;
+      seen.add(t);
       map.set(t, (map.get(t) ?? 0) + 1);
     }
   }
@@ -23,13 +45,13 @@ export function buildTagOptions(events: Event[]): TagOption[] {
 }
 
 export function eventMatchesTopTags(
-  event: Event,
+  event: AppEvent,
   topTags: readonly string[] | Set<string>,
 ): boolean {
   const set = topTags instanceof Set ? topTags : new Set(topTags);
   if (set.size === 0) return true;
   for (const c of event.categories) {
-    if (set.has(c.trim().toLowerCase())) return true;
+    if (set.has(canonicalTag(c))) return true;
   }
   return false;
 }

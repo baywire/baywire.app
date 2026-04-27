@@ -2,15 +2,15 @@ import { HomeFilterRow, HomeProvider } from "@/components/home/HomeProvider";
 import { EventsList } from "@/components/home/EventsList";
 import { EmptyState } from "@/components/EmptyState";
 import { HeroIntro } from "@/components/HeroIntro";
-import { WindowToggle } from "@/components/WindowToggle";
-import { HomePlanClient } from "@/components/plan/HomePlanClient";
+import { SiteFooter } from "@/components/SiteFooter";
+import { HomePlanClient, HomeWithPlanLayout } from "@/components/plan/HomePlanClient";
 
 import { COOKIE_PLAN, COOKIE_SAVED_EVENTS, COOKIE_TOP_TAGS } from "@/lib/cookies/constants";
 import { parsePlanOrderCookie, parseSavedEventIdsCookie, parseTopTagsCookie } from "@/lib/cookies/parse";
 import { CITY_KEYS, type CityKey } from "@/lib/cities";
 import { buildTagOptions } from "@/lib/events/tagOptions";
 import { countEventsByCity, listEvents, listUpcomingEventsByIds } from "@/lib/db/queries";
-import type { Event } from "@/generated/prisma/client";
+import type { AppEvent } from "@/lib/events/types";
 import type { WindowKey } from "@/lib/time/window";
 
 import { cookies } from "next/headers";
@@ -32,7 +32,7 @@ export function SectionSkeleton({ title }: { title: string }) {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="h-72 animate-pulse rounded-(--radius-card) border border-ink-100 bg-white/70 dark:border-ink-700 dark:bg-ink-900/60"
+            className="h-72 animate-pulse rounded-card border border-ink-100 bg-white/70 dark:border-ink-700 dark:bg-ink-900/60"
           />
         ))}
       </div>
@@ -46,7 +46,7 @@ export async function MainColumn({
   freeOnly,
   defaultOpenFromQuery,
 }: MainColumnProps) {
-  let eventRows: Event[] = [];
+  let eventRows: AppEvent[] = [];
   let dbError: string | null = null;
   try {
     eventRows = await listEvents({
@@ -61,10 +61,17 @@ export async function MainColumn({
 
   if (dbError) {
     return (
-      <EmptyState
-        title="Couldn't reach the event database"
-        description={`Make sure DATABASE_URL is set and migrations have run. (${dbError})`}
-      />
+      <>
+        <div className="px-4 pb-12 pt-6 sm:px-5 sm:pb-16">
+          <EmptyState
+            title="Couldn't reach the event database"
+            description={`Make sure DATABASE_URL is set and migrations have run. (${dbError})`}
+          />
+        </div>
+        <div className="-mx-4 sm:-mx-5">
+          <SiteFooter />
+        </div>
+      </>
     );
   }
 
@@ -95,30 +102,39 @@ export async function MainColumn({
     >
       <HomeProvider
         events={eventRows}
-        tagOptions={tagOptions}
         initialTopTags={initialTop}
         initialSavedIds={initialSaved}
         savedFromServer={savedFromServer}
         window={window}
       >
-        <section className="gradient-hero -mx-4 rounded-b-3xl px-4 pb-8 pt-10 sm:-mx-5 sm:rounded-b-[2rem] sm:px-8 sm:pb-12 sm:pt-14">
-          <HeroIntro />
-          <div className="mx-auto mt-8 flex max-w-3xl flex-col items-center gap-4">
-            <WindowToggle selected={window} />
-            <HomeFilterRow selected={city} facets={facetMap} tagOptions={tagOptions} />
-          </div>
-        </section>
+        <HomeWithPlanLayout>
+          <section className="gradient-hero -mx-4 rounded-b-3xl px-4 pb-6 pt-8 sm:-mx-5 sm:rounded-b-[2rem] sm:px-8 sm:pb-10 sm:pt-10">
+            <HeroIntro />
+            <div className="mx-auto mt-6 w-full max-w-5xl px-1 sm:px-0">
+              <HomeFilterRow
+                window={window}
+                selected={city}
+                facets={facetMap}
+                tagOptions={tagOptions}
+              />
+            </div>
+          </section>
 
-        <div className="mt-8 min-w-0" id="weekend">
-          {eventRows.length === 0 ? (
-            <EmptyState
-              title="No events found yet"
-              description="Try a different time window or city, or wait a few minutes for the next scrape to land."
-            />
-          ) : (
-            <EventsList />
-          )}
-        </div>
+          <div className="mt-8 min-w-0" id="weekend">
+            {eventRows.length === 0 ? (
+              <EmptyState
+                title="No events found yet"
+                description="Try a different time window or city, or wait a few minutes for the next scrape to land."
+              />
+            ) : (
+              <EventsList />
+            )}
+          </div>
+
+          <div className="-mx-4 sm:-mx-5">
+            <SiteFooter />
+          </div>
+        </HomeWithPlanLayout>
       </HomeProvider>
     </HomePlanClient>
   );

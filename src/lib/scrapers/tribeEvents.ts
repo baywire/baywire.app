@@ -2,6 +2,7 @@ import type { CityKey } from "@/lib/cities";
 import type { ExtractedEvent } from "@/lib/extract/schema";
 
 import { politeFetch } from "./fetch";
+import { cleanInlineText, stripHtmlToText } from "./text";
 import type { ListingItem, SourceAdapter, StructuredEvent } from "./types";
 
 /**
@@ -136,9 +137,9 @@ function tribeEventToExtracted(event: TribeEvent): ExtractedEvent | null {
   const endLocal = event.end_date ? toLocalIso(event.end_date) : null;
 
   const venue = pickVenue(event.venue);
-  const venueName = venue?.venue?.trim() || null;
-  const address = venue ? formatAddress(venue) : null;
-  const description = stripHtml(event.description ?? event.excerpt ?? "").slice(0, 2000);
+  const venueName = cleanInlineText(venue?.venue) || null;
+  const address = venue ? cleanInlineText(formatAddress(venue)) || null : null;
+  const description = stripHtmlToText(event.description ?? event.excerpt).slice(0, 2000);
   const imageUrl = pickImage(event.image);
   const cityHint = `${venueName ?? ""} ${address ?? ""}`;
 
@@ -147,7 +148,7 @@ function tribeEventToExtracted(event: TribeEvent): ExtractedEvent | null {
   const priceMax = offers?.high ?? offers?.low ?? null;
 
   return {
-    title: event.title.trim().slice(0, 300),
+    title: cleanInlineText(event.title).slice(0, 300),
     description: description || null,
     startLocal,
     endLocal,
@@ -165,12 +166,15 @@ function tribeEventToExtracted(event: TribeEvent): ExtractedEvent | null {
 
 function synthesizeReducedBlob(event: TribeEvent, sourceLabel: string): string {
   const venue = pickVenue(event.venue);
-  const description = stripHtml(event.description ?? event.excerpt ?? "");
+  const cleanTitle = cleanInlineText(event.title);
+  const description = stripHtmlToText(event.description ?? event.excerpt);
+  const venueName = cleanInlineText(venue?.venue);
+  const venueAddress = venue ? cleanInlineText(formatAddress(venue)) : "";
 
   const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Event",
-    name: event.title,
+    name: cleanTitle,
     description,
     startDate: toIso(event.start_date),
     endDate: toIso(event.end_date),
@@ -183,15 +187,15 @@ function synthesizeReducedBlob(event: TribeEvent, sourceLabel: string): string {
     location: venue
       ? {
           "@type": "Place",
-          name: venue.venue ?? null,
-          address: formatAddress(venue) || null,
+          name: venueName || null,
+          address: venueAddress || null,
         }
       : null,
     keywords: collectCategories(event),
   };
 
   const meta: string[] = [
-    `og:title: ${event.title ?? ""}`,
+    `og:title: ${cleanTitle}`,
     `og:url: ${event.url}`,
   ];
   const imageUrl = pickImage(event.image);
@@ -205,13 +209,10 @@ function synthesizeReducedBlob(event: TribeEvent, sourceLabel: string): string {
 
   const textLines: string[] = [
     `Source: ${sourceLabel}`,
-    `Title: ${event.title ?? ""}`,
+    `Title: ${cleanTitle}`,
   ];
-  if (venue?.venue) textLines.push(`Venue: ${venue.venue}`);
-  if (venue) {
-    const addr = formatAddress(venue);
-    if (addr) textLines.push(`Address: ${addr}`);
-  }
+  if (venueName) textLines.push(`Venue: ${venueName}`);
+  if (venueAddress) textLines.push(`Address: ${venueAddress}`);
   if (event.cost) textLines.push(`Cost: ${event.cost}`);
   textLines.push(
     `Starts (local): ${event.start_date}${event.timezone ? ` ${event.timezone}` : ""}`,
@@ -314,36 +315,6 @@ function collectCategories(event: TribeEvent): string[] {
   for (const c of event.categories ?? []) push(c?.name);
   for (const t of event.tags ?? []) push(t?.name);
   return out.slice(0, 6);
-}
-
-const HTML_ENTITIES: Record<string, string> = {
-  "&nbsp;": " ",
-  "&amp;": "&",
-  "&lt;": "<",
-  "&gt;": ">",
-  "&quot;": '"',
-  "&#039;": "'",
-  "&#8217;": "\u2019",
-  "&#8216;": "\u2018",
-  "&#8211;": "\u2013",
-  "&#8212;": "\u2014",
-  "&#8230;": "\u2026",
-};
-
-function stripHtml(html: string): string {
-  if (!html) return "";
-  let out = html
-    .replace(/<\s*br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<[^>]+>/g, "");
-  for (const [entity, replacement] of Object.entries(HTML_ENTITIES)) {
-    out = out.split(entity).join(replacement);
-  }
-  return out
-    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
 }
 
 const CITY_HINTS: Array<{ key: CityKey; matchers: RegExp[] }> = [

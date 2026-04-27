@@ -8,7 +8,7 @@ import { AddToPlanButton } from "@/components/plan/AddToPlanButton";
 import { EventDetailBody } from "@/components/event/EventDetailBody";
 import { IconButton, PillLink } from "@/components/ui";
 
-import type { Event } from "@/generated/prisma/client";
+import type { AppEvent } from "@/lib/events/types";
 
 import { cn } from "@/lib/utils";
 
@@ -18,7 +18,7 @@ export function EventDialog({
   onClose,
   initialInPlan,
 }: {
-  event: Event;
+  event: AppEvent;
   open: boolean;
   onClose: () => void;
   initialInPlan: boolean;

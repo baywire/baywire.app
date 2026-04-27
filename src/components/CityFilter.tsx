@@ -11,9 +11,10 @@ import { cn } from "@/lib/utils";
 interface CityFilterProps {
   selected: CityKey | "all";
   facets?: Record<string, number>;
+  className?: string;
 }
 
-export function CityFilter({ selected, facets }: CityFilterProps) {
+export function CityFilter({ selected, facets, className }: CityFilterProps) {
   const router = useRouter();
   const params = useSearchParams();
   const [pending, startTransition] = useTransition();
@@ -25,32 +26,40 @@ export function CityFilter({ selected, facets }: CityFilterProps) {
     startTransition(() => router.push(`/?${next.toString()}`));
   }
 
+  const visibleCities = CITIES.filter((city) => {
+    if (selected === city.key) return true;
+    if (!facets) return true;
+    return (facets[city.key] ?? 0) > 0;
+  });
+
   return (
-    <div className="w-full px-0">
-      <div
-        className="flex w-full min-w-0 flex-wrap justify-center gap-2"
-        role="tablist"
-        aria-label="Filter by city"
-      >
-        <Pill
-          active={selected === "all"}
-          pending={pending && selected !== "all"}
-          onClick={() => setCity("all")}
-          count={facets ? sumFacets(facets) : undefined}
+    <div className={cn("w-full px-0", className)}>
+      <div className="flex w-full min-w-0 flex-wrap items-center justify-center gap-2">
+        <div
+          className="flex min-w-0 flex-wrap items-center justify-center gap-2"
+          role="tablist"
+          aria-label="Filter by city"
         >
-          All
-        </Pill>
-        {CITIES.map((city) => (
           <Pill
-            key={city.key}
-            active={selected === city.key}
-            pending={pending && selected !== city.key}
-            onClick={() => setCity(city.key)}
-            count={facets?.[city.key]}
+            active={selected === "all"}
+            pending={pending && selected !== "all"}
+            onClick={() => setCity("all")}
+            count={facets ? sumFacets(facets) : undefined}
           >
-            {city.label}
+            All
           </Pill>
-        ))}
+          {visibleCities.map((city) => (
+            <Pill
+              key={city.key}
+              active={selected === city.key}
+              pending={pending && selected !== city.key}
+              onClick={() => setCity(city.key)}
+              count={facets?.[city.key]}
+            >
+              {city.label}
+            </Pill>
+          ))}
+        </div>
       </div>
     </div>
   );

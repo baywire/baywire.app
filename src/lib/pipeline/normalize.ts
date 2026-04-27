@@ -2,6 +2,7 @@ import type { Prisma } from "@/generated/prisma/client";
 
 import type { CityKey } from "@/lib/cities";
 import type { ExtractedEvent } from "@/lib/extract/schema";
+import { cleanInlineText, stripHtmlToText } from "@/lib/scrapers/text";
 import { parseLocalDate } from "@/lib/time/window";
 
 export interface NormalizeArgs {
@@ -38,20 +39,27 @@ export function normalizeExtractedEvent(args: NormalizeArgs): NormalizeResult | 
   if (!startAt) return { ok: false, reason: `invalid startLocal: ${extracted.startLocal}` };
   const endAt = parseLocalDate(extracted.endLocal);
 
-  const city = refineCity(extracted.city, extracted.address ?? extracted.venueName ?? "");
+  const title = cleanInlineText(extracted.title);
+  if (!title) return { ok: false, reason: "empty title after sanitization" };
+
+  const venueName = cleanInlineText(extracted.venueName) || null;
+  const address = cleanInlineText(extracted.address) || null;
+  const description = stripHtmlToText(extracted.description) || null;
+
+  const city = refineCity(extracted.city, address ?? venueName ?? "");
 
   const categories = dedupeCategories(extracted.categories);
 
   const row: Prisma.EventUncheckedCreateInput & { startAt: Date; endAt: Date | null } = {
     sourceId: args.sourceId,
     sourceEventId: args.sourceEventId,
-    title: extracted.title.trim(),
-    description: extracted.description?.trim() || null,
+    title,
+    description,
     startAt,
     endAt: endAt ?? null,
     allDay: extracted.allDay,
-    venueName: extracted.venueName?.trim() || null,
-    address: extracted.address?.trim() || null,
+    venueName,
+    address,
     city,
     lat: null,
     lng: null,

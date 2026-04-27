@@ -8,11 +8,11 @@ import { ListOrdered, Radio } from "lucide-react";
 import { PlanView } from "@/components/plan/PlanView";
 import { HomePlanProvider, useHomePlan } from "@/components/plan/homePlanContext";
 
-import type { Event } from "@/generated/prisma/client";
+import type { AppEvent } from "@/lib/events/types";
 
 import { cn } from "@/lib/utils";
 
-function HomeWithPlanLayout({ children }: { children: ReactNode }) {
+export function HomeWithPlanLayout({ children }: { children: ReactNode }) {
   const { drawerOpen, mobileView, showFeed } = useHomePlan();
 
   return (
@@ -34,16 +34,16 @@ function HomeWithPlanLayout({ children }: { children: ReactNode }) {
             "flex min-h-0 min-w-0 flex-col border-ink-200/80 bg-sand-50/98 dark:border-ink-700/80 dark:bg-ink-900/98",
             "md:shrink-0 md:overflow-hidden md:border-l md:transition-[width,box-shadow] md:duration-300 md:ease-out",
             drawerOpen
-              ? "md:w-88 md:shadow-[-4px_0_24px_-6px_rgba(0,0,0,0.1)] dark:md:shadow-[-4px_0_24px_-6px_rgba(0,0,0,0.35)]"
-              : "md:w-0",
-            "max-md:fixed max-md:bottom-16 max-md:left-0 max-md:right-0 max-md:top-14 max-md:z-30 max-md:border-t max-md:shadow-2xl",
+              ? "md:sticky md:top-14 md:z-10 md:self-start md:h-[calc(100dvh-3.5rem)] md:min-h-0 md:w-88 md:shadow-[-4px_0_24px_-6px_rgba(0,0,0,0.1)] dark:md:shadow-[-4px_0_24px_-6px_rgba(0,0,0,0.35)]"
+              : "md:h-0 md:max-h-0 md:min-h-0 md:w-0 md:overflow-hidden md:border-0",
+            "max-md:fixed max-md:bottom-16 max-md:left-0 max-md:right-0 max-md:top-14 max-md:z-30 max-md:h-auto max-md:max-h-none max-md:border-t max-md:shadow-2xl",
             mobileView === "feed" && "max-md:translate-x-full max-md:pointer-events-none",
             "transition-transform duration-300 ease-out max-md:will-change-transform",
           )}
           aria-label="My plan"
         >
           <div
-            className="flex h-full min-h-0 w-full min-w-0 flex-col md:w-88 md:shrink-0"
+            className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden md:w-88 md:shrink-0"
           >
             <div className="shrink-0 border-b border-ink-200/70 px-4 py-2.5 dark:border-ink-700/70 md:py-3">
               <h2 className="font-display text-base font-semibold text-ink-900 md:text-lg dark:text-sand-50">
@@ -84,7 +84,7 @@ function HomePlanHeaderBar() {
   const planIsActive = drawerOpen || mobileView === "plan";
 
   return (
-    <header className="sticky top-0 z-30 shrink-0 border-b border-ink-100/60 bg-sand-50/90 backdrop-blur-md dark:border-ink-700/60 dark:bg-ink-900/85">
+    <header className="sticky top-0 z-40 shrink-0 border-b border-ink-100/60 bg-sand-50/90 backdrop-blur-md dark:border-ink-700/60 dark:bg-ink-900/85">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 px-4 py-2.5 sm:px-5">
         <Link
           href="/"
@@ -105,27 +105,21 @@ function HomePlanHeaderBar() {
             </span>
           </span>
         </Link>
-        <div className="flex min-w-0 items-center justify-end">
-          <button
-            type="button"
-            onClick={onPlanClick}
-            className={cn(
-              "inline-flex shrink-0 items-center gap-1.5 rounded-full text-xs font-medium sm:text-sm",
-              planIsActive
-                ? "bg-gulf-200 px-2.5 py-1.5 text-ink-900 sm:px-3 sm:py-1.5 dark:bg-gulf-600 dark:text-sand-50"
-                : "px-2.5 py-1.5 text-ink-500 hover:text-ink-900 sm:px-0 sm:py-0 dark:text-ink-300 dark:hover:text-sand-50",
-            )}
-            aria-pressed={planIsActive}
-            aria-label="My plan"
-          >
-            <span className="max-sm:sr-only">My plan</span>
-            <span className="sm:hidden">Plan</span>
-            <ListOrdered
-              className="size-3.5 shrink-0 sm:size-4"
-              aria-hidden
-            />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onPlanClick}
+          className={cn(
+            "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition",
+            planIsActive
+              ? "bg-gulf-200 text-ink-900 dark:bg-gulf-600 dark:text-sand-50"
+              : "text-ink-500 hover:bg-ink-100/80 hover:text-ink-900 dark:text-ink-300 dark:hover:bg-ink-800/80 dark:hover:text-sand-50",
+          )}
+          aria-pressed={planIsActive}
+          aria-label="My plan"
+        >
+          <ListOrdered className="size-4 shrink-0" aria-hidden />
+          <span className="max-sm:sr-only">My plan</span>
+        </button>
       </div>
     </header>
   );
@@ -181,7 +175,7 @@ function HomePlanClientInner({
   children,
 }: {
   orderIds: string[];
-  planEvents: Event[];
+  planEvents: AppEvent[];
   defaultOpenFromQuery: boolean;
   children: ReactNode;
 }) {
@@ -197,7 +191,7 @@ function HomePlanClientInner({
       initialPlanOrder={initialOrderIds}
       initialPlanEvents={initialPlanEvents}
     >
-      <HomeWithPlanLayout>{children}</HomeWithPlanLayout>
+      {children}
     </HomePlanProvider>
   );
 }
@@ -205,7 +199,7 @@ function HomePlanClientInner({
 export function HomePlanClient(
   props: {
     orderIds: string[];
-    planEvents: Event[];
+    planEvents: AppEvent[];
     defaultOpenFromQuery: boolean;
     children: ReactNode;
   },

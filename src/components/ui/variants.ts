@@ -106,9 +106,12 @@ export function iconButtonClasses({ size, surface, className }: IconButtonOption
     );
   }
   return cn(
-    "z-30 flex items-center justify-center rounded-full",
-    "bg-white/90 text-ink-600 shadow transition hover:scale-105",
-    "dark:bg-ink-800/90 dark:text-sand-100",
+    /** z-20: below app header (z-40); above card hit target (z-10). Opaque + shadow so light/gradient backdrops can’t wash through. */
+    "relative z-20 flex items-center justify-center rounded-full",
+    "bg-ink-900 text-sand-100",
+    "shadow-[0_2px_12px_rgba(0,0,0,0.55),0_0_0_1px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.1)]",
+    "transition hover:scale-105 hover:bg-ink-800",
+    "dark:bg-ink-900 dark:shadow-[0_2px_12px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.08),inset_0_1px_0_rgba(255,255,255,0.1)]",
     focusRing,
     sizeCls,
     className,

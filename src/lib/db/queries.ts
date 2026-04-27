@@ -1,6 +1,7 @@
-import type { City, Event } from "@/generated/prisma/client";
+import type { City } from "@/generated/prisma/client";
 
 import type { CityKey } from "@/lib/cities";
+import { type AppEvent, serializeEvent, serializeEvents } from "@/lib/events/types";
 import { getWindow, type WindowKey } from "@/lib/time/window";
 
 import { prisma } from "./client";
@@ -14,9 +15,9 @@ export interface EventListFilters {
   limit?: number;
 }
 
-export async function listEvents(filters: EventListFilters): Promise<Event[]> {
+export async function listEvents(filters: EventListFilters): Promise<AppEvent[]> {
   const window = getWindow(filters.window);
-  return prisma.event.findMany({
+  const rows = await prisma.event.findMany({
     where: {
       startAt: { gte: window.startAt, lte: window.endAt },
       ...(filters.cities && filters.cities.length > 0
@@ -28,13 +29,15 @@ export async function listEvents(filters: EventListFilters): Promise<Event[]> {
     take: filters.limit ?? 200,
     cacheStrategy: READ_CACHE,
   });
+  return serializeEvents(rows);
 }
 
-export async function getEventById(id: string): Promise<Event | null> {
-  return prisma.event.findUnique({
+export async function getEventById(id: string): Promise<AppEvent | null> {
+  const row = await prisma.event.findUnique({
     where: { id },
     cacheStrategy: READ_CACHE,
   });
+  return row ? serializeEvent(row) : null;
 }
 
 export interface CityFacet {
@@ -63,12 +66,13 @@ export async function totalEventsInWindow(window: WindowKey): Promise<number> {
   });
 }
 
-export async function listUpcomingEventsByIds(ids: string[]): Promise<Event[]> {
+export async function listUpcomingEventsByIds(ids: string[]): Promise<AppEvent[]> {
   if (ids.length === 0) return [];
   const now = new Date();
-  return prisma.event.findMany({
+  const rows = await prisma.event.findMany({
     where: { id: { in: ids }, startAt: { gte: now } },
     orderBy: { startAt: "asc" },
     cacheStrategy: READ_CACHE,
   });
+  return serializeEvents(rows);
 }

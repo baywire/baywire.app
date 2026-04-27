@@ -5,6 +5,7 @@ import type { ExtractedEvent } from "@/lib/extract/schema";
 import { TZ } from "@/lib/time/window";
 
 import { loadHtml } from "./parse";
+import { cleanInlineText, stripHtmlToText } from "./text";
 
 /**
  * Subset of schema.org/Event we actually consume. The full vocabulary is
@@ -285,8 +286,8 @@ export function jsonLdEventToExtracted(ev: SchemaOrgEvent): ExtractedEvent | nul
   const allDay = !startHasTime && /^\d{4}-\d{2}-\d{2}$/.test(ev.startDate);
 
   const place = pickPlace(ev.location);
-  const venueName = place?.name?.trim() || null;
-  const address = formatSchemaAddress(place?.address) || null;
+  const venueName = cleanInlineText(place?.name) || null;
+  const address = cleanInlineText(formatSchemaAddress(place?.address)) || null;
 
   const offers = pickOffer(ev.offers);
   const priceMin = parsePrice(offers?.lowPrice ?? offers?.price);
@@ -301,8 +302,8 @@ export function jsonLdEventToExtracted(ev: SchemaOrgEvent): ExtractedEvent | nul
   const cityHint = `${venueName ?? ""} ${address ?? ""}`;
 
   return {
-    title: ev.name.trim().slice(0, 300),
-    description: ev.description?.toString().trim().slice(0, 2000) || null,
+    title: cleanInlineText(ev.name).slice(0, 300),
+    description: stripHtmlToText(ev.description).slice(0, 2000) || null,
     startLocal,
     endLocal,
     allDay,
@@ -330,17 +331,20 @@ export function icsEventToExtracted(ev: IcsEvent): ExtractedEvent | null {
   const endLocal = ev.dtEnd ? icsToLocalNyString(ev.dtEnd) : null;
   const allDay = ev.dtStart.isDate;
 
-  const description = ev.description?.trim().slice(0, 2000) || null;
-  const cityHint = `${ev.location ?? ""}`;
+  const description = stripHtmlToText(ev.description).slice(0, 2000) || null;
+  const location = cleanInlineText(ev.location);
+  const venueName = cleanInlineText(ev.location?.split(",")[0]).slice(0, 200) || null;
+  const address = location.slice(0, 300) || null;
+  const cityHint = location;
 
   return {
-    title: ev.summary.trim().slice(0, 300),
+    title: cleanInlineText(ev.summary).slice(0, 300),
     description,
     startLocal,
     endLocal,
     allDay,
-    venueName: ev.location?.split(",")[0]?.trim().slice(0, 200) || null,
-    address: ev.location?.trim().slice(0, 300) || null,
+    venueName,
+    address,
     city: detectCity(cityHint),
     priceMin: null,
     priceMax: null,

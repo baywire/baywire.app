@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { EventDialog } from "@/components/event/EventDialog";
 import { useHomePlan } from "@/components/plan/homePlanContext";
 
-import type { Event } from "@/generated/prisma/client";
+import type { AppEvent } from "@/lib/events/types";
 
 import { groupEventsByDay, type DayGroup } from "@/lib/events/grouping";
 import { findConflictingEventIds } from "@/lib/plan/intervals";
@@ -23,19 +23,19 @@ interface PlanViewProps {
   onBrowseEvents?: () => void;
 }
 
-function groupPlanEvents(ordered: Event[]): DayGroup[] {
+function groupPlanEvents(ordered: AppEvent[]): DayGroup[] {
   return groupEventsByDay(ordered);
 }
 
 export function PlanView({ onBrowseEvents }: PlanViewProps) {
   const { planOrder, setPlanOrder, planEventsById } = useHomePlan();
-  const [viewer, setViewer] = useState<Event | null>(null);
+  const [viewer, setViewer] = useState<AppEvent | null>(null);
 
   const ordered = useMemo(
     () =>
       planOrder
         .map((id) => planEventsById.get(id))
-        .filter((e): e is Event => e != null),
+        .filter((e): e is AppEvent => e != null),
     [planOrder, planEventsById],
   );
 
@@ -163,7 +163,7 @@ function PlanEventRow({
   onRemove,
   onViewDetails,
 }: {
-  event: Event;
+  event: AppEvent;
   hasConflict: boolean;
   canUp: boolean;
   canDown: boolean;

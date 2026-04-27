@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 
 import { MainColumn, SectionSkeleton } from "@/components/home/MainColumn";
-import { SiteFooter } from "@/components/SiteFooter";
 
 import { isCityKey } from "@/lib/cities";
 import { getWindow, type WindowKey } from "@/lib/time/window";
@@ -33,7 +32,7 @@ export default async function HomePage(props: {
 
   return (
     <div className="flex min-h-dvh min-w-0 flex-col">
-      <main className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col px-0 pb-12 sm:px-0 sm:pb-16">
+      <main className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col px-0 sm:px-0">
         <Suspense fallback={<SectionSkeleton title={windowMeta.label} />}>
           <MainColumn
             window={window}
@@ -43,8 +42,6 @@ export default async function HomePage(props: {
           />
         </Suspense>
       </main>
-
-      <SiteFooter />
     </div>
   );
 }

@@ -1,14 +1,14 @@
-import type { Event } from "@/generated/prisma/client";
+import type { AppEvent } from "@/lib/events/types";
 
 import { formatDayHeader, TZ } from "@/lib/time/window";
 
 export interface DayGroup {
   key: string;
   label: string;
-  events: Event[];
+  events: AppEvent[];
 }
 
-export function groupEventsByDay(rows: Event[]): DayGroup[] {
+export function groupEventsByDay(rows: AppEvent[]): DayGroup[] {
   const map = new Map<string, DayGroup>();
   const fmt = new Intl.DateTimeFormat("en-CA", {
     timeZone: TZ,

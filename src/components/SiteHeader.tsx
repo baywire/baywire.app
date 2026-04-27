@@ -5,14 +5,14 @@ import { TextLink } from "@/components/ui";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b border-ink-100/60 bg-sand-50/80 backdrop-blur-md dark:border-ink-700/60 dark:bg-ink-900/70">
+    <header className="sticky top-0 z-40 border-b border-ink-100/60 bg-sand-50/80 backdrop-blur-md dark:border-ink-700/60 dark:bg-ink-900/70">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-5">
         <Link
           href="/"
           className="group flex items-center gap-2 font-display text-lg font-semibold tracking-tight"
           aria-label="Baywire — Tampa Bay events"
         >
-          <span className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-br from-sunset-400 to-gulf-400 text-white shadow-sm transition group-hover:rotate-6">
+          <span className="flex size-8 items-center justify-center rounded-xl bg-linear-to-br from-sunset-400 to-gulf-400 text-white shadow-sm transition group-hover:rotate-6">
             <Radio className="size-4" />
           </span>
           <span className="leading-none">

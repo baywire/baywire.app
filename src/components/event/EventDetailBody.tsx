@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-import type { Event } from "@/generated/prisma/client";
+import type { AppEvent } from "@/lib/events/types";
 
 import { ExternalPillLink } from "@/components/ui";
 
@@ -46,7 +46,7 @@ export function EventDetailBody({
   imageLayout = "default",
   titleId,
 }: {
-  event: Event;
+  event: AppEvent;
   /** Next/Image priority (full page or first open). */
   priorityImage?: boolean;
   /** When the title is already shown elsewhere (rare). */
