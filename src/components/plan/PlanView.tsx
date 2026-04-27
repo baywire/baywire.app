@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -8,10 +8,10 @@ import Link from "next/link";
 import { Button, buttonClasses } from "@/components/ui";
 import { EmptyState } from "@/components/EmptyState";
 import { EventDialog } from "@/components/event/EventDialog";
+import { useHomePlan } from "@/components/plan/homePlanContext";
 
 import type { Event } from "@/generated/prisma/client";
 
-import { setPlanOrderCookie } from "@/lib/cookies/browser";
 import { groupEventsByDay, type DayGroup } from "@/lib/events/grouping";
 import { findConflictingEventIds } from "@/lib/plan/intervals";
 import { cityLabel } from "@/lib/cities";
@@ -19,8 +19,6 @@ import { formatTimeRange } from "@/lib/time/window";
 import { cn } from "@/lib/utils";
 
 interface PlanViewProps {
-  orderIds: string[];
-  events: Event[];
   /** In slide-in or mobile, empty-state “browse” can switch to events without navigation. */
   onBrowseEvents?: () => void;
 }
@@ -29,40 +27,30 @@ function groupPlanEvents(ordered: Event[]): DayGroup[] {
   return groupEventsByDay(ordered);
 }
 
-export function PlanView({
-  orderIds: initialOrder,
-  events: initialEvents,
-  onBrowseEvents,
-}: PlanViewProps) {
-  const eventById = useMemo(
-    () => new Map<string, Event>(initialEvents.map((e) => [e.id, e])),
-    [initialEvents],
-  );
-
-  const [order, setOrder] = useState<string[]>(() => [...initialOrder]);
+export function PlanView({ onBrowseEvents }: PlanViewProps) {
+  const { planOrder, setPlanOrder, planEventsById } = useHomePlan();
   const [viewer, setViewer] = useState<Event | null>(null);
 
-  useEffect(() => {
-    setPlanOrderCookie(order);
-  }, [order]);
-
   const ordered = useMemo(
-    () => order.map((id) => eventById.get(id)).filter((e): e is Event => e != null),
-    [order, eventById],
+    () =>
+      planOrder
+        .map((id) => planEventsById.get(id))
+        .filter((e): e is Event => e != null),
+    [planOrder, planEventsById],
   );
 
   const indexById = useMemo(() => {
     const m = new Map<string, number>();
-    order.forEach((id, i) => m.set(id, i));
+    planOrder.forEach((id, i) => m.set(id, i));
     return m;
-  }, [order]);
+  }, [planOrder]);
 
   const conflictIds = useMemo(() => findConflictingEventIds(ordered), [ordered]);
 
   const groups = useMemo(() => groupPlanEvents(ordered), [ordered]);
 
   const move = useCallback((id: string, dir: "up" | "down") => {
-    setOrder((o) => {
+    setPlanOrder((o) => {
       const i = o.indexOf(id);
       if (i < 0) return o;
       const j = dir === "up" ? i - 1 : i + 1;
@@ -71,13 +59,16 @@ export function PlanView({
       [c[i], c[j]] = [c[j]!, c[i]!];
       return c;
     });
-  }, []);
+  }, [setPlanOrder]);
 
-  const remove = useCallback((id: string) => {
-    setOrder((o) => o.filter((x) => x !== id));
-  }, []);
+  const remove = useCallback(
+    (id: string) => {
+      setPlanOrder((o) => o.filter((x) => x !== id));
+    },
+    [setPlanOrder],
+  );
 
-  if (order.length === 0) {
+  if (planOrder.length === 0) {
     return (
       <div className="space-y-4">
         <EmptyState
@@ -136,7 +127,7 @@ export function PlanView({
                       event={e}
                       hasConflict={conflictIds.has(e.id)}
                       canUp={gIdx > 0}
-                      canDown={gIdx < order.length - 1}
+                      canDown={gIdx < planOrder.length - 1}
                       onUp={() => move(e.id, "up")}
                       onDown={() => move(e.id, "down")}
                       onRemove={() => remove(e.id)}
@@ -155,7 +146,7 @@ export function PlanView({
           event={viewer}
           open
           onClose={() => setViewer(null)}
-          initialInPlan
+          initialInPlan={planOrder.includes(viewer.id)}
         />
       )}
     </div>

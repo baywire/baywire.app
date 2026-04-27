@@ -44,14 +44,17 @@ export function EventDetailBody({
   priorityImage,
   hideTitle = false,
   imageLayout = "default",
+  titleId,
 }: {
   event: Event;
   /** Next/Image priority (full page or first open). */
   priorityImage?: boolean;
-  /** When the title is already shown in a dialog header (or elsewhere). */
+  /** When the title is already shown elsewhere (rare). */
   hideTitle?: boolean;
   /** `dialog` caps image height so the modal stays scannable. */
   imageLayout?: "default" | "dialog";
+  /** `aria-labelledby` for the event dialog. */
+  titleId?: string;
 }) {
   const dayLabel = formatLocal(event.startAt, {
     weekday: "long",
@@ -106,6 +109,15 @@ export function EventDetailBody({
       )}
 
       <div className="space-y-6 p-6 sm:p-8">
+        {!hideTitle && imageLayout === "dialog" && (
+          <h1
+            id={titleId}
+            className="font-display text-2xl font-semibold leading-tight text-ink-900 sm:text-3xl dark:text-sand-50"
+          >
+            {event.title}
+          </h1>
+        )}
+
         <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wide text-gulf-600 dark:text-gulf-200">
           <span className="inline-flex items-center gap-1 rounded-full bg-gulf-50 px-2 py-0.5 dark:bg-gulf-700/40">
             <MapPin className="size-3" />
@@ -125,7 +137,7 @@ export function EventDetailBody({
           )}
         </div>
 
-        {!hideTitle && (
+        {!hideTitle && imageLayout === "default" && (
           <h1 className="font-display text-3xl font-semibold leading-tight text-ink-900 sm:text-4xl dark:text-sand-50">
             {event.title}
           </h1>

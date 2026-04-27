@@ -1,40 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { ListOrdered } from "lucide-react";
 
+import { useHomePlanOptional } from "@/components/plan/homePlanContext";
 import { getPlanOrderFromBrowser, setPlanOrderCookie } from "@/lib/cookies/browser";
 import { appendOrMoveToEnd } from "@/lib/plan/order";
 import { cn } from "@/lib/utils";
 
+import type { Event } from "@/generated/prisma/client";
+
 export function AddToPlanButton({
-  eventId,
+  event,
   initialInPlan,
   surface = "default",
   className: classNameProp,
 }: {
-  eventId: string;
+  event: Event;
   initialInPlan: boolean;
   /** `onDark` = event dialog header (ink background). */
   surface?: "default" | "onDark";
   className?: string;
 }) {
-  const [inPlan, setInPlan] = useState(initialInPlan);
+  const homePlan = useHomePlanOptional();
+  const [standaloneInPlan, setStandaloneInPlan] = useState(initialInPlan);
 
-  function toggle() {
-    const cur = getPlanOrderFromBrowser();
-    if (cur.includes(eventId)) {
-      const n = cur.filter((x) => x !== eventId);
-      setPlanOrderCookie(n);
-      setInPlan(false);
-    } else {
-      if (!cur.includes(eventId) && cur.length >= 80) return;
-      const n = appendOrMoveToEnd(cur, eventId);
-      setPlanOrderCookie(n);
-      setInPlan(true);
+  const inPlan = homePlan
+    ? homePlan.planOrder.includes(event.id)
+    : standaloneInPlan;
+
+  const toggle = useCallback(() => {
+    if (homePlan) {
+      homePlan.togglePlan(event);
+      return;
     }
-  }
+    const cur = getPlanOrderFromBrowser();
+    if (cur.includes(event.id)) {
+      const n = cur.filter((x) => x !== event.id);
+      setPlanOrderCookie(n);
+      setStandaloneInPlan(false);
+    } else {
+      if (cur.length >= 80) return;
+      const n = appendOrMoveToEnd(cur, event.id);
+      setPlanOrderCookie(n);
+      setStandaloneInPlan(true);
+    }
+  }, [event, homePlan]);
 
   return (
     <button
@@ -48,7 +60,7 @@ export function AddToPlanButton({
             ? "border-gulf-300/80 bg-gulf-500/20 px-3 py-1.5 text-xs text-sand-50 hover:bg-gulf-500/30 focus-visible:outline-gulf-200 sm:text-sm"
             : "border-white/30 bg-white/5 px-3 py-1.5 text-xs text-sand-100 hover:border-white/50 hover:bg-white/10 focus-visible:outline-sand-200 sm:text-sm"
           : inPlan
-            ? "border-gulf-500 bg-gulf-50 px-4 py-2 text-sm text-ink-900 focus-visible:outline-gulf-400 dark:border-gulf-400 dark:bg-gulf-800 dark:text-sand-50"
+            ? "border-gulf-500 bg-gulf-50 px-4 py-2 text-sm text-ink-900 focus-visible:outline-gulf-400 dark:border-gulf-300 dark:bg-gulf-700 dark:text-white"
             : "border-ink-200 bg-white px-4 py-2 text-sm text-ink-700 hover:border-ink-300 focus-visible:outline-gulf-400 dark:border-ink-600 dark:bg-ink-900/60 dark:text-ink-200",
         classNameProp,
       )}

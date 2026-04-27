@@ -85,41 +85,37 @@ export function EventDialog({
         onKeyDown={onKeyDown}
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "relative z-101 flex w-full max-w-lg max-h-dvh flex-col overflow-hidden",
-          "bg-sand-50 shadow-2xl sm:max-h-[min(100dvh,40rem)] sm:max-w-xl sm:rounded-2xl dark:bg-ink-900",
+          "relative z-101 flex w-full max-w-lg min-h-[50dvh] max-h-dvh flex-col overflow-hidden",
+          "bg-sand-50 shadow-2xl sm:min-h-[34rem] sm:max-h-[min(100dvh,56rem)] sm:max-w-xl sm:rounded-2xl dark:bg-ink-900",
         )}
       >
-        <div className="flex shrink-0 items-start justify-between gap-2 border-b border-ink-800 bg-ink-900 px-3 py-2.5 sm:items-center sm:gap-3 sm:px-4 sm:py-3">
-          <h2
-            id={titleId}
-            className="line-clamp-2 min-w-0 flex-1 pr-1 text-left font-display text-sm font-semibold leading-snug text-sand-50 sm:text-base"
+        <div className="flex shrink-0 items-center justify-end gap-1.5 border-b border-ink-800 bg-ink-900 px-3 py-2.5 sm:gap-2 sm:px-4 sm:py-3">
+          <AddToPlanButton
+            event={event}
+            initialInPlan={initialInPlan}
+            surface="onDark"
+          />
+          <PillLink href={`/event/${event.id}` as Route}>
+            <span className="max-sm:sr-only">Page</span>
+            <ExternalLink className="size-3.5 text-gulf-600 sm:size-4" />
+          </PillLink>
+          <IconButton
+            ref={closeRef}
+            type="button"
+            size="sm"
+            surface="onDark"
+            onClick={onClose}
+            aria-label="Close"
           >
-            {event.title}
-          </h2>
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <AddToPlanButton
-              eventId={event.id}
-              initialInPlan={initialInPlan}
-              surface="onDark"
-            />
-            <PillLink href={`/event/${event.id}` as Route}>
-              <span className="max-sm:sr-only">Page</span>
-              <ExternalLink className="size-3.5 text-gulf-600 sm:size-4" />
-            </PillLink>
-            <IconButton
-              ref={closeRef}
-              type="button"
-              size="sm"
-              surface="onDark"
-              onClick={onClose}
-              aria-label="Close"
-            >
-              <X className="size-5" />
-            </IconButton>
-          </div>
+            <X className="size-5" />
+          </IconButton>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">
-          <EventDetailBody event={event} hideTitle imageLayout="dialog" />
+          <EventDetailBody
+            event={event}
+            imageLayout="dialog"
+            titleId={titleId}
+          />
         </div>
       </div>
     </div>,

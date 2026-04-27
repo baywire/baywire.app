@@ -1,10 +1,29 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+
+import { setPlanOrderCookie } from "@/lib/cookies/browser";
+import { appendOrMoveToEnd } from "@/lib/plan/order";
+
+import type { Event } from "@/generated/prisma/client";
 
 export type HomeMobileView = "feed" | "plan";
 
-interface HomePlanContextValue {
+function eventMapFromList(events: Event[]): Map<string, Event> {
+  const m = new Map<string, Event>();
+  for (const e of events) m.set(e.id, e);
+  return m;
+}
+
+export interface HomePlanContextValue {
   /** md+: slide-in from right, pushes main content. */
   drawerOpen: boolean;
   setDrawerOpen: (v: boolean) => void;
@@ -14,6 +33,10 @@ interface HomePlanContextValue {
   setMobileView: (v: HomeMobileView) => void;
   showFeed: () => void;
   showPlan: () => void;
+  planOrder: string[];
+  setPlanOrder: (next: string[] | ((p: string[]) => string[])) => void;
+  planEventsById: ReadonlyMap<string, Event>;
+  togglePlan: (e: Event) => void;
 }
 
 const HomePlanContext = createContext<HomePlanContextValue | null>(null);
@@ -33,13 +56,21 @@ export function useHomePlanOptional(): HomePlanContextValue | null {
 export function HomePlanProvider({
   children,
   defaultOpenPlan = false,
+  initialPlanOrder,
+  initialPlanEvents,
 }: {
   children: ReactNode;
   defaultOpenPlan?: boolean;
+  initialPlanOrder: string[];
+  initialPlanEvents: Event[];
 }) {
   const [drawerOpen, setDrawerOpen] = useState(() => defaultOpenPlan);
   const [mobileView, setMobileView] = useState<HomeMobileView>(() =>
     defaultOpenPlan ? "plan" : "feed",
+  );
+  const [planOrder, setPlanOrder] = useState(() => [...initialPlanOrder]);
+  const [planEventsById, setPlanEventsById] = useState(() =>
+    eventMapFromList(initialPlanEvents),
   );
 
   const toggleDrawer = useCallback(() => {
@@ -54,6 +85,22 @@ export function HomePlanProvider({
     setMobileView("plan");
   }, []);
 
+  const togglePlan = useCallback((e: Event) => {
+    setPlanOrder((prev) => {
+      if (prev.includes(e.id)) return prev.filter((x) => x !== e.id);
+      return appendOrMoveToEnd(prev, e.id);
+    });
+    setPlanEventsById((m) => {
+      const n = new Map(m);
+      n.set(e.id, e);
+      return n;
+    });
+  }, []);
+
+  useEffect(() => {
+    setPlanOrderCookie(planOrder);
+  }, [planOrder]);
+
   const value = useMemo<HomePlanContextValue>(
     () => ({
       drawerOpen,
@@ -63,8 +110,12 @@ export function HomePlanProvider({
       setMobileView,
       showFeed,
       showPlan,
+      planOrder,
+      setPlanOrder,
+      planEventsById,
+      togglePlan,
     }),
-    [drawerOpen, mobileView, toggleDrawer, showFeed, showPlan],
+    [drawerOpen, mobileView, toggleDrawer, showFeed, showPlan, planOrder, planEventsById, togglePlan],
   );
 
   return <HomePlanContext.Provider value={value}>{children}</HomePlanContext.Provider>;

@@ -16,7 +16,7 @@ export interface HomeContextValue {
   toggleSaved: (event: Event) => void;
   filtered: Event[];
   planOrder: string[];
-  togglePlan: (id: string) => void;
+  togglePlan: (event: Event) => void;
 }
 
 const HomeContext = createContext<HomeContextValue | null>(null);

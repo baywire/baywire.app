@@ -56,7 +56,7 @@ export default async function EventDetailPage({ params }: RouteParams) {
             <ArrowLeft className="size-4" />
             Back to events
           </Link>
-          <AddToPlanButton eventId={id} initialInPlan={initialInPlan} />
+          <AddToPlanButton event={event} initialInPlan={initialInPlan} />
         </div>
 
         <div className="mt-6">

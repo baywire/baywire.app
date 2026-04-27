@@ -32,8 +32,8 @@ export default async function HomePage(props: {
   const windowMeta = getWindow(window);
 
   return (
-    <div className="flex min-h-dvh min-w-0 flex-col overflow-x-hidden">
-      <main className="mx-auto flex min-h-0 w-full min-w-0 max-w-7xl flex-1 flex-col overflow-x-hidden px-0 pb-12 sm:px-0 sm:pb-16">
+    <div className="flex min-h-dvh min-w-0 flex-col">
+      <main className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col px-0 pb-12 sm:px-0 sm:pb-16">
         <Suspense fallback={<SectionSkeleton title={windowMeta.label} />}>
           <MainColumn
             window={window}

@@ -12,10 +12,10 @@ import { TopTagFilter } from "@/components/TopTagFilter";
 
 import type { Event } from "@/generated/prisma/client";
 
-import { setPlanOrderCookie, setSavedEventIdsCookie, setTopTagsCookie } from "@/lib/cookies/browser";
+import { setSavedEventIdsCookie, setTopTagsCookie } from "@/lib/cookies/browser";
+import { useHomePlan } from "@/components/plan/homePlanContext";
 import type { CityKey } from "@/lib/cities";
 import { eventMatchesTopTags, type TagOption } from "@/lib/events/tagOptions";
-import { appendOrMoveToEnd } from "@/lib/plan/order";
 import type { WindowKey } from "@/lib/time/window";
 
 interface HomeProviderProps {
@@ -24,7 +24,6 @@ interface HomeProviderProps {
   tagOptions: TagOption[];
   initialTopTags: string[];
   initialSavedIds: string[];
-  initialPlanOrder: string[];
   savedFromServer: Event[];
   window: WindowKey;
 }
@@ -35,15 +34,14 @@ export function HomeProvider({
   tagOptions,
   initialTopTags,
   initialSavedIds,
-  initialPlanOrder,
   savedFromServer,
   window,
 }: HomeProviderProps) {
+  const { planOrder, togglePlan } = useHomePlan();
   const [topTags, setTopTags] = useState<Set<string>>(
     () => new Set(initialTopTags.map((t) => t.toLowerCase())),
   );
   const [savedIds, setSavedIds] = useState<Set<string>>(() => new Set(initialSavedIds));
-  const [planOrder, setPlanOrder] = useState<string[]>(() => [...initialPlanOrder]);
 
   useEffect(() => {
     setTopTagsCookie([...topTags]);
@@ -53,23 +51,12 @@ export function HomeProvider({
     setSavedEventIdsCookie([...savedIds]);
   }, [savedIds]);
 
-  useEffect(() => {
-    setPlanOrderCookie(planOrder);
-  }, [planOrder]);
-
   const toggleSaved = useCallback((e: Event) => {
     setSavedIds((prev) => {
       const n = new Set(prev);
       if (n.has(e.id)) n.delete(e.id);
       else n.add(e.id);
       return n;
-    });
-  }, []);
-
-  const togglePlan = useCallback((id: string) => {
-    setPlanOrder((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      return appendOrMoveToEnd(prev, id);
     });
   }, []);
 

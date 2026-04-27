@@ -5,8 +5,6 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ListOrdered, Radio } from "lucide-react";
 
-import { TextLink } from "@/components/ui";
-
 import { PlanView } from "@/components/plan/PlanView";
 import { HomePlanProvider, useHomePlan } from "@/components/plan/homePlanContext";
 
@@ -14,25 +12,17 @@ import type { Event } from "@/generated/prisma/client";
 
 import { cn } from "@/lib/utils";
 
-function HomeWithPlanLayout({
-  orderIds: initialOrderIds,
-  planEvents: initialPlanEvents,
-  children,
-}: {
-  orderIds: string[];
-  planEvents: Event[];
-  children: ReactNode;
-}) {
+function HomeWithPlanLayout({ children }: { children: ReactNode }) {
   const { drawerOpen, mobileView, showFeed } = useHomePlan();
 
   return (
-    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden">
+    <div className="flex w-full min-w-0 flex-1 flex-col">
       <HomePlanHeaderBar />
 
-      <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden md:flex-row">
+      <div className="relative flex w-full min-w-0 flex-1 flex-col md:flex-row">
         <div
           className={cn(
-            "min-h-0 w-full min-w-0 max-w-6xl flex-1 overflow-x-hidden overflow-y-auto px-4 pb-20 sm:px-0 md:pb-0",
+            "w-full min-w-0 max-w-7xl flex-1 px-4 pb-20 sm:px-5 md:pb-0",
             mobileView === "plan" && "max-md:hidden",
           )}
         >
@@ -64,11 +54,7 @@ function HomeWithPlanLayout({
               </p>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 py-1 pb-2 sm:px-3 sm:py-2">
-              <PlanView
-                orderIds={initialOrderIds}
-                events={initialPlanEvents}
-                onBrowseEvents={showFeed}
-              />
+              <PlanView onBrowseEvents={showFeed} />
             </div>
           </div>
         </aside>
@@ -98,7 +84,7 @@ function HomePlanHeaderBar() {
   const planIsActive = drawerOpen || mobileView === "plan";
 
   return (
-    <header className="shrink-0 border-b border-ink-100/60 bg-sand-50/80 backdrop-blur-md dark:border-ink-700/60 dark:bg-ink-900/70">
+    <header className="sticky top-0 z-30 shrink-0 border-b border-ink-100/60 bg-sand-50/90 backdrop-blur-md dark:border-ink-700/60 dark:bg-ink-900/85">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 px-4 py-2.5 sm:px-5">
         <Link
           href="/"
@@ -119,28 +105,7 @@ function HomePlanHeaderBar() {
             </span>
           </span>
         </Link>
-        <nav
-          className="flex min-w-0 items-center justify-end gap-1.5 text-sm sm:gap-4"
-          aria-label="Primary"
-        >
-          <TextLink
-            href="/?window=tonight"
-            className="hidden sm:inline"
-          >
-            Tonight
-          </TextLink>
-          <TextLink
-            href="/?window=weekend"
-            className="hidden sm:inline"
-          >
-            Weekend
-          </TextLink>
-          <TextLink
-            href="/?window=week"
-            className="hidden sm:inline"
-          >
-            All week
-          </TextLink>
+        <div className="flex min-w-0 items-center justify-end">
           <button
             type="button"
             onClick={onPlanClick}
@@ -151,6 +116,7 @@ function HomePlanHeaderBar() {
                 : "px-2.5 py-1.5 text-ink-500 hover:text-ink-900 sm:px-0 sm:py-0 dark:text-ink-300 dark:hover:text-sand-50",
             )}
             aria-pressed={planIsActive}
+            aria-label="My plan"
           >
             <span className="max-sm:sr-only">My plan</span>
             <span className="sm:hidden">Plan</span>
@@ -159,7 +125,7 @@ function HomePlanHeaderBar() {
               aria-hidden
             />
           </button>
-        </nav>
+        </div>
       </div>
     </header>
   );
@@ -177,7 +143,7 @@ function HomeMobilePlanTabs() {
         paddingRight: "max(0.75rem, env(safe-area-inset-right, 0px))",
       }}
     >
-      <div className="mx-auto flex w-full max-w-6xl gap-1.5 p-1.5">
+      <div className="mx-auto flex w-full max-w-7xl gap-1.5 p-1.5">
         <button
           type="button"
           onClick={() => setMobileView("feed")}
@@ -226,13 +192,12 @@ function HomePlanClientInner({
     sp.get("openPlan") === "1";
 
   return (
-    <HomePlanProvider defaultOpenPlan={defaultOpenFromQuery || openFromUrl}>
-      <HomeWithPlanLayout
-        orderIds={initialOrderIds}
-        planEvents={initialPlanEvents}
-      >
-        {children}
-      </HomeWithPlanLayout>
+    <HomePlanProvider
+      defaultOpenPlan={defaultOpenFromQuery || openFromUrl}
+      initialPlanOrder={initialOrderIds}
+      initialPlanEvents={initialPlanEvents}
+    >
+      <HomeWithPlanLayout>{children}</HomeWithPlanLayout>
     </HomePlanProvider>
   );
 }

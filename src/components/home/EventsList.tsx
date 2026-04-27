@@ -64,7 +64,7 @@ export function EventsList() {
                   bookmark={{ isSaved: true, onToggle: () => toggleSaved(e) }}
                   plan={{
                     inPlan: planOrder.includes(e.id),
-                    onToggle: () => togglePlan(e.id),
+                    onToggle: () => togglePlan(e),
                   }}
                   initialInPlan={planOrder.includes(e.id)}
                 />
@@ -100,7 +100,7 @@ export function EventsList() {
               }}
               plan={{
                 inPlan: planOrder.includes(featured.id),
-                onToggle: () => togglePlan(featured.id),
+                onToggle: () => togglePlan(featured),
               }}
               initialInPlan={planOrder.includes(featured.id)}
             />
@@ -118,7 +118,7 @@ export function EventsList() {
             <section className="min-w-0" key={group.key} aria-labelledby={`day-${group.key}`}>
               <h2
                 id={`day-${group.key}`}
-                className="sticky top-[57px] z-20 -mx-4 bg-sand-50/85 px-4 py-2 font-display text-xl font-semibold text-ink-900 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:p-0 sm:text-2xl dark:bg-ink-900/80 dark:text-sand-50"
+                className="sticky top-14 z-20 -mx-4 bg-sand-50/85 px-4 py-2 font-display text-xl font-semibold text-ink-900 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:p-0 sm:text-2xl dark:bg-ink-900/80 dark:text-sand-50"
               >
                 {group.label}
                 <span className="ml-2 text-sm font-medium text-ink-500 dark:text-ink-300">
@@ -136,7 +136,7 @@ export function EventsList() {
                       }}
                       plan={{
                         inPlan: planOrder.includes(event.id),
-                        onToggle: () => togglePlan(event.id),
+                        onToggle: () => togglePlan(event),
                       }}
                       initialInPlan={planOrder.includes(event.id)}
                     />

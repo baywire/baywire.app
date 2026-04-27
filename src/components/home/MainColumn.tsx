@@ -98,11 +98,10 @@ export async function MainColumn({
         tagOptions={tagOptions}
         initialTopTags={initialTop}
         initialSavedIds={initialSaved}
-        initialPlanOrder={initialPlanOrder}
         savedFromServer={savedFromServer}
         window={window}
       >
-        <section className="gradient-hero -mx-4 rounded-b-3xl px-4 pb-8 pt-10 sm:-mx-6 sm:rounded-b-[2rem] sm:px-8 sm:pb-12 sm:pt-14">
+        <section className="gradient-hero -mx-4 rounded-b-3xl px-4 pb-8 pt-10 sm:-mx-5 sm:rounded-b-[2rem] sm:px-8 sm:pb-12 sm:pt-14">
           <HeroIntro />
           <div className="mx-auto mt-8 flex max-w-3xl flex-col items-center gap-4">
             <WindowToggle selected={window} />

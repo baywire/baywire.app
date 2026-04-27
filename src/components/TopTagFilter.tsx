@@ -66,7 +66,7 @@ export function TopTagFilter({ options, selected, onChange }: TopTagFilterProps)
                 className={cn(
                   "ml-1.5 tabular-nums",
                   isOn
-                    ? "text-ink-800 dark:text-sand-100"
+                    ? "text-ink-800 dark:text-white/90"
                     : "text-ink-500 dark:text-ink-400",
                 )}
               >
