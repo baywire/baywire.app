@@ -154,8 +154,8 @@ export function externalCtaClasses({ variant, className }: ExternalCtaOptions): 
 
 /** Compact in-app (Next) link, e.g. event dialog “Page” chip. */
 export const inAppPillLinkClass = cn(
-  "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-sand-200/90 bg-sand-50",
-  "px-2.5 text-xs font-semibold text-gulf-700 shadow-sm transition",
-  "hover:border-sand-100 hover:bg-white sm:px-3 sm:text-sm",
+  "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-sand-200/90 bg-sand-50",
+  "px-3.5 text-sm font-semibold text-gulf-700 shadow-sm transition",
+  "hover:border-sand-100 hover:bg-white sm:h-9 sm:px-3",
   focusRing,
 );

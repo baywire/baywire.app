@@ -31,8 +31,11 @@
   --color-ink-100: #ecebe6;
   --color-ink-200: #d6d3cb;
   --color-ink-300: #aaa69a;
+  --color-ink-400: #827e74;
   --color-ink-500: #5b574e;
+  --color-ink-600: #444139;
   --color-ink-700: #2d2b25;
+  --color-ink-800: #201f1a;
   --color-ink-900: #14130f;
 
   --font-sans: "InterVariable", ui-sans-serif, system-ui, -apple-system,

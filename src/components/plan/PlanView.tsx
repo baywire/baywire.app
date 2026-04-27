@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 
-import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 import { Button, buttonClasses } from "@/components/ui";
@@ -13,7 +13,7 @@ import { useHomePlan } from "@/components/plan/homePlanContext";
 import type { AppEvent } from "@/lib/events/types";
 
 import { groupEventsByDay, type DayGroup } from "@/lib/events/grouping";
-import { findConflictingEventIds } from "@/lib/plan/intervals";
+import { findConflictMap } from "@/lib/plan/intervals";
 import { cityLabel } from "@/lib/cities";
 import { formatTimeRange } from "@/lib/time/window";
 import { cn } from "@/lib/utils";
@@ -45,7 +45,7 @@ export function PlanView({ onBrowseEvents }: PlanViewProps) {
     return m;
   }, [planOrder]);
 
-  const conflictIds = useMemo(() => findConflictingEventIds(ordered), [ordered]);
+  const conflictMap = useMemo(() => findConflictMap(ordered), [ordered]);
 
   const groups = useMemo(() => groupPlanEvents(ordered), [ordered]);
 
@@ -100,7 +100,7 @@ export function PlanView({ onBrowseEvents }: PlanViewProps) {
   return (
     <div className="space-y-8">
       {groups.map((group) => {
-        const anyConflict = group.events.some((e) => conflictIds.has(e.id));
+        const conflictsOnDay = group.events.filter((e) => conflictMap.has(e.id)).length;
 
         return (
           <section key={group.key} aria-labelledby={`plan-day-${group.key}`}>
@@ -111,10 +111,9 @@ export function PlanView({ onBrowseEvents }: PlanViewProps) {
               >
                 {group.label}
               </h2>
-              {anyConflict && (
+              {conflictsOnDay > 0 && (
                 <p className="mt-1 text-sm font-medium text-sunset-600 dark:text-sunset-300">
-                  Some events on this day overlap in time — adjust the schedule or
-                  order if needed.
+                  {conflictsOnDay} event{conflictsOnDay === 1 ? "" : "s"} on this day overlap in time — see details on each card below.
                 </p>
               )}
             </div>
@@ -125,7 +124,7 @@ export function PlanView({ onBrowseEvents }: PlanViewProps) {
                   <li key={e.id}>
                     <PlanEventRow
                       event={e}
-                      hasConflict={conflictIds.has(e.id)}
+                      conflictsWith={conflictMap.get(e.id) ?? []}
                       canUp={gIdx > 0}
                       canDown={gIdx < planOrder.length - 1}
                       onUp={() => move(e.id, "up")}
@@ -155,7 +154,7 @@ export function PlanView({ onBrowseEvents }: PlanViewProps) {
 
 function PlanEventRow({
   event,
-  hasConflict,
+  conflictsWith,
   canUp,
   canDown,
   onUp,
@@ -164,7 +163,7 @@ function PlanEventRow({
   onViewDetails,
 }: {
   event: AppEvent;
-  hasConflict: boolean;
+  conflictsWith: AppEvent[];
   canUp: boolean;
   canDown: boolean;
   onUp: () => void;
@@ -173,6 +172,7 @@ function PlanEventRow({
   onViewDetails: () => void;
 }) {
   const time = formatTimeRange(event.startAt, event.endAt, event.allDay);
+  const hasConflict = conflictsWith.length > 0;
   return (
     <div
       className={cn(
@@ -192,9 +192,7 @@ function PlanEventRow({
           {event.title}
         </button>
         {hasConflict && (
-          <p className="mt-1 text-xs font-medium text-sunset-600 dark:text-sunset-300">
-            Time overlaps another plan item
-          </p>
+          <ConflictNote conflictsWith={conflictsWith} />
         )}
       </div>
       <div className="flex shrink-0 items-center gap-1 sm:gap-0.5">
@@ -226,5 +224,36 @@ function PlanEventRow({
         </button>
       </div>
     </div>
+  );
+}
+
+function ConflictNote({ conflictsWith }: { conflictsWith: AppEvent[] }) {
+  const max = 2;
+  const shown = conflictsWith.slice(0, max);
+  const extra = conflictsWith.length - shown.length;
+
+  return (
+    <p className="mt-1.5 flex items-start gap-1.5 text-xs font-medium text-sunset-600 dark:text-sunset-300">
+      <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+      <span className="min-w-0">
+        Overlaps{" "}
+        {shown.map((c, i) => (
+          <span key={c.id}>
+            {i > 0 && (extra > 0 || i < shown.length - 1 ? ", " : " and ")}
+            <span className="font-semibold">{c.title}</span>
+            <span className="text-sunset-500/90 dark:text-sunset-300/80">
+              {" "}
+              ({formatTimeRange(c.startAt, c.endAt, c.allDay)})
+            </span>
+          </span>
+        ))}
+        {extra > 0 && (
+          <>
+            {" "}
+            and {extra} other{extra === 1 ? "" : "s"}
+          </>
+        )}
+      </span>
+    </p>
   );
 }

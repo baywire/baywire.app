@@ -40,20 +40,35 @@ export function eventsTimeOverlap(e1: AppEvent, e2: AppEvent): boolean {
   return halfOpenRangesOverlap(A.start, A.end, B.start, B.end);
 }
 
-export function findConflictingEventIds(ordered: AppEvent[]): Set<string> {
+/**
+ * For each event id, the *other* events on the same local day whose effective
+ * interval overlaps it. Used to surface specific conflicting titles in the UI
+ * instead of a generic "overlaps another item" string.
+ */
+export function findConflictMap(ordered: AppEvent[]): Map<string, AppEvent[]> {
   const byDay = groupIdsByLocalDay(ordered);
-  const conflicts = new Set<string>();
+  const map = new Map<string, AppEvent[]>();
+  const push = (id: string, other: AppEvent) => {
+    let arr = map.get(id);
+    if (!arr) {
+      arr = [];
+      map.set(id, arr);
+    }
+    arr.push(other);
+  };
   for (const list of byDay) {
     for (let i = 0; i < list.length; i++) {
       for (let j = i + 1; j < list.length; j++) {
-        if (eventsTimeOverlap(list[i]!, list[j]!)) {
-          conflicts.add(list[i]!.id);
-          conflicts.add(list[j]!.id);
+        const a = list[i]!;
+        const b = list[j]!;
+        if (eventsTimeOverlap(a, b)) {
+          push(a.id, b);
+          push(b.id, a);
         }
       }
     }
   }
-  return conflicts;
+  return map;
 }
 
 function groupIdsByLocalDay(events: AppEvent[]): AppEvent[][] {

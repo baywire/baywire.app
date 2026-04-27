@@ -69,7 +69,7 @@ export function EventDialog({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-100 flex items-end justify-center p-3 pb-5 sm:items-center sm:p-4"
+      className="fixed inset-0 z-100 flex items-end justify-center sm:items-center sm:p-4"
       role="presentation"
     >
       <button
@@ -89,23 +89,28 @@ export function EventDialog({
           "bg-sand-50 shadow-2xl sm:min-h-[34rem] sm:max-h-[min(100dvh,56rem)] sm:max-w-xl sm:rounded-2xl dark:bg-ink-900",
         )}
       >
-        <div className="flex shrink-0 items-center justify-end gap-1.5 border-b border-ink-800 bg-ink-900 px-3 py-2.5 sm:gap-2 sm:px-4 sm:py-3">
+        <div
+          className="flex shrink-0 items-center justify-end gap-2 border-b border-ink-800 bg-ink-900 px-3 py-2.5 sm:px-4 sm:py-3"
+          style={{
+            paddingTop: "max(env(safe-area-inset-top, 0px), 0.625rem)",
+          }}
+        >
           <AddToPlanButton
             event={event}
             initialInPlan={initialInPlan}
             surface="onDark"
           />
           <PillLink href={`/event/${event.id}` as Route}>
-            <span className="max-sm:sr-only">Page</span>
-            <ExternalLink className="size-3.5 text-gulf-600 sm:size-4" />
+            <span>Page</span>
+            <ExternalLink className="size-4 text-gulf-600" />
           </PillLink>
           <IconButton
             ref={closeRef}
             type="button"
-            size="sm"
             surface="onDark"
             onClick={onClose}
             aria-label="Close"
+            className="size-10 sm:size-9"
           >
             <X className="size-5" />
           </IconButton>

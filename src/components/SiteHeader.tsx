@@ -6,7 +6,7 @@ import { TextLink } from "@/components/ui";
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-ink-100/60 bg-sand-50/80 backdrop-blur-md dark:border-ink-700/60 dark:bg-ink-900/70">
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-5">
+      <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4 sm:px-5">
         <Link
           href="/"
           className="group flex items-center gap-2 font-display text-lg font-semibold tracking-tight"
