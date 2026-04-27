@@ -1,7 +1,8 @@
 import { politeFetch } from "./fetch";
 import { loadHtml } from "./parse";
 import { reduceHtml } from "./reduce";
-import type { ListingItem, SourceAdapter } from "./types";
+import { extractJsonLdEvents, jsonLdEventToExtracted } from "./structured";
+import type { ListingItem, SourceAdapter, StructuredEvent } from "./types";
 
 const ORIGIN = "https://www.visittampabay.com";
 const LISTING_URL = `${ORIGIN}/events/`;
@@ -27,6 +28,18 @@ export const visitTampaBayAdapter: SourceAdapter = {
   async listEvents({ signal }) {
     const html = await politeFetch(LISTING_URL, { signal });
     return parseListing(html);
+  },
+
+  async tryStructured(item, signal): Promise<StructuredEvent | null> {
+    const html = await politeFetch(item.url, { signal });
+    const events = extractJsonLdEvents(html);
+    for (const ev of events) {
+      const extracted = jsonLdEventToExtracted(ev);
+      if (extracted) {
+        return { event: extracted, canonicalUrl: ev.url || item.url };
+      }
+    }
+    return null;
   },
 
   async fetchAndReduce(item, signal) {

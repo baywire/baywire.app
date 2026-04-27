@@ -4,6 +4,7 @@ import pLimit from "p-limit";
 
 import { prisma } from "@/lib/db/client";
 import type { Prisma } from "@/generated/prisma/client";
+import type { ExtractedEvent } from "@/lib/extract/schema";
 import { extractEvent } from "@/lib/extract/openai";
 import { ADAPTERS, getAdapter } from "@/lib/scrapers";
 import type { SourceAdapter } from "@/lib/scrapers";
@@ -22,6 +23,8 @@ export interface SourceStats {
   inserted: number;
   updated: number;
   skipped: number;
+  /** How many items were resolved without an LLM call. */
+  structuredHits: number;
   error?: string;
   durationMs: number;
 }
@@ -54,6 +57,7 @@ export async function runScrape(opts: RunOptions = {}): Promise<SourceStats[]> {
       inserted: 0,
       updated: 0,
       skipped: 0,
+      structuredHits: 0,
       error: res.reason instanceof Error ? res.reason.message : String(res.reason),
       durationMs: 0,
     } satisfies SourceStats;
@@ -81,6 +85,7 @@ async function runSingleSource(
     inserted: 0,
     updated: 0,
     skipped: 0,
+    structuredHits: 0,
     durationMs: 0,
     error: undefined as string | undefined,
   };
@@ -109,9 +114,10 @@ async function runSingleSource(
               windowEnd: window.endAt,
               signal,
             });
-            if (result === "inserted") stats.inserted += 1;
-            else if (result === "updated") stats.updated += 1;
+            if (result.outcome === "inserted") stats.inserted += 1;
+            else if (result.outcome === "updated") stats.updated += 1;
             else stats.skipped += 1;
+            if (result.structured) stats.structuredHits += 1;
           } catch (err) {
             stats.skipped += 1;
             console.warn(
@@ -176,12 +182,37 @@ interface ProcessArgs {
 
 type ProcessOutcome = "inserted" | "updated" | "skipped";
 
-async function processItem(args: ProcessArgs): Promise<ProcessOutcome> {
+interface ProcessResult {
+  outcome: ProcessOutcome;
+  structured: boolean;
+}
+
+async function processItem(args: ProcessArgs): Promise<ProcessResult> {
   const { adapter, sourceId, item, signal } = args;
+
+  if (adapter.tryStructured) {
+    try {
+      const structured = await adapter.tryStructured(item, signal);
+      if (structured) {
+        const outcome = await persistStructured(args, structured.event, {
+          canonicalUrl: structured.canonicalUrl ?? item.url,
+          contentHash: structured.contentHash ?? hashStructured(structured.event),
+        });
+        return { outcome, structured: true };
+      }
+    } catch (err) {
+      console.warn(
+        `[${adapter.slug}] tryStructured failed for ${item.url}, falling back:`,
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
 
   const fetched = await adapter.fetchAndReduce(item, signal);
   const reducedHtml = fetched.reducedHtml;
-  if (!reducedHtml || reducedHtml.length < 200) return "skipped";
+  if (!reducedHtml || reducedHtml.length < 200) {
+    return { outcome: "skipped", structured: false };
+  }
 
   const contentHash = sha256(reducedHtml);
 
@@ -197,7 +228,7 @@ async function processItem(args: ProcessArgs): Promise<ProcessOutcome> {
       where: { id: existing.id },
       data: { lastSeenAt: new Date() },
     });
-    return "skipped";
+    return { outcome: "skipped", structured: false };
   }
 
   const extraction = await extractEvent({
@@ -206,7 +237,9 @@ async function processItem(args: ProcessArgs): Promise<ProcessOutcome> {
     reducedHtml,
   });
 
-  if (!extraction.isEvent || !extraction.event) return "skipped";
+  if (!extraction.isEvent || !extraction.event) {
+    return { outcome: "skipped", structured: false };
+  }
 
   const normalized = normalizeExtractedEvent({
     sourceId,
@@ -214,6 +247,60 @@ async function processItem(args: ProcessArgs): Promise<ProcessOutcome> {
     eventUrl: fetched.canonicalUrl,
     contentHash,
     extracted: extraction.event,
+  });
+  if (!normalized.ok) return { outcome: "skipped", structured: false };
+
+  if (
+    !overlapsWindow(
+      normalized.row.startAt,
+      normalized.row.endAt ?? null,
+      args.windowStart,
+      args.windowEnd,
+    )
+  ) {
+    return { outcome: "skipped", structured: false };
+  }
+
+  const data: Prisma.EventUncheckedCreateInput = normalized.row;
+  return {
+    outcome: await writeEvent(sourceId, item.sourceEventId, data, existing),
+    structured: false,
+  };
+}
+
+interface PersistOpts {
+  canonicalUrl: string;
+  contentHash: string;
+}
+
+async function persistStructured(
+  args: ProcessArgs,
+  extracted: ExtractedEvent,
+  opts: PersistOpts,
+): Promise<ProcessOutcome> {
+  const { sourceId, item } = args;
+
+  const existing = await prisma.event.findUnique({
+    where: {
+      sourceId_sourceEventId: { sourceId, sourceEventId: item.sourceEventId },
+    },
+    select: { id: true, contentHash: true },
+  });
+
+  if (existing && existing.contentHash === opts.contentHash) {
+    await prisma.event.update({
+      where: { id: existing.id },
+      data: { lastSeenAt: new Date() },
+    });
+    return "skipped";
+  }
+
+  const normalized = normalizeExtractedEvent({
+    sourceId,
+    sourceEventId: item.sourceEventId,
+    eventUrl: opts.canonicalUrl,
+    contentHash: opts.contentHash,
+    extracted,
   });
   if (!normalized.ok) return "skipped";
 
@@ -228,8 +315,15 @@ async function processItem(args: ProcessArgs): Promise<ProcessOutcome> {
     return "skipped";
   }
 
-  const data: Prisma.EventUncheckedCreateInput = normalized.row;
+  return writeEvent(sourceId, item.sourceEventId, normalized.row, existing);
+}
 
+async function writeEvent(
+  sourceId: string,
+  sourceEventId: string,
+  data: Prisma.EventUncheckedCreateInput,
+  existing: { id: string } | null,
+): Promise<ProcessOutcome> {
   if (existing) {
     await prisma.event.update({
       where: { id: existing.id },
@@ -242,6 +336,8 @@ async function processItem(args: ProcessArgs): Promise<ProcessOutcome> {
   }
 
   await prisma.event.create({ data });
+  void sourceId;
+  void sourceEventId;
   return "inserted";
 }
 
@@ -256,4 +352,23 @@ function stripIdentity(
 
 function sha256(input: string): string {
   return crypto.createHash("sha256").update(input).digest("hex");
+}
+
+/**
+ * Deterministic hash of a structured event payload for dedupe. Sorts keys at
+ * every level so unrelated key-order changes do not invalidate the cache.
+ */
+function hashStructured(extracted: ExtractedEvent): string {
+  return sha256(stableStringify(extracted));
+}
+
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(",")}]`;
+  }
+  const obj = value as Record<string, unknown>;
+  const keys = Object.keys(obj).sort();
+  const parts = keys.map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`);
+  return `{${parts.join(",")}}`;
 }

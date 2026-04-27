@@ -1,14 +1,15 @@
+import type { CityKey } from "@/lib/cities";
+import type { ExtractedEvent } from "@/lib/extract/schema";
+
 import { politeFetch } from "./fetch";
-import type { ListingItem, SourceAdapter } from "./types";
+import type { ListingItem, SourceAdapter, StructuredEvent } from "./types";
 
 /**
  * Adapter factory for sites running The Events Calendar (Tribe) WordPress
  * plugin. Tribe ships a public REST API at /wp-json/tribe/events/v1/events
- * which returns fully structured event records (start/end in local time,
- * venue, image, cost, categories), so we synthesize a JSON-LD-style blob and
- * feed it through the existing reduce/extract path. This keeps the pipeline
- * uniform (content-hash dedupe, city refinement, category normalization)
- * with effectively zero per-event LLM context overhead.
+ * which returns fully structured records (start/end in local time, venue,
+ * image, cost, categories), so we convert directly to an `ExtractedEvent`
+ * and skip the LLM. The HTML fallback path is preserved for safety.
  */
 
 interface TribeVenue {
@@ -63,6 +64,18 @@ export function createTribeEventsAdapter(cfg: TribeAdapterConfig): SourceAdapter
   const apiBase = `${cfg.baseUrl.replace(/\/$/, "")}/wp-json/tribe/events/v1/events`;
   const cache = new Map<string, TribeEvent>();
 
+  async function fetchEvent(id: string, signal?: AbortSignal): Promise<TribeEvent> {
+    const cached = cache.get(id);
+    if (cached) return cached;
+    const body = await politeFetch(`${apiBase}/${id}`, {
+      signal,
+      headers: { Accept: "application/json" },
+    });
+    const ev = JSON.parse(body) as TribeEvent;
+    cache.set(id, ev);
+    return ev;
+  }
+
   return {
     slug: cfg.slug,
     label: cfg.label,
@@ -96,20 +109,55 @@ export function createTribeEventsAdapter(cfg: TribeAdapterConfig): SourceAdapter
       return out;
     },
 
+    async tryStructured(item, signal): Promise<StructuredEvent | null> {
+      const event = await fetchEvent(item.sourceEventId, signal);
+      const extracted = tribeEventToExtracted(event);
+      if (!extracted) return null;
+      return { event: extracted, canonicalUrl: event.url || item.url };
+    },
+
     async fetchAndReduce(item, signal) {
-      let event = cache.get(item.sourceEventId);
-      if (!event) {
-        const body = await politeFetch(`${apiBase}/${item.sourceEventId}`, {
-          signal,
-          headers: { Accept: "application/json" },
-        });
-        event = JSON.parse(body) as TribeEvent;
-      }
+      const event = await fetchEvent(item.sourceEventId, signal);
       return {
         reducedHtml: synthesizeReducedBlob(event, cfg.label),
         canonicalUrl: event.url || item.url,
       };
     },
+  };
+}
+
+function tribeEventToExtracted(event: TribeEvent): ExtractedEvent | null {
+  if (!event.title || !event.start_date) return null;
+
+  const startLocal = toLocalIso(event.start_date);
+  if (!startLocal) return null;
+  const endLocal = event.end_date ? toLocalIso(event.end_date) : null;
+
+  const venue = pickVenue(event.venue);
+  const venueName = venue?.venue?.trim() || null;
+  const address = venue ? formatAddress(venue) : null;
+  const description = stripHtml(event.description ?? event.excerpt ?? "").slice(0, 2000);
+  const imageUrl = pickImage(event.image);
+  const cityHint = `${venueName ?? ""} ${address ?? ""}`;
+
+  const offers = buildOffers(event);
+  const priceMin = offers?.low ?? null;
+  const priceMax = offers?.high ?? offers?.low ?? null;
+
+  return {
+    title: event.title.trim().slice(0, 300),
+    description: description || null,
+    startLocal,
+    endLocal,
+    allDay: Boolean(event.all_day),
+    venueName: venueName ? venueName.slice(0, 200) : null,
+    address: address ? address.slice(0, 300) : null,
+    city: detectCity(cityHint),
+    priceMin,
+    priceMax,
+    isFree: detectFree(event.cost),
+    categories: collectCategories(event),
+    imageUrl,
   };
 }
 
@@ -129,7 +177,7 @@ function synthesizeReducedBlob(event: TribeEvent, sourceLabel: string): string {
     url: event.url,
     image: pickImage(event.image),
     isAccessibleForFree: detectFree(event.cost),
-    offers: buildOffers(event),
+    offers: legacyOffer(event),
     location: venue
       ? {
           "@type": "Place",
@@ -137,7 +185,7 @@ function synthesizeReducedBlob(event: TribeEvent, sourceLabel: string): string {
           address: formatAddress(venue) || null,
         }
       : null,
-    keywords: collectKeywords(event),
+    keywords: collectCategories(event),
   };
 
   const meta: string[] = [
@@ -203,35 +251,67 @@ function formatAddress(v: TribeVenue): string {
     .join(", ");
 }
 
+function toLocalIso(value: string): string | null {
+  if (!value) return null;
+  if (value.includes("T")) return value.length === 16 ? `${value}:00` : value;
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)) {
+    return value.replace(" ", "T");
+  }
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(value)) {
+    return `${value.replace(" ", "T")}:00`;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value}T00:00:00`;
+  return null;
+}
+
 function toIso(value: string | null | undefined): string | null {
   if (!value) return null;
   return value.includes("T") ? value : value.replace(" ", "T");
 }
 
-function detectFree(cost: string | undefined): boolean | null {
-  if (!cost) return null;
-  return /^\s*(free|0|0\.00|\$0)\s*$/i.test(cost) ? true : null;
+function detectFree(cost: string | undefined): boolean {
+  if (!cost) return false;
+  return /^\s*(free|0|0\.00|\$0)\s*$/i.test(cost);
 }
 
-function buildOffers(event: TribeEvent): Record<string, unknown> | null {
+interface PriceRange {
+  low: number;
+  high: number;
+}
+
+function buildOffers(event: TribeEvent): PriceRange | null {
   const raw = event.cost_details?.values ?? [];
   const numeric = raw
     .map((v) => Number(v))
     .filter((n) => Number.isFinite(n));
   if (numeric.length === 0) return null;
+  return { low: Math.min(...numeric), high: Math.max(...numeric) };
+}
+
+function legacyOffer(event: TribeEvent): Record<string, unknown> | null {
+  const range = buildOffers(event);
+  if (!range) return null;
   return {
     "@type": "Offer",
     priceCurrency: event.cost_details?.currency_code ?? "USD",
-    price: Math.min(...numeric),
-    highPrice: Math.max(...numeric),
+    price: range.low,
+    highPrice: range.high,
   };
 }
 
-function collectKeywords(event: TribeEvent): string[] {
-  const out = new Set<string>();
-  for (const c of event.categories ?? []) if (c?.name) out.add(c.name);
-  for (const t of event.tags ?? []) if (t?.name) out.add(t.name);
-  return Array.from(out);
+function collectCategories(event: TribeEvent): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const push = (raw: string | undefined) => {
+    if (!raw) return;
+    const tag = raw.trim().toLowerCase();
+    if (!tag || seen.has(tag) || tag.length > 40) return;
+    seen.add(tag);
+    out.push(tag);
+  };
+  for (const c of event.categories ?? []) push(c?.name);
+  for (const t of event.tags ?? []) push(t?.name);
+  return out.slice(0, 6);
 }
 
 const HTML_ENTITIES: Record<string, string> = {
@@ -262,4 +342,22 @@ function stripHtml(html: string): string {
     .replace(/[ \t]+/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+const CITY_HINTS: Array<{ key: CityKey; matchers: RegExp[] }> = [
+  { key: "tampa", matchers: [/\btampa\b/i, /\bybor\b/i] },
+  { key: "st_petersburg", matchers: [/st\.?\s*pete(rsburg)?/i, /\bgulfport\b/i] },
+  { key: "clearwater", matchers: [/clearwater/i] },
+  { key: "brandon", matchers: [/\bbrandon\b/i, /valrico/i, /riverview/i] },
+  { key: "bradenton", matchers: [/bradenton/i, /palmetto/i, /anna maria/i] },
+  { key: "safety_harbor", matchers: [/safety\s*harbor/i] },
+  { key: "dunedin", matchers: [/\bdunedin\b/i, /palm\s*harbor/i] },
+];
+
+function detectCity(text: string): CityKey {
+  if (!text) return "other";
+  for (const { key, matchers } of CITY_HINTS) {
+    if (matchers.some((m) => m.test(text))) return key;
+  }
+  return "other";
 }

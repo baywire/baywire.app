@@ -3,15 +3,16 @@ import { CITIES } from "@/lib/cities";
 import { politeFetch } from "./fetch";
 import { loadHtml } from "./parse";
 import { reduceHtml } from "./reduce";
-import type { ListingItem, SourceAdapter } from "./types";
+import { extractJsonLdEvents, jsonLdEventToExtracted } from "./structured";
+import type { ListingItem, SourceAdapter, StructuredEvent } from "./types";
 
 const PAGES_PER_CITY = 2;
 
 /**
  * Eventbrite adapter. Eventbrite shut down their public API for new apps in
  * 2020, so we walk the public HTML listing per city and follow event detail
- * links. Detail pages embed JSON-LD with full event data which dramatically
- * improves LLM extraction quality.
+ * links. Detail pages embed schema.org/Event JSON-LD with the full record;
+ * we parse that directly via `tryStructured` and skip the LLM.
  */
 export const eventbriteAdapter: SourceAdapter = {
   slug: "eventbrite",
@@ -39,6 +40,18 @@ export const eventbriteAdapter: SourceAdapter = {
     }
 
     return Array.from(seen.values());
+  },
+
+  async tryStructured(item, signal): Promise<StructuredEvent | null> {
+    const html = await politeFetch(item.url, { signal });
+    const events = extractJsonLdEvents(html);
+    for (const ev of events) {
+      const extracted = jsonLdEventToExtracted(ev);
+      if (extracted) {
+        return { event: extracted, canonicalUrl: ev.url || item.url };
+      }
+    }
+    return null;
   },
 
   async fetchAndReduce(item, signal) {

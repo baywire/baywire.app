@@ -23,6 +23,11 @@ interface RssItem {
  * event with title, date, time, location, and a /Calendar.aspx?EID={id}
  * detail-page link. Detail pages are server-rendered, so we feed both the
  * RSS facts (as a metadata header) and the reduced detail HTML to the LLM.
+ *
+ * Stays on the LLM path: the RSS description carries date/time/location as
+ * free-form prose, not structured fields, and CivicPlus does not advertise an
+ * iCal feed for this calendar. Once a reliable structured surface exists we
+ * can add a `tryStructured` slot.
  */
 export const safetyHarborAdapter: SourceAdapter = {
   slug: "safety_harbor",

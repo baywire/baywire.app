@@ -4,16 +4,20 @@
 
 A modern, AI-curated guide to live music, festivals, food, and family fun across the Tampa Bay area — Tampa, St. Petersburg, Clearwater, Brandon, and Bradenton. Lives at [baywire.app](https://baywire.app).
 
-Baywire pulls candidate events from nine high-signal sources every six hours, hands the raw HTML (or synthesized JSON-LD for sites with public APIs) to OpenAI for structured extraction, and serves the deduplicated, normalized result as a mobile-first browsing experience.
+Baywire pulls candidate events from nine high-signal sources daily. Each source runs as its own GitHub Actions matrix job: adapters first try a structured surface (JSON-LD on detail pages, the WordPress Tribe Events JSON API, iCal exports) and only fall back to OpenAI extraction when no structured data is available. Vercel hosts the read-only Next.js app — it no longer runs scrapes.
 
 ```text
-   Vercel Cron ─▶ /api/cron/scrape ─▶ source adapters ─▶ HTML reducer
-                                                          │
-                                            OpenAI structured outputs
-                                                          │
-                                            Prisma Postgres + Accelerate
-                                                          │
-                                                Next.js RSC pages
+   GHA cron (daily 12:00 UTC)
+       │  matrix: one job per source
+       ▼
+   adapter.listEvents
+       │
+       ├─ tryStructured() ── parse JSON-LD / ICS / vendor JSON ──┐
+       │                                                          ▼
+       └─ fetchAndReduce() ── HTML reducer ── OpenAI extractor ──▶ Prisma Postgres + Accelerate
+                                                                      │
+                                                                      ▼
+                                                              Vercel Next.js (read-only)
 ```
 
 ## Stack
@@ -23,28 +27,30 @@ Baywire pulls candidate events from nine high-signal sources every six hours, ha
 - **Prisma ORM** + **Prisma Postgres** + **Prisma Accelerate** (managed Postgres + edge cache / connection pool in one URL)
 - **OpenAI `gpt-4.1-mini`** with Zod-typed structured outputs (also works with any OpenAI-compatible proxy via `OPENAI_BASE_URL`, e.g. Poe / Groq / Together)
 - `cheerio` for HTML reduction, `p-limit` for per-host pacing
-- Deployed to **Vercel** with **Vercel Cron**
+- **GitHub Actions** drives the daily scrape (one matrix job per source)
+- **Vercel** hosts the read-only Next.js app and the public events JSON API
 
 ## Sources
 
-| Slug                       | Site                                | Notes                                                |
-| -------------------------- | ----------------------------------- | ---------------------------------------------------- |
-| `eventbrite`               | eventbrite.com                      | Geo-search across all 7 cities, 2 pages each         |
-| `visit_tampa_bay`          | visittampabay.com/events            | Official tourism, curated                            |
-| `visit_st_pete_clearwater` | visitstpeteclearwater.com           | Both `/events` and `/events-festivals` listings      |
-| `tampa_bay_times`          | tampabay.com/things-to-do           | Editorial weekend picks                              |
-| `tampa_bay_markets`        | tampabaymarkets.com                 | Recurring farmers' markets across the bay            |
-| `tampa_gov`                | tampa.gov/calendar                  | City of Tampa public events calendar                 |
-| `safety_harbor`            | cityofsafetyharbor.com              | CivicPlus RSS feed → SSR detail pages                |
-| `ilovetheburg`             | ilovetheburg.com                    | St. Pete blog (Tribe Events JSON API)                |
-| `thats_so_tampa`           | thatssotampa.com                    | Tampa-side blog (Tribe Events JSON API)              |
+| Slug                       | Site                                | Path                | Notes                                                |
+| -------------------------- | ----------------------------------- | ------------------- | ---------------------------------------------------- |
+| `eventbrite`               | eventbrite.com                      | JSON-LD             | Geo-search across all 7 cities, 2 pages each         |
+| `visit_tampa_bay`          | visittampabay.com/events            | JSON-LD             | Official tourism, curated                            |
+| `visit_st_pete_clearwater` | visitstpeteclearwater.com           | JSON-LD             | Both `/events` and `/events-festivals` listings      |
+| `tampa_gov`                | tampa.gov/calendar                  | JSON-LD + ICS       | City of Tampa public events calendar                 |
+| `ilovetheburg`             | ilovetheburg.com                    | Tribe REST API      | St. Pete blog                                        |
+| `thats_so_tampa`           | thatssotampa.com                    | Tribe REST API      | Tampa-side blog                                      |
+| `tampa_bay_times`          | tampabay.com/things-to-do           | HTML + LLM          | Editorial weekend picks                              |
+| `tampa_bay_markets`        | tampabaymarkets.com                 | HTML + LLM          | Recurring farmers' markets across the bay            |
+| `safety_harbor`            | cityofsafetyharbor.com              | RSS hint + LLM      | CivicPlus RSS feed → SSR detail pages                |
 
-**Deferred (need a headless browser):** `feverup.com/en/tampa` (JS SPA),
-`unation.com` (Cloudflare bot challenge), and `dunedin.gov/Community/City-Calendar`
-(Akamai edge block). These are gated by anti-bot infrastructure that
-defeats simple HTTP fetches; tracked by a TODO in
-[`src/lib/scrapers/index.ts`](src/lib/scrapers/index.ts) to revisit once we
-add a Playwright-backed fetcher.
+**Deferred:** `feverup.com/en/tampa` (JS SPA, no public JSON-LD/sitemap),
+`unation.com` (Cloudflare bot challenge), and
+`dunedin.gov/Community/City-Calendar` (Akamai edge block on HTML, no public
+ICS/JSON-LD endpoint discovered). These will be re-enabled by adding a
+`tryStructured` slot pointed at any structured surface they expose; we
+explicitly do **not** ship Playwright/headless browsers for them. Status is
+tracked inline in [`src/lib/scrapers/index.ts`](src/lib/scrapers/index.ts).
 
 ## Local setup
 
@@ -95,13 +101,52 @@ The same URL handles both the live query path (via Accelerate, with edge caching
 
 ## Deployment
 
+Baywire is deployed in two parts: Vercel hosts the Next.js read path, and
+GitHub Actions runs the daily scrape.
+
+### Vercel (read-only web app)
+
 1. Push to GitHub and import the repo into Vercel.
-2. In **Project Settings → Environment Variables**, add `DATABASE_URL`, `OPENAI_API_KEY`, and `CRON_SECRET`.
-3. The included `vercel.json` registers a cron at `0 */6 * * *` hitting `/api/cron/scrape`. Vercel automatically forwards the configured `CRON_SECRET` as `Authorization: Bearer …`.
-4. After the first deploy, run `npm run db:push` against the production `DATABASE_URL` once, then trigger a manual scrape via:
-   ```bash
-   curl -H "Authorization: Bearer $CRON_SECRET" https://your-app.vercel.app/api/cron/scrape
-   ```
+2. In **Project Settings → Environment Variables**, add `DATABASE_URL` (and
+   `CRON_SECRET` if you still want the manual `/api/cron/scrape` lever to be
+   bearer-token gated; the route is no longer triggered automatically).
+3. Deploy. There are no Vercel cron schedules — `vercel.json` is intentionally
+   empty.
+
+### GitHub Actions (daily scrape)
+
+The workflow at [`.github/workflows/scrape.yml`](.github/workflows/scrape.yml)
+runs every day at **12:00 UTC** and fans out to one matrix job per source.
+Each cell installs deps, runs `npm run scrape:local -- <source>`, parses the
+`[scrape:result]` line into a step summary table, and uploads
+`scripts/.last-html/` plus `scrape.log` as artifacts when the job fails.
+
+Required repo secrets:
+
+| Secret                  | Required | Notes                                              |
+| ----------------------- | -------- | -------------------------------------------------- |
+| `DATABASE_URL`          | yes      | Same Prisma Postgres URL Vercel uses               |
+| `OPENAI_API_KEY`        | yes      | Used only by HTML+LLM fallbacks                    |
+| `OPENAI_BASE_URL`       | optional | OpenAI-compatible proxy (Poe / Groq / …)           |
+| `OPENAI_EXTRACT_MODEL`  | optional | Override default `gpt-4.1-mini`                    |
+
+Notes:
+
+- `workflow_dispatch` accepts an optional `source` input to scrape a single
+  adapter. Leave it blank to run every adapter in parallel.
+- GitHub-hosted scheduled runs may start 5–30 minutes late under platform
+  load. That is acceptable for a daily aggregator; if you need it tighter,
+  trigger from `workflow_dispatch` or `curl` the bearer-gated endpoint below.
+- The Vercel route `POST /api/cron/scrape` is preserved as a manual lever:
+
+  ```bash
+  curl -H "Authorization: Bearer $CRON_SECRET" \
+       https://your-app.vercel.app/api/cron/scrape
+  ```
+
+  It returns immediately and continues the work in the background via
+  `next/after`. Use it for ad-hoc reseeds; the GHA workflow is the
+  source of truth.
 
 ## Project layout
 
@@ -129,9 +174,10 @@ scripts/scrape-local.ts   `npm run scrape:local`
 ## Cost & rate posture
 
 - Per-host pacing is 1 request / 1.1 seconds with concurrent extraction at 4 in flight.
-- Content-hash short-circuit: pages whose reduced HTML hasn't changed never re-hit the LLM.
+- **Structured-first**: adapters with JSON-LD / ICS / vendor JSON skip the LLM entirely via `tryStructured`. The HTML+LLM fallback runs only when no structured surface exists for a given event.
+- Content-hash short-circuit: events whose structured payload (or reduced HTML) hasn't changed never re-hit the LLM.
 - Reduced HTML is capped at 16k characters (well under 4k tokens) before being sent to `gpt-4.1-mini`.
-- A typical 6-hour run touches roughly 100–150 unique events; expect a few hundred LLM calls per day at first, dropping to a fraction of that as the content-hash cache warms.
+- A daily run currently touches ~100–200 unique events. With Phase 2 structured-first enabled, most adapters do zero LLM calls per event; only `tampa_bay_times`, `tampa_bay_markets`, and `safety_harbor` consistently use the LLM, plus any detail page where structured extraction returned `null`.
 - All public read queries pass `cacheStrategy: { ttl: 60, swr: 300 }` to Prisma Accelerate, so the home page hits the edge cache for up to 60 seconds and serves stale-while-revalidate up to 5 minutes — even bursty traffic stays cheap.
 
 ## Attribution & ToS

@@ -11,6 +11,8 @@ dist/
 .tools/
 .notes/
 
+scripts/.last-html/
+
 *.log
 .DS_Store
 .vercel

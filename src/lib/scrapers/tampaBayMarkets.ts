@@ -13,6 +13,9 @@ const LISTING_URL = `${ORIGIN}/upcoming-markets-events`;
  * for every internal slug, then drop nav / utility paths. Markets are
  * recurring, so the LLM extractor's "next upcoming occurrence" rule yields
  * the right startAt.
+ *
+ * Stays on the LLM path: detail pages are bespoke Squarespace marketing
+ * layouts without JSON-LD, ICS, or any other structured event surface.
  */
 const SKIP_SLUGS = new Set([
   "cart",

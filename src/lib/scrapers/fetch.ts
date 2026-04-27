@@ -1,3 +1,6 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+
 import pLimit from "p-limit";
 
 const USER_AGENT =
@@ -51,9 +54,39 @@ export interface FetchOptions {
 
 const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
 
+const DEBUG_DIR = join(process.cwd(), "scripts", ".last-html");
+const DEBUG_DIR_READY = new Map<string, Promise<void>>();
+
+function debugEnabled(): boolean {
+  return process.env.SCRAPE_DEBUG === "1";
+}
+
+async function ensureDebugDir(): Promise<void> {
+  let pending = DEBUG_DIR_READY.get(DEBUG_DIR);
+  if (!pending) {
+    pending = mkdir(DEBUG_DIR, { recursive: true }).then(() => undefined);
+    DEBUG_DIR_READY.set(DEBUG_DIR, pending);
+  }
+  await pending;
+}
+
+async function captureBody(host: string, status: number, body: string): Promise<void> {
+  if (!debugEnabled()) return;
+  try {
+    await ensureDebugDir();
+    const safe = host.replace(/[^a-zA-Z0-9._-]+/g, "_");
+    const file = join(DEBUG_DIR, `${safe}.${status}.html`);
+    await writeFile(file, body, "utf8");
+  } catch {
+    // Debug capture is best-effort; never fail the scrape over it.
+  }
+}
+
 /**
  * Fetches a URL with realistic browser-like headers, per-host pacing, and
- * exponential backoff on retryable failures.
+ * exponential backoff on retryable failures. When `SCRAPE_DEBUG=1`, writes the
+ * latest response body per host to `scripts/.last-html/<host>.<status>.html`
+ * for offline diagnosis (uploaded as a CI artifact on failure).
  */
 export async function politeFetch(url: string, opts: FetchOptions = {}): Promise<string> {
   const parsed = new URL(url);
@@ -79,9 +112,15 @@ export async function politeFetch(url: string, opts: FetchOptions = {}): Promise
             await sleep(500 * 2 ** attempt);
             continue;
           }
+          if (debugEnabled()) {
+            const body = await res.text().catch(() => "");
+            await captureBody(parsed.host, res.status, body);
+          }
           throw new Error(`HTTP ${res.status} for ${url}`);
         }
-        return await res.text();
+        const body = await res.text();
+        if (debugEnabled()) await captureBody(parsed.host, res.status, body);
+        return body;
       } catch (err) {
         lastError = err;
         if (attempt === retries) break;

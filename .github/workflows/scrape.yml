@@ -1,59 +1,118 @@
 name: Scrape Baywire
 
-# Pings the production scrape endpoint every 6 hours. The route is idempotent —
-# unchanged event pages are detected by content hash and skip the LLM call —
-# so even runs that overlap Vercel's daily cron are essentially free.
+# Daily Baywire scrape, one matrix job per source. Each job runs the full
+# pipeline (fetch → reduce/structured → extract → DB write) directly on the
+# runner — no Vercel hop. Slugs MUST stay in sync with ADAPTERS in
+# src/lib/scrapers/index.ts.
 on:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 12 * * *"
   workflow_dispatch:
     inputs:
       source:
-        description: "Optional source slug to scrape (eventbrite, visitTampaBay, visitStPete, tampaBayTimes). Leave blank to run all."
+        description: "Optional source slug. Leave blank to run every adapter in parallel."
         required: false
         default: ""
 
-concurrency:
-  group: baywire-scrape
-  cancel-in-progress: false
+permissions:
+  contents: read
 
 jobs:
-  scrape:
+  source-matrix:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
     steps:
-      - name: Trigger scrape
+      - name: Set source matrix
+        id: set
         env:
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          SITE_URL: ${{ vars.SITE_URL }}
-          SOURCE: ${{ github.event.inputs.source }}
+          PICK: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.source || '' }}
         run: |
-          if [ -z "$SITE_URL" ]; then
-            echo "::error::SITE_URL repository variable is not set"
-            exit 1
-          fi
-          if [ -z "$CRON_SECRET" ]; then
-            echo "::error::CRON_SECRET repository secret is not set"
-            exit 1
-          fi
-
-          URL="${SITE_URL%/}/api/cron/scrape"
-          if [ -n "$SOURCE" ]; then
-            URL="${URL}?source=${SOURCE}"
+          # Keep in sync with ADAPTERS in src/lib/scrapers/index.ts.
+          all='["eventbrite","visit_tampa_bay","visit_st_pete_clearwater","tampa_bay_times","tampa_bay_markets","tampa_gov","safety_harbor","ilovetheburg","thats_so_tampa"]'
+          if [ -n "${PICK// }" ]; then
+            sub=$(jq -n --arg s "$PICK" '[$s]')
+            echo "matrix={\"source\":$sub}" >> "$GITHUB_OUTPUT"
+          else
+            echo "matrix={\"source\":$all}" >> "$GITHUB_OUTPUT"
           fi
 
-          echo "Pinging $URL"
-          response=$(curl --fail-with-body --silent --show-error \
-            --max-time 90 \
-            -H "Authorization: Bearer $CRON_SECRET" \
-            -H "User-Agent: Baywire-GH-Action" \
-            "$URL")
+  scrape:
+    needs: source-matrix
+    name: "Scrape ${{ matrix.source }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.source-matrix.outputs.matrix) }}
+    concurrency:
+      group: baywire-scrape-${{ matrix.source }}
+      cancel-in-progress: false
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
+      OPENAI_EXTRACT_MODEL: ${{ secrets.OPENAI_EXTRACT_MODEL }}
+      SCRAPE_DEBUG: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-          echo "$response" | jq .
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run scrape
+        id: scrape
+        run: |
+          set +e
+          npm run scrape:local -- "${{ matrix.source }}" 2>&1 | tee scrape.log
+          status=${PIPESTATUS[0]}
+          set -e
+          result=$(grep -E '^\[scrape:result\] ' scrape.log | tail -1 | sed 's/^\[scrape:result\] //') || true
+          if [ -z "$result" ]; then
+            result='{"slug":"${{ matrix.source }}","ok":false,"error":"no [scrape:result] line emitted","seen":0,"inserted":0,"updated":0,"skipped":0,"durationMs":0}'
+          fi
           {
-            echo "## Scrape result"
-            echo ''
-            echo '```json'
-            echo "$response" | jq .
-            echo '```'
+            echo "## Scrape \`${{ matrix.source }}\`"
+            echo ""
+            ok=$(echo "$result" | jq -r '.ok')
+            seen=$(echo "$result" | jq -r '.seen')
+            inserted=$(echo "$result" | jq -r '.inserted')
+            updated=$(echo "$result" | jq -r '.updated')
+            skipped=$(echo "$result" | jq -r '.skipped')
+            duration=$(echo "$result" | jq -r '.durationMs')
+            err=$(echo "$result" | jq -r '.error // empty')
+            if [ "$ok" = "true" ]; then
+              echo "Status: ok"
+            else
+              echo "Status: error"
+              if [ -n "$err" ]; then
+                echo ""
+                echo "\`\`\`"
+                echo "$err"
+                echo "\`\`\`"
+              fi
+            fi
+            echo ""
+            echo "| seen | inserted | updated | skipped | duration |"
+            echo "| ---- | -------- | ------- | ------- | -------- |"
+            echo "| $seen | $inserted | $updated | $skipped | ${duration}ms |"
           } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
+      - name: Upload debug artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scrape-${{ matrix.source }}-debug
+          path: |
+            scrape.log
+            scripts/.last-html/
+          if-no-files-found: ignore
+          retention-days: 7

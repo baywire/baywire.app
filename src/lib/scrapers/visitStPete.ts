@@ -1,7 +1,8 @@
 import { politeFetch } from "./fetch";
 import { loadHtml } from "./parse";
 import { reduceHtml } from "./reduce";
-import type { ListingItem, SourceAdapter } from "./types";
+import { extractJsonLdEvents, jsonLdEventToExtracted } from "./structured";
+import type { ListingItem, SourceAdapter, StructuredEvent } from "./types";
 
 const ORIGIN = "https://www.visitstpeteclearwater.com";
 
@@ -37,6 +38,18 @@ export const visitStPeteAdapter: SourceAdapter = {
     }
     if (!anyOk) throw lastError instanceof Error ? lastError : new Error(String(lastError));
     return Array.from(merged.values());
+  },
+
+  async tryStructured(item, signal): Promise<StructuredEvent | null> {
+    const html = await politeFetch(item.url, { signal });
+    const events = extractJsonLdEvents(html);
+    for (const ev of events) {
+      const extracted = jsonLdEventToExtracted(ev);
+      if (extracted) {
+        return { event: extracted, canonicalUrl: ev.url || item.url };
+      }
+    }
+    return null;
   },
 
   async fetchAndReduce(item, signal) {
