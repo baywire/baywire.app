@@ -1,45 +1,51 @@
-import { NextResponse, type NextRequest } from "next/server";
+"use server";
 
-import { isCityKey } from "@/lib/cities";
+import { type CityKey, isCityKey } from "@/lib/cities";
 import { listEvents } from "@/lib/db/queries";
 import type { AppEvent } from "@/lib/events/types";
 import { eventMatchesTopTags } from "@/lib/events/tagOptions";
 import { rerankWithAI } from "@/lib/search/ai";
 import { normalizeSearchQuery, rankDeterministic } from "@/lib/search/rank";
 import type { SearchMode, SearchResponse } from "@/lib/search/types";
-import type { WindowKey } from "@/lib/time/window";
-
-export const runtime = "nodejs";
+import { type WindowKey } from "@/lib/time/window";
 
 const VALID_WINDOWS = new Set<WindowKey>(["tonight", "weekend", "week"]);
 const MAX_CANDIDATES = 40;
 const DIRECT_MATCH_LIMIT = 60;
+const AI_TIMEOUT_MS = 3500;
 
-export async function GET(req: NextRequest) {
+export interface SearchEventsInput {
+  query: string;
+  window: WindowKey;
+  city: CityKey | "all";
+  freeOnly: boolean;
+  tags: readonly string[];
+  savedOnly: boolean;
+  savedIDs: readonly string[];
+}
+
+export async function searchEvents(input: SearchEventsInput): Promise<SearchResponse> {
   const startedAt = Date.now();
-  const sp = req.nextUrl.searchParams;
-  const query = normalizeSearchQuery(sp.get("q") ?? "");
+  const query = normalizeSearchQuery(input.query ?? "");
   if (query.length < 2) {
-    return NextResponse.json(buildEmpty(query, "idle", startedAt, false, false));
+    return buildEmpty(query, "idle", startedAt, false, false);
   }
 
-  const windowRaw = (sp.get("window") ?? "weekend") as WindowKey;
-  const window: WindowKey = VALID_WINDOWS.has(windowRaw) ? windowRaw : "weekend";
-  const cityRaw = sp.get("city");
-  const freeOnly = sp.get("free") === "true";
-  const tags = parseCsv(sp.get("tags"));
-  const savedOnly = sp.get("savedOnly") === "true";
-  const savedIDs = new Set(parseCsv(sp.get("savedIDs")));
+  const window: WindowKey = VALID_WINDOWS.has(input.window) ? input.window : "weekend";
+  const city = input.city && input.city !== "all" && isCityKey(input.city) ? input.city : null;
+  const tags = normalizeStringArray(input.tags);
+  const savedIDs = new Set(normalizeStringArray(input.savedIDs));
 
   const rows = await listEvents({
     window,
-    cities: cityRaw && cityRaw !== "all" && isCityKey(cityRaw) ? [cityRaw] : undefined,
-    freeOnly,
+    cities: city ? [city] : undefined,
+    freeOnly: Boolean(input.freeOnly),
     limit: 200,
   });
+
   const filtered = rows.filter((event) => {
     if (tags.length > 0 && !eventMatchesTopTags(event, new Set(tags))) return false;
-    if (savedOnly && !savedIDs.has(event.id)) return false;
+    if (input.savedOnly && !savedIDs.has(event.id)) return false;
     return true;
   });
 
@@ -47,7 +53,7 @@ export async function GET(req: NextRequest) {
   const ranked = rankDeterministic(deduped, query);
   const directMatchIDs = ranked.slice(0, DIRECT_MATCH_LIMIT).map((row) => row.eventID);
   if (directMatchIDs.length === 0) {
-    return NextResponse.json(buildEmpty(query, "fallback", startedAt, false, false));
+    return buildEmpty(query, "fallback", startedAt, false, false);
   }
 
   const candidateIDs = ranked.slice(0, MAX_CANDIDATES).map((row) => row.eventID);
@@ -55,23 +61,24 @@ export async function GET(req: NextRequest) {
   const candidates = candidateIDs
     .map((id) => byID.get(id))
     .filter((event): event is NonNullable<typeof event> => Boolean(event));
-  const aiEnabled = process.env.SEARCH_AI_ENABLED !== "false" && process.env.OPENAI_API_KEY;
+  const aiEnabled = process.env.SEARCH_AI_ENABLED !== "false" && Boolean(process.env.OPENAI_API_KEY);
+  const truncated = ranked.length > MAX_CANDIDATES;
 
   if (!aiEnabled) {
-    return NextResponse.json({
+    return {
       query,
       intentLine: null,
       aiPickIDs: [],
       directMatchIDs,
       reasonByID: {},
-      metadata: buildMetadata("fallback", startedAt, false, ranked.length > MAX_CANDIDATES),
-    } satisfies SearchResponse);
+      metadata: buildMetadata("fallback", startedAt, false, truncated),
+    };
   }
 
   try {
     const ai = await Promise.race([
       rerankWithAI(query, candidates),
-      timeoutReject(3500),
+      timeoutReject(AI_TIMEOUT_MS),
     ]);
     const aiPickIDs = uniqueStable(
       ai.aiPickIDs.filter((id) => candidateIDs.includes(id)),
@@ -81,35 +88,32 @@ export async function GET(req: NextRequest) {
       const reason = ai.reasonByID[id];
       if (reason) reasonByID[id] = reason;
     }
-    return NextResponse.json({
+    return {
       query,
       intentLine: ai.intentLine,
       aiPickIDs,
       directMatchIDs,
       reasonByID,
-      metadata: buildMetadata("ai", startedAt, true, ranked.length > MAX_CANDIDATES),
-    } satisfies SearchResponse);
+      metadata: buildMetadata("ai", startedAt, true, truncated),
+    };
   } catch (err) {
     console.warn(
       `[search] AI rerank failed for q="${query}": ${err instanceof Error ? err.message : String(err)}`,
     );
-    return NextResponse.json({
+    return {
       query,
       intentLine: null,
       aiPickIDs: [],
       directMatchIDs,
       reasonByID: {},
-      metadata: buildMetadata("fallback", startedAt, false, ranked.length > MAX_CANDIDATES),
-    } satisfies SearchResponse);
+      metadata: buildMetadata("fallback", startedAt, false, truncated),
+    };
   }
 }
 
-function parseCsv(value: string | null): string[] {
-  if (!value) return [];
-  return value
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
+function normalizeStringArray(input: readonly string[] | undefined): string[] {
+  if (!input) return [];
+  return input.map((value) => value.trim()).filter(Boolean);
 }
 
 function uniqueStable(input: readonly string[]): string[] {

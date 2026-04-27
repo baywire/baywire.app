@@ -8,7 +8,7 @@ import { SearchResultRow } from "@/components/search/SearchResultRow";
 import { useHome } from "@/components/home/homeState";
 import { Button, IconButton } from "@/components/ui";
 
-import type { SearchResponse } from "@/lib/search/types";
+import { searchEvents } from "@/lib/search/actions";
 
 export function SearchDialog() {
   const {
@@ -101,37 +101,31 @@ export function SearchDialog() {
       setSearchResponse(null);
       return;
     }
-    const controller = new AbortController();
+    let cancelled = false;
     const timeout = window.setTimeout(async () => {
       setSearchMode("loading");
       try {
-        const params = new URLSearchParams({
-          q: normalized,
+        const payload = await searchEvents({
+          query: normalized,
           window: windowKey,
           city: selectedCity,
-          free: String(freeOnly),
-          tags: Array.from(topTags).sort((a, b) => a.localeCompare(b)).join(","),
-          savedOnly: String(showSavedOnly),
-          savedIDs: showSavedOnly ? Array.from(savedIds).join(",") : "",
+          freeOnly,
+          tags: Array.from(topTags).sort((a, b) => a.localeCompare(b)),
+          savedOnly: showSavedOnly,
+          savedIDs: showSavedOnly ? Array.from(savedIds) : [],
         });
-        const response = await fetch(`/api/search?${params.toString()}`, {
-          method: "GET",
-          signal: controller.signal,
-          cache: "no-store",
-        });
-        if (!response.ok) throw new Error(`Search failed (${response.status})`);
-        const payload = await response.json() as SearchResponse;
+        if (cancelled) return;
         setSearchResponse(payload);
         setSearchMode(payload.metadata.mode);
       } catch (err) {
-        if (controller.signal.aborted) return;
+        if (cancelled) return;
         console.error("search request failed", err);
         setSearchResponse(null);
         setSearchMode("error");
       }
     }, 250);
     return () => {
-      controller.abort();
+      cancelled = true;
       clearTimeout(timeout);
     };
   }, [
