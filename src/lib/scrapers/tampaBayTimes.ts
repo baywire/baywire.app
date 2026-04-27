@@ -21,12 +21,20 @@ export const tampaBayTimesAdapter: SourceAdapter = {
   baseUrl: ORIGIN,
 
   async listEvents({ signal }) {
-    const html = await politeFetch(LISTING_URL, { signal });
+    const html = await politeFetch(LISTING_URL, {
+      signal,
+      referer: "https://www.google.com/",
+      label: "tampa_bay_times:list",
+    });
     return parseListing(html);
   },
 
   async fetchAndReduce(item, signal) {
-    const html = await politeFetch(item.url, { signal });
+    const html = await politeFetch(item.url, {
+      signal,
+      referer: LISTING_URL,
+      label: "tampa_bay_times:detail",
+    });
     return {
       reducedHtml: reduceHtml(html, item.url),
       canonicalUrl: item.url,

@@ -64,6 +64,15 @@ jobs:
           node-version: "22"
           cache: "npm"
 
+      - name: Print runtime info
+        run: |
+          echo "Source: ${{ matrix.source }}"
+          echo "Node: $(node -v)"
+          echo "npm: $(npm -v)"
+          echo "Runner: $RUNNER_OS / $RUNNER_ARCH"
+          echo "Outbound IP: $(curl -s --max-time 5 https://api.ipify.org || echo unknown)"
+          echo "SCRAPE_DEBUG: ${SCRAPE_DEBUG:-0}"
+
       - name: Install dependencies
         run: npm ci
 
@@ -76,7 +85,7 @@ jobs:
           set -e
           result=$(grep -E '^\[scrape:result\] ' scrape.log | tail -1 | sed 's/^\[scrape:result\] //') || true
           if [ -z "$result" ]; then
-            result='{"slug":"${{ matrix.source }}","ok":false,"error":"no [scrape:result] line emitted","seen":0,"inserted":0,"updated":0,"skipped":0,"durationMs":0}'
+            result='{"slug":"${{ matrix.source }}","ok":false,"error":"no [scrape:result] line emitted","seen":0,"inserted":0,"updated":0,"skipped":0,"durationMs":0,"structuredHits":0}'
           fi
           {
             echo "## Scrape \`${{ matrix.source }}\`"
@@ -86,6 +95,7 @@ jobs:
             inserted=$(echo "$result" | jq -r '.inserted')
             updated=$(echo "$result" | jq -r '.updated')
             skipped=$(echo "$result" | jq -r '.skipped')
+            structured=$(echo "$result" | jq -r '.structuredHits // 0')
             duration=$(echo "$result" | jq -r '.durationMs')
             err=$(echo "$result" | jq -r '.error // empty')
             if [ "$ok" = "true" ]; then
@@ -100,11 +110,39 @@ jobs:
               fi
             fi
             echo ""
-            echo "| seen | inserted | updated | skipped | duration |"
-            echo "| ---- | -------- | ------- | ------- | -------- |"
-            echo "| $seen | $inserted | $updated | $skipped | ${duration}ms |"
+            echo "| seen | inserted | updated | skipped | structured | duration |"
+            echo "| ---- | -------- | ------- | ------- | ---------- | -------- |"
+            echo "| $seen | $inserted | $updated | $skipped | $structured | ${duration}ms |"
+            echo ""
+            echo "<details><summary>Fetch breakdown ($(grep -c '^\[fetch\]' scrape.log) requests)</summary>"
+            echo ""
+            echo "\`\`\`"
+            grep -E '^\[fetch\]' scrape.log | tail -50 || true
+            echo "\`\`\`"
+            echo ""
+            echo "</details>"
+            non_200=$(grep -E '^\[fetch\] .* status=[0-9]+' scrape.log | grep -vE 'status=2[0-9]{2}' || true)
+            if [ -n "$non_200" ]; then
+              echo ""
+              echo "<details open><summary>Non-2xx responses</summary>"
+              echo ""
+              echo "\`\`\`"
+              echo "$non_200"
+              echo "\`\`\`"
+              echo ""
+              echo "</details>"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
           exit "$status"
+
+      - name: Upload scrape log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scrape-${{ matrix.source }}-log
+          path: scrape.log
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Upload debug artifacts
         if: failure()
@@ -112,7 +150,6 @@ jobs:
         with:
           name: scrape-${{ matrix.source }}-debug
           path: |
-            scrape.log
             scripts/.last-html/
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 14

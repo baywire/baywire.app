@@ -7,6 +7,8 @@ import { extractJsonLdEvents, jsonLdEventToExtracted } from "./structured";
 import type { ListingItem, SourceAdapter, StructuredEvent } from "./types";
 
 const PAGES_PER_CITY = 2;
+const SLUG = "eventbrite";
+const DETAIL_REFERER = "https://www.eventbrite.com/";
 
 /**
  * Eventbrite adapter. Eventbrite shut down their public API for new apps in
@@ -27,7 +29,11 @@ export const eventbriteAdapter: SourceAdapter = {
         const url = `https://www.eventbrite.com/d/${city.eventbriteSlug}/all-events/?page=${page}`;
         let html: string;
         try {
-          html = await politeFetch(url, { signal });
+          html = await politeFetch(url, {
+            signal,
+            referer: "https://www.google.com/",
+            label: `${SLUG}:list:${city.key}:p${page}`,
+          });
         } catch {
           break;
         }
@@ -43,7 +49,11 @@ export const eventbriteAdapter: SourceAdapter = {
   },
 
   async tryStructured(item, signal): Promise<StructuredEvent | null> {
-    const html = await politeFetch(item.url, { signal });
+    const html = await politeFetch(item.url, {
+      signal,
+      referer: DETAIL_REFERER,
+      label: `${SLUG}:structured`,
+    });
     const events = extractJsonLdEvents(html);
     for (const ev of events) {
       const extracted = jsonLdEventToExtracted(ev);
@@ -55,7 +65,11 @@ export const eventbriteAdapter: SourceAdapter = {
   },
 
   async fetchAndReduce(item, signal) {
-    const html = await politeFetch(item.url, { signal });
+    const html = await politeFetch(item.url, {
+      signal,
+      referer: DETAIL_REFERER,
+      label: `${SLUG}:detail`,
+    });
     return {
       reducedHtml: reduceHtml(html, item.url),
       canonicalUrl: item.url,

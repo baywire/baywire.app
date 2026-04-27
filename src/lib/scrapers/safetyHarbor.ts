@@ -35,7 +35,10 @@ export const safetyHarborAdapter: SourceAdapter = {
   baseUrl: ORIGIN,
 
   async listEvents({ signal }) {
-    const xml = await politeFetch(FEED_URL, { signal });
+    const xml = await politeFetch(FEED_URL, {
+      signal,
+      label: "safety_harbor:rss",
+    });
     const items = parseFeed(xml);
     cache.clear();
     const out: ListingItem[] = [];
@@ -47,7 +50,11 @@ export const safetyHarborAdapter: SourceAdapter = {
   },
 
   async fetchAndReduce(item, signal) {
-    const html = await politeFetch(item.url, { signal });
+    const html = await politeFetch(item.url, {
+      signal,
+      referer: ORIGIN,
+      label: "safety_harbor:detail",
+    });
     const detail = reduceHtml(html, item.url);
     const meta = cache.get(item.sourceEventId);
     const header = meta

@@ -13,6 +13,7 @@ import type { ListingItem, SourceAdapter, StructuredEvent } from "./types";
 
 const ORIGIN = "https://www.tampa.gov";
 const LISTING_URL = `${ORIGIN}/calendar`;
+const SLUG = "tampa_gov";
 
 const DETAIL_RE = /^\/events\/([a-z0-9-]+)\/(\d+)$/i;
 
@@ -31,7 +32,11 @@ export const tampaGovAdapter: SourceAdapter = {
 
   async listEvents({ signal }) {
     icsCache.clear();
-    const html = await politeFetch(LISTING_URL, { signal });
+    const html = await politeFetch(LISTING_URL, {
+      signal,
+      referer: "https://www.google.com/",
+      label: `${SLUG}:list`,
+    });
     const items = parseListing(html);
 
     const ics = findIcsLink(html, LISTING_URL);
@@ -40,6 +45,8 @@ export const tampaGovAdapter: SourceAdapter = {
         const body = await politeFetch(ics, {
           signal,
           headers: { Accept: "text/calendar" },
+          referer: LISTING_URL,
+          label: `${SLUG}:ical`,
         });
         for (const ev of parseICalFeed(body)) {
           const id = idFromUrl(ev.url);
@@ -59,7 +66,11 @@ export const tampaGovAdapter: SourceAdapter = {
       const extracted = icsEventToExtracted(cached);
       if (extracted) return { event: extracted, canonicalUrl: cached.url || item.url };
     }
-    const html = await politeFetch(item.url, { signal });
+    const html = await politeFetch(item.url, {
+      signal,
+      referer: LISTING_URL,
+      label: `${SLUG}:structured`,
+    });
     const events = extractJsonLdEvents(html);
     for (const ev of events) {
       const extracted = jsonLdEventToExtracted(ev);
@@ -71,7 +82,11 @@ export const tampaGovAdapter: SourceAdapter = {
   },
 
   async fetchAndReduce(item, signal) {
-    const html = await politeFetch(item.url, { signal });
+    const html = await politeFetch(item.url, {
+      signal,
+      referer: LISTING_URL,
+      label: `${SLUG}:detail`,
+    });
     return {
       reducedHtml: reduceHtml(html, item.url),
       canonicalUrl: item.url,

@@ -90,7 +90,12 @@ async function runSingleSource(
     error: undefined as string | undefined,
   };
 
+  console.log(
+    `[run:start] slug=${adapter.slug} label="${adapter.label}" windowStart=${window.startAt.toISOString()} windowEnd=${window.endAt.toISOString()}`,
+  );
+
   try {
+    const listStart = Date.now();
     const items = await adapter.listEvents({
       windowStart: window.startAt,
       windowEnd: window.endAt,
@@ -98,13 +103,21 @@ async function runSingleSource(
     });
     const limited = items.slice(0, MAX_EVENTS_PER_SOURCE);
     stats.seen = limited.length;
+    console.log(
+      `[run:list] slug=${adapter.slug} found=${items.length} processing=${limited.length} ms=${
+        Date.now() - listStart
+      }`,
+    );
 
     const limit = pLimit(EXTRACTION_CONCURRENCY);
+    let llmHits = 0;
+    let errors = 0;
 
     await Promise.all(
       limited.map((item) =>
         limit(async () => {
           if (signal?.aborted) return;
+          const itemStart = Date.now();
           try {
             const result = await processItem({
               adapter,
@@ -118,22 +131,42 @@ async function runSingleSource(
             else if (result.outcome === "updated") stats.updated += 1;
             else stats.skipped += 1;
             if (result.structured) stats.structuredHits += 1;
+            else llmHits += 1;
+            console.log(
+              `[item] slug=${adapter.slug} outcome=${result.outcome} path=${
+                result.structured ? "structured" : "llm"
+              } ms=${Date.now() - itemStart} url=${item.url}`,
+            );
           } catch (err) {
             stats.skipped += 1;
+            errors += 1;
             console.warn(
-              `[${adapter.slug}] failed for ${item.url}:`,
-              err instanceof Error ? err.message : err,
+              `[item] slug=${adapter.slug} outcome=error ms=${Date.now() - itemStart} url=${
+                item.url
+              } error="${err instanceof Error ? err.message : String(err)}"`,
             );
           }
         }),
       ),
     );
+
+    console.log(
+      `[run:process] slug=${adapter.slug} structured=${stats.structuredHits} llm=${llmHits} errors=${errors}`,
+    );
   } catch (err) {
     stats.ok = false;
     stats.error = err instanceof Error ? err.message : String(err);
+    console.error(
+      `[run:error] slug=${adapter.slug} error="${stats.error}"`,
+    );
   }
 
   stats.durationMs = Date.now() - startedAt;
+  console.log(
+    `[run:finish] slug=${adapter.slug} ok=${stats.ok} seen=${stats.seen} inserted=${stats.inserted} updated=${stats.updated} skipped=${stats.skipped} structuredHits=${stats.structuredHits} durationMs=${stats.durationMs}${
+      stats.error ? ` error="${stats.error}"` : ""
+    }`,
+  );
 
   await prisma.scrapeRun.update({
     where: { id: run.id },

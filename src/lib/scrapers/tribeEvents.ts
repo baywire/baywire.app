@@ -70,6 +70,7 @@ export function createTribeEventsAdapter(cfg: TribeAdapterConfig): SourceAdapter
     const body = await politeFetch(`${apiBase}/${id}`, {
       signal,
       headers: { Accept: "application/json" },
+      label: `${cfg.slug}:tribe-event`,
     });
     const ev = JSON.parse(body) as TribeEvent;
     cache.set(id, ev);
@@ -89,6 +90,7 @@ export function createTribeEventsAdapter(cfg: TribeAdapterConfig): SourceAdapter
       const body = await politeFetch(url, {
         signal,
         headers: { Accept: "application/json" },
+        label: `${cfg.slug}:tribe-list`,
       });
 
       let parsed: TribeListResponse;

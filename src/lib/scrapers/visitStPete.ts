@@ -15,9 +15,11 @@ const LISTING_URLS = [
   `${ORIGIN}/events`,
   `${ORIGIN}/events-festivals`,
 ];
+const DETAIL_REFERER = `${ORIGIN}/events`;
+const SLUG = "visit_st_pete_clearwater";
 
 export const visitStPeteAdapter: SourceAdapter = {
-  slug: "visit_st_pete_clearwater",
+  slug: SLUG,
   label: "Visit St. Pete/Clearwater",
   baseUrl: ORIGIN,
 
@@ -27,7 +29,11 @@ export const visitStPeteAdapter: SourceAdapter = {
     let anyOk = false;
     for (const url of LISTING_URLS) {
       try {
-        const html = await politeFetch(url, { signal });
+        const html = await politeFetch(url, {
+          signal,
+          referer: "https://www.google.com/",
+          label: `${SLUG}:list`,
+        });
         anyOk = true;
         for (const item of parseListing(html)) {
           if (!merged.has(item.url)) merged.set(item.url, item);
@@ -41,7 +47,11 @@ export const visitStPeteAdapter: SourceAdapter = {
   },
 
   async tryStructured(item, signal): Promise<StructuredEvent | null> {
-    const html = await politeFetch(item.url, { signal });
+    const html = await politeFetch(item.url, {
+      signal,
+      referer: DETAIL_REFERER,
+      label: `${SLUG}:structured`,
+    });
     const events = extractJsonLdEvents(html);
     for (const ev of events) {
       const extracted = jsonLdEventToExtracted(ev);
@@ -53,7 +63,11 @@ export const visitStPeteAdapter: SourceAdapter = {
   },
 
   async fetchAndReduce(item, signal) {
-    const html = await politeFetch(item.url, { signal });
+    const html = await politeFetch(item.url, {
+      signal,
+      referer: DETAIL_REFERER,
+      label: `${SLUG}:detail`,
+    });
     return {
       reducedHtml: reduceHtml(html, item.url),
       canonicalUrl: item.url,

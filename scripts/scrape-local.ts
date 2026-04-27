@@ -15,7 +15,7 @@ async function main() {
   for (const s of stats) {
     const status = s.ok ? "ok" : `error: ${s.error}`;
     console.log(
-      `[${s.slug}] ${status}  seen=${s.seen} inserted=${s.inserted} updated=${s.updated} skipped=${s.skipped} (${s.durationMs}ms)`,
+      `[${s.slug}] ${status}  seen=${s.seen} inserted=${s.inserted} updated=${s.updated} skipped=${s.skipped} structured=${s.structuredHits} (${s.durationMs}ms)`,
     );
     // Single-line, machine-parseable summary consumed by the GHA workflow to
     // render the per-source step summary. Do not change the prefix.
