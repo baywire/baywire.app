@@ -22,24 +22,6 @@ interface MainColumnProps {
   defaultOpenFromQuery: boolean;
 }
 
-export function SectionSkeleton({ title }: { title: string }) {
-  return (
-    <div className="space-y-4">
-      <h2 className="font-display text-2xl font-semibold text-ink-900 dark:text-sand-50">
-        {title}
-      </h2>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-72 animate-pulse rounded-card border border-ink-100 bg-white/70 dark:border-ink-700 dark:bg-ink-900/60"
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export async function MainColumn({
   window,
   city,

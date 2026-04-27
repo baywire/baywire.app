@@ -1,9 +1,7 @@
-import { Suspense } from "react";
-
-import { MainColumn, SectionSkeleton } from "@/components/home/MainColumn";
+import { MainColumn } from "@/components/home/MainColumn";
 
 import { isCityKey } from "@/lib/cities";
-import { getWindow, type WindowKey } from "@/lib/time/window";
+import { type WindowKey } from "@/lib/time/window";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -28,19 +26,15 @@ export default async function HomePage(props: {
   const defaultOpenFromQuery =
     sp.view === "plan" || sp.plan === "1" || sp.openPlan === "1";
 
-  const windowMeta = getWindow(window);
-
   return (
     <div className="flex min-h-dvh min-w-0 flex-col">
       <main className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col px-0 sm:px-0">
-        <Suspense fallback={<SectionSkeleton title={windowMeta.label} />}>
-          <MainColumn
-            window={window}
-            city={cityParam}
-            freeOnly={freeOnly}
-            defaultOpenFromQuery={defaultOpenFromQuery}
-          />
-        </Suspense>
+        <MainColumn
+          window={window}
+          city={cityParam}
+          freeOnly={freeOnly}
+          defaultOpenFromQuery={defaultOpenFromQuery}
+        />
       </main>
     </div>
   );
