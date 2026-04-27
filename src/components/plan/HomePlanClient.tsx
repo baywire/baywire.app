@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, Suspense, type ReactNode } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, type ReactNode } from "react";
 import Link from "next/link";
 import { ListOrdered, Radio, Search } from "lucide-react";
 
@@ -183,7 +182,7 @@ function HomeMobilePlanTabs() {
   );
 }
 
-function HomePlanClientInner({
+export function HomePlanClient({
   orderIds: initialOrderIds,
   planEvents: initialPlanEvents,
   defaultOpenFromQuery,
@@ -194,40 +193,13 @@ function HomePlanClientInner({
   defaultOpenFromQuery: boolean;
   children: ReactNode;
 }) {
-  const sp = useSearchParams();
-  const openFromUrl =
-    sp.get("view") === "plan" ||
-    sp.get("plan") === "1" ||
-    sp.get("openPlan") === "1";
-
   return (
     <HomePlanProvider
-      defaultOpenPlan={defaultOpenFromQuery || openFromUrl}
+      defaultOpenPlan={defaultOpenFromQuery}
       initialPlanOrder={initialOrderIds}
       initialPlanEvents={initialPlanEvents}
     >
       {children}
     </HomePlanProvider>
-  );
-}
-
-export function HomePlanClient(
-  props: {
-    orderIds: string[];
-    planEvents: AppEvent[];
-    defaultOpenFromQuery: boolean;
-    children: ReactNode;
-  },
-) {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col items-center justify-center p-8 text-sm text-ink-500">
-          Loading…
-        </div>
-      }
-    >
-      <HomePlanClientInner {...props} />
-    </Suspense>
   );
 }

@@ -126,7 +126,7 @@ export async function listEvents(filters: EventListFilters): Promise<AppEvent[]>
   }
 
   out.sort((a, b) => compareEvents(a, b));
-  return out.slice(0, filters.limit ?? 200);
+  return out.slice(0, filters.limit ?? 100);
 }
 
 export async function getEventById(id: string): Promise<AppEvent | null> {
@@ -175,18 +175,59 @@ export interface CityFacet {
   count: number;
 }
 
+/**
+ * Counts visible events per city without materializing rows. Each canonical
+ * group contributes once (mapped to its primary event's city); legacy
+ * (un-canonicalized) events each contribute once.
+ */
 export async function countEventsByCity(window: WindowKey): Promise<CityFacet[]> {
-  const rows = await listEvents({ window, limit: 10000 });
-  const map = new Map<CityKey, number>();
-  for (const row of rows) {
-    map.set(row.city as CityKey, (map.get(row.city as CityKey) ?? 0) + 1);
+  const w = getWindow(window);
+  const visible: Prisma.EventWhereInput = {
+    startAt: { gte: w.startAt, lte: w.endAt },
+    source: { enabled: true },
+  };
+
+  const [canonicalGroups, legacyGroups] = await Promise.all([
+    prisma.event.groupBy(withReadCache({
+      by: ["city"] as const,
+      where: { primaryOf: { events: { some: visible } } },
+      _count: { _all: true },
+    })),
+    prisma.event.groupBy(withReadCache({
+      by: ["city"] as const,
+      where: { ...visible, canonicalId: null },
+      _count: { _all: true },
+    })),
+  ]);
+
+  const counts = new Map<CityKey, number>();
+  for (const row of canonicalGroups) {
+    const key = row.city as CityKey;
+    counts.set(key, (counts.get(key) ?? 0) + row._count._all);
   }
-  return Array.from(map.entries()).map(([city, count]) => ({ city, count }));
+  for (const row of legacyGroups) {
+    const key = row.city as CityKey;
+    counts.set(key, (counts.get(key) ?? 0) + row._count._all);
+  }
+  return Array.from(counts, ([city, count]) => ({ city, count }));
 }
 
 export async function totalEventsInWindow(window: WindowKey): Promise<number> {
-  const rows = await listEvents({ window, limit: 10000 });
-  return rows.length;
+  const w = getWindow(window);
+  const visible: Prisma.EventWhereInput = {
+    startAt: { gte: w.startAt, lte: w.endAt },
+    source: { enabled: true },
+  };
+
+  const [canonicalCount, legacyCount] = await Promise.all([
+    prisma.canonicalEvent.count(withReadCache({
+      where: { events: { some: visible } },
+    })),
+    prisma.event.count(withReadCache({
+      where: { ...visible, canonicalId: null },
+    })),
+  ]);
+  return canonicalCount + legacyCount;
 }
 
 export interface CurationCoverage {
@@ -196,22 +237,44 @@ export interface CurationCoverage {
   refreshedAt: Date | null;
 }
 
+/**
+ * Computes editorial coverage with four parallel aggregate queries instead of
+ * loading every row in the window. `filters.limit` is intentionally ignored —
+ * coverage is always computed against the full window.
+ */
 export async function getCurationCoverage(filters: EventListFilters): Promise<CurationCoverage> {
-  const rows = await listEvents({ ...filters, limit: 10000 });
-  let curatedCount = 0;
-  let refreshedAt: Date | null = null;
-  for (const row of rows) {
-    const updatedAt = row.editorialUpdatedAt ?? null;
-    if (updatedAt && (!refreshedAt || updatedAt.getTime() > refreshedAt.getTime())) {
-      refreshedAt = updatedAt;
-    }
-    if (isEditorialFresh(updatedAt) && typeof row.editorialScore === "number") {
-      curatedCount += 1;
-    }
-  }
-  const visibleCount = rows.length;
+  const w = getWindow(filters.window);
+  const visible = buildVisibleEventWhere(w.startAt, w.endAt, filters);
+  const freshCutoff = new Date(Date.now() - FRESH_EDITORIAL_WINDOW_HOURS * 60 * 60 * 1000);
+
+  const [canonicalCount, legacyCount, curatedCount, refreshed] = await Promise.all([
+    prisma.canonicalEvent.count(withReadCache({
+      where: { events: { some: visible } },
+    })),
+    prisma.event.count(withReadCache({
+      where: { ...visible, canonicalId: null },
+    })),
+    prisma.canonicalEvent.count(withReadCache({
+      where: {
+        editorialScore: { not: null },
+        editorialUpdatedAt: { gte: freshCutoff },
+        events: { some: visible },
+      },
+    })),
+    prisma.canonicalEvent.aggregate(withReadCache({
+      _max: { editorialUpdatedAt: true },
+      where: { events: { some: visible } },
+    })),
+  ]);
+
+  const visibleCount = canonicalCount + legacyCount;
   const coveragePct = visibleCount === 0 ? 0 : Math.round((curatedCount / visibleCount) * 100);
-  return { visibleCount, curatedCount, coveragePct, refreshedAt };
+  return {
+    visibleCount,
+    curatedCount,
+    coveragePct,
+    refreshedAt: refreshed._max.editorialUpdatedAt ?? null,
+  };
 }
 
 export async function listUpcomingEventsByIds(ids: string[]): Promise<AppEvent[]> {

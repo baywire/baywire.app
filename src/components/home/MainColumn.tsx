@@ -62,7 +62,6 @@ export async function MainColumn({
       window,
       cities: city === "all" ? undefined : [city],
       freeOnly,
-      limit: 200,
     };
     const [rows, coverage] = await Promise.all([listEvents(filters), getCurationCoverage(filters)]);
     eventRows = rows;

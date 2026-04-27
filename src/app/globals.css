@@ -132,3 +132,46 @@ html, body {
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
           mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
 }
+
+/*
+  Skeleton: smooth shimmer that sweeps across a solid base.
+  Uses background-position so we never animate opacity (which causes the
+  visible "flicker" against semi-transparent surfaces).
+*/
+.skeleton {
+  background-color: var(--color-ink-100);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 200% 100%;
+  background-position: -150% 0;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  will-change: background-position;
+}
+
+@media (prefers-color-scheme: dark) {
+  .skeleton {
+    background-color: var(--color-ink-800);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.06) 50%,
+      transparent 100%
+    );
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: -150% 0; }
+  100% { background-position:  150% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
