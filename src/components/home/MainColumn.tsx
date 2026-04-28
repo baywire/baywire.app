@@ -92,7 +92,7 @@ export async function MainColumn({
   const rawSaved = parseSavedEventIdsCookie(jar.get(COOKIE_SAVED_EVENTS)?.value);
   const rawPlan = parsePlanOrderCookie(jar.get(COOKIE_PLAN)?.value);
   const [facets, savedFromServer, planUpcoming] = await Promise.all([
-    countEventsByCity(window).catch(() => [] as { city: string; count: number }[]),
+    countEventsByCity({ window, freeOnly }).catch(() => [] as { city: string; count: number }[]),
     listUpcomingEventsByIds(rawSaved),
     listUpcomingEventsByIds(rawPlan),
   ]);

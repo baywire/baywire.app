@@ -1,25 +1,13 @@
 import type { Prisma } from "@/generated/prisma/client";
 import type { CityKey } from "@/lib/cities";
 import { type AppEvent, serializeEvent, serializeEvents } from "@/lib/events/types";
+import { sourcePriorityRank } from "@/lib/sources/priority";
 import { getWindow, type WindowKey } from "@/lib/time/window";
 
 import { prisma } from "./client";
 import { buildVisibleEventWhere } from "./eventWhere";
 
 const READ_CACHE = { ttl: 60, swr: 300 };
-const SOURCE_PRIORITY = [
-  "eventbrite",
-  "visit_tampa_bay",
-  "visit_st_pete_clearwater",
-  "tampa_gov",
-  "ilovetheburg",
-  "thats_so_tampa",
-  "tampa_bay_times",
-  "tampa_bay_markets",
-  "safety_harbor",
-  "ticketmaster",
-] as const;
-const SOURCE_RANK = new Map<string, number>(SOURCE_PRIORITY.map((slug, idx) => [slug, idx]));
 type EventWithSourceSlug = Prisma.EventGetPayload<{
   include: { source: { select: { slug: true } } };
 }>;
@@ -175,22 +163,34 @@ export interface CityFacet {
   count: number;
 }
 
+export interface CityFacetFilters {
+  window: WindowKey;
+  freeOnly?: boolean;
+}
+
 /**
- * Counts visible events per city without materializing rows. Each canonical
- * group contributes once (mapped to its primary event's city); legacy
- * (un-canonicalized) events each contribute once.
+ * Counts visible events per city for the facet pills. Each pill shows
+ * "events I'd see if this city were selected", so the active `cities` filter
+ * is intentionally NOT applied; `freeOnly` IS applied so the pills agree with
+ * the rendered list.
+ *
+ * Counted by city of any visible event in a canonical group (one contribution
+ * per group, deterministic on tied multi-city groups), so a disabled primary
+ * never skews the facet. Legacy (un-canonicalized) events each contribute
+ * once by their own city.
  */
-export async function countEventsByCity(window: WindowKey): Promise<CityFacet[]> {
-  const w = getWindow(window);
+export async function countEventsByCity(filters: CityFacetFilters): Promise<CityFacet[]> {
+  const w = getWindow(filters.window);
   const visible: Prisma.EventWhereInput = {
     startAt: { gte: w.startAt, lte: w.endAt },
     source: { enabled: true },
+    ...(filters.freeOnly ? { isFree: true } : {}),
   };
 
-  const [canonicalGroups, legacyGroups] = await Promise.all([
+  const [canonicalPairs, legacyGroups] = await Promise.all([
     prisma.event.groupBy(withReadCache({
-      by: ["city"] as const,
-      where: { primaryOf: { events: { some: visible } } },
+      by: ["canonicalId", "city"] as const,
+      where: { ...visible, canonicalId: { not: null } },
       _count: { _all: true },
     })),
     prisma.event.groupBy(withReadCache({
@@ -200,10 +200,17 @@ export async function countEventsByCity(window: WindowKey): Promise<CityFacet[]>
     })),
   ]);
 
+  const cityByCanonical = new Map<string, string>();
+  for (const row of canonicalPairs) {
+    if (!row.canonicalId) continue;
+    const existing = cityByCanonical.get(row.canonicalId);
+    if (!existing || row.city < existing) cityByCanonical.set(row.canonicalId, row.city);
+  }
+
   const counts = new Map<CityKey, number>();
-  for (const row of canonicalGroups) {
-    const key = row.city as CityKey;
-    counts.set(key, (counts.get(key) ?? 0) + row._count._all);
+  for (const city of cityByCanonical.values()) {
+    const key = city as CityKey;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
   }
   for (const row of legacyGroups) {
     const key = row.city as CityKey;
@@ -291,10 +298,6 @@ export async function listUpcomingEventsByIds(ids: string[]): Promise<AppEvent[]
   return serializeEvents(rows);
 }
 
-function sourceRank(slug: string): number {
-  return SOURCE_RANK.get(slug) ?? SOURCE_PRIORITY.length + 100;
-}
-
 function choosePrimaryEvent(
   events: EventWithSourceSlug[],
 ) {
@@ -308,7 +311,7 @@ function choosePrimaryEvent(
       if (nextHasImage) best = next;
       continue;
     }
-    const rankDiff = sourceRank(next.source.slug) - sourceRank(best.source.slug);
+    const rankDiff = sourcePriorityRank(next.source.slug) - sourcePriorityRank(best.source.slug);
     if (rankDiff < 0) {
       best = next;
       continue;

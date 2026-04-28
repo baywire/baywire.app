@@ -1,24 +1,10 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma, type AppPrismaClient } from "@/lib/db/client";
+import { sourcePriorityRank } from "@/lib/sources/priority";
 
 import { refreshEditorialForCanonical } from "./editorial";
 import { isLikelySameEvent } from "./canonicalMatch";
 import { buildCandidateEventWhere } from "./canonicalWhere";
-
-const SOURCE_PRIORITY = [
-  "eventbrite",
-  "visit_tampa_bay",
-  "visit_st_pete_clearwater",
-  "tampa_gov",
-  "thats_so_tampa",
-  "ilovetheburg",
-  "tampa_bay_times",
-  "tampa_bay_markets",
-  "safety_harbor",
-  "ticketmaster",
-] as const;
-
-const SOURCE_RANK = new Map<string, number>(SOURCE_PRIORITY.map((slug, idx) => [slug, idx]));
 
 type CanonicalTx = Pick<AppPrismaClient, "event" | "canonicalEvent">;
 
@@ -146,10 +132,6 @@ function comparePrimaryCandidate(a: EventWithSource, b: EventWithSource): number
   const timeB = b.startAt.getTime();
   if (timeA !== timeB) return timeA - timeB;
   return a.id.localeCompare(b.id);
-}
-
-function sourcePriorityRank(slug: string): number {
-  return SOURCE_RANK.get(slug) ?? SOURCE_PRIORITY.length + 100;
 }
 
 function hasImage(imageUrl: string | null): boolean {
