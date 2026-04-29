@@ -15,7 +15,7 @@ const bodySchema = z.object({
   }),
   eventId: z.uuid().nullish(),
   placeId: z.uuid().nullish(),
-  payload: z.record(z.unknown()).nullish(),
+  payload: z.record(z.string(), z.unknown()).nullish(),
 });
 
 export async function POST(req: NextRequest) {
