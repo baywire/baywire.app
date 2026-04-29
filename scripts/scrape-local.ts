@@ -1,6 +1,7 @@
 import "dotenv/config";
 
 import { runScrape } from "../src/lib/pipeline/run";
+import { runPlaceScrape } from "../src/lib/pipeline/runPlaces";
 
 function isFailForwardError(err: unknown): boolean {
   if (!err) return false;
@@ -16,7 +17,12 @@ function isFailForwardError(err: unknown): boolean {
 
 async function main() {
   const only = process.argv[2];
-  const stats = await runScrape({ only });
+
+  const [eventStats, placeStats] = await Promise.all([
+    runScrape({ only }),
+    runPlaceScrape({ only }),
+  ]);
+  const stats = [...eventStats, ...placeStats];
 
   if (only && stats.length === 0) {
     console.error(`[scrape:local] unknown source: ${only}`);

@@ -1,19 +1,28 @@
-import { CalendarSearch } from "lucide-react";
+import { CalendarSearch, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+
+import { cn } from "@/lib/utils";
 
 export function EmptyState({
   title,
   description,
   actions,
+  dashed = true,
+  icon: Icon = CalendarSearch,
 }: {
   title: string;
   description: string;
   actions?: ReactNode;
+  dashed?: boolean;
+  icon?: LucideIcon;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-card border border-dashed border-ink-200 bg-white/70 p-10 text-center dark:border-ink-700 dark:bg-ink-900/60">
+    <div className={cn(
+      "flex flex-col items-center justify-center rounded-card border border-ink-200 bg-white/70 p-10 text-center dark:border-ink-700 dark:bg-ink-900/60",
+      dashed && "border-dashed",
+    )}>
       <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-gulf-50 text-gulf-500 dark:bg-gulf-700/40 dark:text-gulf-100">
-        <CalendarSearch className="size-7" />
+        <Icon className="size-7" />
       </div>
       <h3 className="font-display text-xl font-semibold text-ink-900 dark:text-sand-50">
         {title}

@@ -39,8 +39,8 @@ export function SearchResultRow({
           "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-gulf-400 dark:focus-visible:outline-sand-200",
         )}
       >
-        {event.imageUrl && (
-          <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
+        <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
+          {event.imageUrl ? (
             <Image
               src={event.imageUrl}
               alt=""
@@ -49,8 +49,17 @@ export function SearchResultRow({
               className="object-cover"
               unoptimized
             />
-          </div>
-        )}
+          ) : (
+            <div
+              aria-hidden
+              className="flex size-full items-center justify-center bg-linear-to-br from-gulf-100 via-sand-100 to-sunset-100 text-ink-500"
+            >
+              <span className="font-display text-[10px] font-semibold uppercase tracking-tight">
+                {city.replace(/[^A-Za-z]/g, "").slice(0, 3)}
+              </span>
+            </div>
+          )}
+        </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-ink-900 dark:text-sand-50">
             {event.title}

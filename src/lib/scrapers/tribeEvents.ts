@@ -147,6 +147,8 @@ function tribeEventToExtracted(event: TribeEvent): ExtractedEvent | null {
   const priceMin = offers?.low ?? null;
   const priceMax = offers?.high ?? offers?.low ?? null;
 
+  const isFree = detectFree(event.cost);
+
   return {
     title: cleanInlineText(event.title).slice(0, 300),
     description: description || null,
@@ -158,9 +160,17 @@ function tribeEventToExtracted(event: TribeEvent): ExtractedEvent | null {
     city: detectCity(cityHint),
     priceMin,
     priceMax,
-    isFree: detectFree(event.cost),
+    isFree,
     categories: collectCategories(event),
     imageUrl,
+    offer: event.url ? {
+      ticketUrl: event.url,
+      status: isFree ? "free" as const : "on_sale" as const,
+      currency: "USD",
+      onSaleLocal: null,
+      validFromLocal: null,
+      tiers: null,
+    } : null,
   };
 }
 

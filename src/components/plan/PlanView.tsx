@@ -2,10 +2,9 @@
 
 import { useCallback, useMemo, useState } from "react";
 
-import { AlertTriangle, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
-import Link from "next/link";
+import { AlertTriangle, ChevronDown, ChevronUp, Clock, ListOrdered, MapPin, Tag, Trash2 } from "lucide-react";
+import Image from "next/image";
 
-import { Button, buttonClasses } from "@/components/ui";
 import { EmptyState } from "@/components/EmptyState";
 import { EventDialog } from "@/components/event/EventDialog";
 import { useHomePlan } from "@/components/plan/homePlanContext";
@@ -16,18 +15,13 @@ import { groupEventsByDay, type DayGroup } from "@/lib/events/grouping";
 import { findConflictMap } from "@/lib/plan/intervals";
 import { cityLabel } from "@/lib/cities";
 import { formatTimeRange } from "@/lib/time/window";
-import { cn } from "@/lib/utils";
-
-interface PlanViewProps {
-  /** In slide-in or mobile, empty-state “browse” can switch to events without navigation. */
-  onBrowseEvents?: () => void;
-}
+import { cn, formatPrice } from "@/lib/utils";
 
 function groupPlanEvents(ordered: AppEvent[]): DayGroup[] {
   return groupEventsByDay(ordered);
 }
 
-export function PlanView({ onBrowseEvents }: PlanViewProps) {
+export function PlanView() {
   const { planOrder, setPlanOrder, planEventsById } = useHomePlan();
   const [viewer, setViewer] = useState<AppEvent | null>(null);
 
@@ -39,24 +33,38 @@ export function PlanView({ onBrowseEvents }: PlanViewProps) {
     [planOrder, planEventsById],
   );
 
-  const indexById = useMemo(() => {
+  const conflictMap = useMemo(() => findConflictMap(ordered), [ordered]);
+
+  const groups = useMemo(() => groupPlanEvents(ordered), [ordered]);
+
+  const globalIndex = useMemo(() => {
     const m = new Map<string, number>();
     planOrder.forEach((id, i) => m.set(id, i));
     return m;
   }, [planOrder]);
 
-  const conflictMap = useMemo(() => findConflictMap(ordered), [ordered]);
+  const canSwap = useCallback(
+    (id: string, neighborId: string) => {
+      const a = planEventsById.get(id);
+      const b = planEventsById.get(neighborId);
+      if (!a || !b) return true;
+      if (a.allDay || b.allDay) return true;
+      const aIdx = globalIndex.get(id) ?? 0;
+      const bIdx = globalIndex.get(neighborId) ?? 0;
+      const movingUp = aIdx > bIdx;
+      if (movingUp) return a.startAt.getTime() <= b.startAt.getTime();
+      return a.startAt.getTime() >= b.startAt.getTime();
+    },
+    [planEventsById, globalIndex],
+  );
 
-  const groups = useMemo(() => groupPlanEvents(ordered), [ordered]);
-
-  const move = useCallback((id: string, dir: "up" | "down") => {
+  const swap = useCallback((idA: string, idB: string) => {
     setPlanOrder((o) => {
-      const i = o.indexOf(id);
-      if (i < 0) return o;
-      const j = dir === "up" ? i - 1 : i + 1;
-      if (j < 0 || j >= o.length) return o;
+      const iA = o.indexOf(idA);
+      const iB = o.indexOf(idB);
+      if (iA < 0 || iB < 0) return o;
       const c = [...o];
-      [c[i], c[j]] = [c[j]!, c[i]!];
+      [c[iA], c[iB]] = [c[iB]!, c[iA]!];
       return c;
     });
   }, [setPlanOrder]);
@@ -70,30 +78,34 @@ export function PlanView({ onBrowseEvents }: PlanViewProps) {
 
   if (planOrder.length === 0) {
     return (
-      <div className="space-y-4">
-        <EmptyState
-          title="Your plan is empty"
-          description="Add events from the home feed, then build your day here again."
-        />
-        <div className="text-center">
-          {onBrowseEvents ? (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onBrowseEvents}
-            >
-              Browse events
-            </Button>
-          ) : (
-            <Link
-              href="/"
-              className={buttonClasses({ variant: "secondary", size: "md" })}
-            >
-              Browse events
-            </Link>
-          )}
-        </div>
-      </div>
+      <EmptyState
+        title="Your plan is empty"
+        description="Build your perfect day by adding events you're interested in."
+        icon={ListOrdered}
+        dashed={false}
+        actions={
+          <ol className="w-full max-w-xs space-y-3 text-left text-sm text-ink-600 dark:text-ink-300">
+            <li className="flex items-start gap-3">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-gulf-50 text-xs font-bold text-gulf-600 dark:bg-gulf-700/40 dark:text-gulf-100">
+                1
+              </span>
+              <span>
+                Tap the{" "}
+                <span className="inline-flex translate-y-0.5 items-center gap-1 rounded bg-ink-100 px-1.5 py-0.5 font-medium text-ink-700 dark:bg-ink-700 dark:text-ink-200">
+                  <ListOrdered className="size-3.5" />
+                </span>{" "}
+                icon on any event card
+              </span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-gulf-50 text-xs font-bold text-gulf-600 dark:bg-gulf-700/40 dark:text-gulf-100">
+                2
+              </span>
+              <span>Rearrange your day and check for conflicts</span>
+            </li>
+          </ol>
+        }
+      />
     );
   }
 
@@ -119,16 +131,18 @@ export function PlanView({ onBrowseEvents }: PlanViewProps) {
             </div>
             <ul className="mt-4 space-y-3">
               {group.events.map((e) => {
-                const gIdx = indexById.get(e.id) ?? 0;
+                const gIdx = globalIndex.get(e.id) ?? 0;
+                const upId = gIdx > 0 ? planOrder[gIdx - 1]! : undefined;
+                const downId = gIdx < planOrder.length - 1 ? planOrder[gIdx + 1]! : undefined;
                 return (
                   <li key={e.id}>
                     <PlanEventRow
                       event={e}
                       conflictsWith={conflictMap.get(e.id) ?? []}
-                      canUp={gIdx > 0}
-                      canDown={gIdx < planOrder.length - 1}
-                      onUp={() => move(e.id, "up")}
-                      onDown={() => move(e.id, "down")}
+                      canUp={!!upId && canSwap(e.id, upId)}
+                      canDown={!!downId && canSwap(e.id, downId)}
+                      onUp={() => upId && swap(e.id, upId)}
+                      onDown={() => downId && swap(e.id, downId)}
                       onRemove={() => remove(e.id)}
                       onViewDetails={() => setViewer(e)}
                     />
@@ -172,55 +186,110 @@ function PlanEventRow({
   onViewDetails: () => void;
 }) {
   const time = formatTimeRange(event.startAt, event.endAt, event.allDay);
+  const city = cityLabel(event.city);
+  const price = formatPrice(event.priceMin, event.priceMax, event.isFree);
   const hasConflict = conflictsWith.length > 0;
+
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 rounded-card border border-ink-100 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-ink-700 dark:bg-ink-900/80",
+        "rounded-lg border border-ink-100 bg-white transition dark:border-ink-700 dark:bg-ink-900/80",
         hasConflict && "border-sunset-300/80 ring-1 ring-sunset-200/60 dark:border-sunset-500/50 dark:ring-sunset-500/30",
       )}
     >
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-gulf-600 dark:text-gulf-200">
-          {time} · {cityLabel(event.city)}
-        </p>
-        <button
-          type="button"
-          onClick={onViewDetails}
-          className="mt-0.5 block w-full text-left font-display text-lg font-semibold text-ink-900 hover:text-gulf-600 dark:text-sand-50 dark:hover:text-gulf-200"
-        >
-          {event.title}
-        </button>
-        {hasConflict && (
+      <button
+        type="button"
+        onClick={onViewDetails}
+        className="flex w-full items-start gap-3 rounded-t-lg px-3 py-2.5 text-left transition hover:bg-ink-50/60 dark:hover:bg-ink-800/40"
+      >
+        <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
+          {event.imageUrl ? (
+            <Image
+              src={event.imageUrl}
+              alt=""
+              fill
+              sizes="48px"
+              className="object-cover"
+              unoptimized
+            />
+          ) : (
+            <div
+              aria-hidden
+              className="flex size-full items-center justify-center bg-linear-to-br from-gulf-100 via-sand-100 to-sunset-100 text-ink-500"
+            >
+              <span className="font-display text-[10px] font-semibold uppercase tracking-tight">
+                {city.replace(/[^A-Za-z]/g, "").slice(0, 3)}
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-ink-900 dark:text-sand-50">
+            {event.title}
+          </p>
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-500 dark:text-ink-300">
+            <span className="inline-flex items-center gap-1">
+              <Clock className="size-3" />
+              {time}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <MapPin className="size-3" />
+              {event.venueName ?? city}
+            </span>
+            {price && (
+              <span className={event.isFree ? "font-medium text-emerald-600 dark:text-emerald-300" : ""}>
+                {price}
+              </span>
+            )}
+          </p>
+          {event.categories.length > 0 && (
+            <div className="mt-1 flex items-center gap-1">
+              <Tag className="size-2.5 text-ink-400" />
+              {event.categories.slice(0, 3).map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full bg-ink-100 px-1.5 py-0.5 text-[11px] capitalize text-ink-600 dark:bg-ink-700/60 dark:text-ink-200"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </button>
+
+      {hasConflict && (
+        <div className="border-t border-ink-100 px-3 py-1.5 dark:border-ink-700">
           <ConflictNote conflictsWith={conflictsWith} />
-        )}
-      </div>
-      <div className="flex shrink-0 items-center gap-1 sm:gap-0.5">
+        </div>
+      )}
+
+      <div className="flex items-center gap-1 border-t border-ink-100 px-2 py-1.5 dark:border-ink-700">
         <button
           type="button"
           onClick={onUp}
           disabled={!canUp}
-          className="flex size-9 items-center justify-center rounded-lg border border-ink-200 text-ink-600 hover:bg-ink-50 disabled:cursor-not-allowed disabled:opacity-30 dark:border-ink-600 dark:hover:bg-ink-800/80 dark:text-ink-200"
+          className="flex size-7 items-center justify-center rounded text-ink-500 hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-ink-800 dark:text-ink-300"
           aria-label="Move up in plan"
         >
-          <ChevronUp className="size-5" />
+          <ChevronUp className="size-4" />
         </button>
         <button
           type="button"
           onClick={onDown}
           disabled={!canDown}
-          className="flex size-9 items-center justify-center rounded-lg border border-ink-200 text-ink-600 hover:bg-ink-50 disabled:cursor-not-allowed disabled:opacity-30 dark:border-ink-600 dark:hover:bg-ink-800/80 dark:text-ink-200"
+          className="flex size-7 items-center justify-center rounded text-ink-500 hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-ink-800 dark:text-ink-300"
           aria-label="Move down in plan"
         >
-          <ChevronDown className="size-5" />
+          <ChevronDown className="size-4" />
         </button>
         <button
           type="button"
           onClick={onRemove}
-          className="ml-1 flex size-9 items-center justify-center rounded-lg border border-ink-200 text-ink-500 hover:border-sunset-300 hover:text-sunset-600 dark:border-ink-600 dark:hover:border-sunset-500 dark:hover:text-sunset-300"
+          className="ml-auto flex size-7 items-center justify-center rounded text-ink-400 hover:bg-sunset-50 hover:text-sunset-600 dark:hover:bg-sunset-500/10 dark:hover:text-sunset-300"
           aria-label="Remove from plan"
         >
-          <Trash2 className="size-4" />
+          <Trash2 className="size-3.5" />
         </button>
       </div>
     </div>

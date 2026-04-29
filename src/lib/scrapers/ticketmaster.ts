@@ -1,6 +1,6 @@
 import type { CityKey } from "@/lib/cities";
 import { normalizeCategoryTags } from "@/lib/events/tagCanonical";
-import type { ExtractedEvent } from "@/lib/extract/schema";
+import type { ExtractedEvent, ExtractedOffer, PriceTier, TicketStatusValue } from "@/lib/extract/schema";
 
 import { politeFetch } from "./fetch";
 import { cleanInlineText, stripHtmlToText } from "./text";
@@ -74,6 +74,15 @@ interface TicketmasterDates {
   status?: { code?: string };
 }
 
+interface TicketmasterSales {
+  public?: {
+    startDateTime?: string;
+    endDateTime?: string;
+    startTBD?: boolean;
+    startTBA?: boolean;
+  };
+}
+
 interface TicketmasterEvent {
   id: string;
   name: string;
@@ -85,6 +94,7 @@ interface TicketmasterEvent {
   classifications?: TicketmasterClassification[];
   priceRanges?: TicketmasterPriceRange[];
   dates?: TicketmasterDates;
+  sales?: TicketmasterSales;
   _embedded?: { venues?: TicketmasterVenue[] };
 }
 
@@ -217,6 +227,9 @@ function ticketmasterEventToExtracted(event: TicketmasterEvent): ExtractedEvent 
   const cityHint = `${venueName ?? ""} ${address ?? ""}`;
   const priceRange = pickPriceRange(event.priceRanges);
 
+  const isFree = priceRange ? priceRange.min === 0 && (priceRange.max ?? 0) === 0 : false;
+  const offer = buildTicketmasterOffer(event, isFree);
+
   return {
     title: cleanInlineText(event.name).slice(0, 300),
     description: description ? description.slice(0, 2000) : null,
@@ -228,9 +241,10 @@ function ticketmasterEventToExtracted(event: TicketmasterEvent): ExtractedEvent 
     city: detectCity(cityHint),
     priceMin: priceRange?.min ?? null,
     priceMax: priceRange?.max ?? priceRange?.min ?? null,
-    isFree: priceRange ? priceRange.min === 0 && (priceRange.max ?? 0) === 0 : false,
+    isFree,
     categories: collectCategories(event),
     imageUrl,
+    offer,
   };
 }
 
@@ -365,6 +379,61 @@ function synthesizeReducedBlob(event: TicketmasterEvent): string {
     "Text:",
     lines.join("\n"),
   ].join("\n");
+}
+
+const TM_STATUS_MAP: Record<string, TicketStatusValue> = {
+  onsale: "on_sale",
+  offsale: "not_yet",
+  cancelled: "cancelled",
+  postponed: "not_yet",
+  rescheduled: "on_sale",
+};
+
+function buildTicketmasterOffer(event: TicketmasterEvent, isFree: boolean): ExtractedOffer {
+  const ticketUrl = sanitizeHttp(event.url) ?? null;
+  const currency = event.priceRanges?.[0]?.currency?.toUpperCase().slice(0, 3) ?? "USD";
+
+  let status: TicketStatusValue = "unknown";
+  if (isFree) {
+    status = "free";
+  } else {
+    const code = event.dates?.status?.code?.toLowerCase() ?? "";
+    status = TM_STATUS_MAP[code] ?? "on_sale";
+  }
+
+  let onSaleLocal: string | null = null;
+  const publicStart = event.sales?.public?.startDateTime;
+  if (publicStart) {
+    const d = new Date(publicStart);
+    if (!Number.isNaN(d.getTime())) {
+      const pad = (n: number) => String(n).padStart(2, "0");
+      onSaleLocal = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+    }
+  }
+
+  let tiers: PriceTier[] | null = null;
+  if (event.priceRanges && event.priceRanges.length > 1) {
+    const built: PriceTier[] = [];
+    for (const r of event.priceRanges) {
+      if (typeof r.min !== "number" || !Number.isFinite(r.min)) continue;
+      built.push({
+        name: r.type ?? "Ticket",
+        min: r.min,
+        max: typeof r.max === "number" && Number.isFinite(r.max) ? r.max : r.min,
+        currency: r.currency?.toUpperCase().slice(0, 3) ?? currency,
+      });
+    }
+    if (built.length > 1) tiers = built.slice(0, 8);
+  }
+
+  return {
+    ticketUrl,
+    status,
+    currency,
+    onSaleLocal,
+    validFromLocal: null,
+    tiers,
+  };
 }
 
 const CITY_HINTS: Array<{ key: CityKey; matchers: RegExp[] }> = [

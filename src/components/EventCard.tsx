@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { ArrowUpRight, Bookmark, Clock, ListOrdered, MapPin, Tag } from "lucide-react";
+import { ArrowUpRight, Bookmark, Clock, ListOrdered, MapPin, Tag, Ticket } from "lucide-react";
 
 import { EventDialog } from "@/components/event/EventDialog";
 import { IconButton } from "@/components/ui";
@@ -163,6 +163,17 @@ export function EventCard({
               )}
             >
               {price}
+            </span>
+          )}
+          {event.ticketStatus === "sold_out" && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-red-700 dark:bg-red-700/30 dark:text-red-200">
+              Sold out
+            </span>
+          )}
+          {event.ticketUrl && event.ticketStatus !== "sold_out" && !event.isFree && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-gulf-50 px-2 py-0.5 text-gulf-700 dark:bg-gulf-700/30 dark:text-gulf-200">
+              <Ticket className="size-3" />
+              Tickets
             </span>
           )}
         </div>

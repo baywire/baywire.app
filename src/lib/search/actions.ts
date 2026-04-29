@@ -7,16 +7,18 @@ import { eventMatchesTopTags } from "@/lib/events/tagOptions";
 import { rerankWithAI } from "@/lib/search/ai";
 import { normalizeSearchQuery, rankDeterministic } from "@/lib/search/rank";
 import type { SearchMode, SearchResponse } from "@/lib/search/types";
-import { type WindowKey } from "@/lib/time/window";
 
-const VALID_WINDOWS = new Set<WindowKey>(["tonight", "weekend", "week"]);
 const MAX_CANDIDATES = 40;
 const DIRECT_MATCH_LIMIT = 60;
 const AI_TIMEOUT_MS = 3500;
 
+/**
+ * Search always scans the full week (`"week"` window) so users can find
+ * events outside the home page's current window selection. Other filters
+ * (city, freeOnly, tags, saved-only) still apply.
+ */
 export interface SearchEventsInput {
   query: string;
-  window: WindowKey;
   city: CityKey | "all";
   freeOnly: boolean;
   tags: readonly string[];
@@ -31,16 +33,15 @@ export async function searchEvents(input: SearchEventsInput): Promise<SearchResp
     return buildEmpty(query, "idle", startedAt, false, false);
   }
 
-  const window: WindowKey = VALID_WINDOWS.has(input.window) ? input.window : "weekend";
   const city = input.city && input.city !== "all" && isCityKey(input.city) ? input.city : null;
   const tags = normalizeStringArray(input.tags);
   const savedIDs = new Set(normalizeStringArray(input.savedIDs));
 
   const rows = await listEvents({
-    window,
+    window: "week",
     cities: city ? [city] : undefined,
     freeOnly: Boolean(input.freeOnly),
-    limit: 200,
+    limit: 400,
   });
 
   const filtered = rows.filter((event) => {

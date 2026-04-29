@@ -19,6 +19,15 @@ import { cityLabel } from "@/lib/cities";
 import { formatLocal, formatTimeRange } from "@/lib/time/window";
 import { cn, formatPrice, safeUrl } from "@/lib/utils";
 
+function ticketCtaLabel(status: string | null | undefined): string {
+  switch (status) {
+    case "rsvp": return "RSVP";
+    case "free": return "Get free tickets";
+    case "not_yet": return "Notify me";
+    default: return "Buy tickets";
+  }
+}
+
 function DetailRow({
   icon,
   label,
@@ -65,6 +74,8 @@ export function EventDetailBody({
   const time = formatTimeRange(event.startAt, event.endAt, event.allDay);
   const price = formatPrice(event.priceMin, event.priceMax, event.isFree);
   const sourceUrl = safeUrl(event.eventUrl);
+  const ticketUrl = safeUrl(event.ticketUrl);
+  const ticketStatus = event.ticketStatus;
   const mapUrl = event.address
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address)}`
     : null;
@@ -135,6 +146,11 @@ export function EventDetailBody({
               {price}
             </span>
           )}
+          {ticketStatus === "sold_out" && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-red-700 dark:bg-red-700/30 dark:text-red-200">
+              Sold out
+            </span>
+          )}
         </div>
 
         {!hideTitle && imageLayout === "default" && (
@@ -193,12 +209,23 @@ export function EventDetailBody({
           </div>
         )}
 
-        {sourceUrl && (
+        {(ticketUrl || sourceUrl) && (
           <div className="flex flex-wrap gap-3 border-t border-ink-100 pt-6 dark:border-ink-700">
-            <ExternalPillLink href={sourceUrl} variant="primary">
-              View on source
-              <ExternalLink className="size-4" />
-            </ExternalPillLink>
+            {ticketUrl && ticketStatus !== "sold_out" ? (
+              <ExternalPillLink href={ticketUrl} variant="primary">
+                <Ticket className="size-4" />
+                {ticketCtaLabel(ticketStatus)}
+              </ExternalPillLink>
+            ) : null}
+            {sourceUrl && (
+              <ExternalPillLink
+                href={sourceUrl}
+                variant={ticketUrl && ticketStatus !== "sold_out" ? "outline" : "primary"}
+              >
+                View on source
+                <ExternalLink className="size-4" />
+              </ExternalPillLink>
+            )}
             {mapUrl && (
               <ExternalPillLink href={mapUrl} variant="outline">
                 Open in Maps
@@ -206,6 +233,12 @@ export function EventDetailBody({
               </ExternalPillLink>
             )}
           </div>
+        )}
+
+        {event.onSaleAt && new Date(event.onSaleAt) > new Date() && (
+          <p className="text-sm text-ink-500 dark:text-ink-300">
+            Tickets on sale {formatLocal(event.onSaleAt, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+          </p>
         )}
       </div>
     </article>

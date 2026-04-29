@@ -11,7 +11,7 @@ import pLimit from "p-limit";
 const USER_AGENT =
   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36";
 
-const DEFAULT_HEADERS: Readonly<Record<string, string>> = {
+export const DEFAULT_SCRAPE_HEADERS: Readonly<Record<string, string>> = {
   "User-Agent": USER_AGENT,
   Accept:
     "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -132,15 +132,30 @@ function shortUrl(url: string): string {
   }
 }
 
+/** First `name=value` segment from each `Set-Cookie` header (Node/undici). */
+function clientCookieHeaderFromResponse(res: Response): string | null {
+  const headers = res.headers as unknown as { getSetCookie?: () => string[] };
+  const parts = typeof headers.getSetCookie === "function" ? headers.getSetCookie() : null;
+  if (!parts?.length) return null;
+  const pairs = parts.map((c) => c.split(";")[0]?.trim()).filter(Boolean);
+  return pairs.length ? pairs.join("; ") : null;
+}
+
+export interface PoliteFetchResult {
+  body: string;
+  /** Semicolon-joined `name=value` pairs parsed from `Set-Cookie` response headers. */
+  clientCookieHeader: string | null;
+}
+
 /**
- * Fetches a URL with realistic browser-like headers, per-host pacing, and
- * exponential backoff on retryable failures. Emits a structured `[fetch]`
- * log line for every attempt (status + duration); on non-OK responses also
- * logs a body preview so anti-bot WAFs are easy to identify in CI logs.
- * When `SCRAPE_DEBUG=1`, full response bodies are written to
- * `scripts/.last-html/<host>.<status>.html` for offline diagnosis.
+ * Same as {@link politeFetch}, but also returns any `Set-Cookie` lines as a
+ * single `Cookie` request header value for follow-up requests (e.g. WAF
+ * session cookies after a homepage hit).
  */
-export async function politeFetch(url: string, opts: FetchOptions = {}): Promise<string> {
+export async function politeFetchWithMeta(
+  url: string,
+  opts: FetchOptions = {},
+): Promise<PoliteFetchResult> {
   const parsed = new URL(url);
   const limit = limiterFor(parsed.host);
   const retries = opts.retries ?? 2;
@@ -149,11 +164,11 @@ export async function politeFetch(url: string, opts: FetchOptions = {}): Promise
   const referer = opts.referer;
   const baseHeaders: Record<string, string> = referer
     ? {
-        ...DEFAULT_HEADERS,
+        ...DEFAULT_SCRAPE_HEADERS,
         Referer: referer,
         "Sec-Fetch-Site": sameSite(referer, parsed) ? "same-origin" : "cross-site",
       }
-    : { ...DEFAULT_HEADERS };
+    : { ...DEFAULT_SCRAPE_HEADERS };
 
   return limit(async () => {
     let lastError: unknown = null;
@@ -191,10 +206,11 @@ export async function politeFetch(url: string, opts: FetchOptions = {}): Promise
         }
 
         const body = await res.text();
+        const clientCookieHeader = clientCookieHeaderFromResponse(res);
         const totalMs = Date.now() - startedAt;
         if (debugEnabled()) await captureBody(parsed.host, res.status, body);
         logFetch("log", parsed, res.status, totalMs, opts, `bytes=${body.length}`);
-        return body;
+        return { body, clientCookieHeader };
       } catch (err) {
         lastError = err;
         if (err instanceof DOMException && err.name === "AbortError" && opts.signal?.aborted) {
@@ -219,6 +235,19 @@ export async function politeFetch(url: string, opts: FetchOptions = {}): Promise
     }
     throw lastError instanceof Error ? lastError : new Error(String(lastError));
   });
+}
+
+/**
+ * Fetches a URL with realistic browser-like headers, per-host pacing, and
+ * exponential backoff on retryable failures. Emits a structured `[fetch]`
+ * log line for every attempt (status + duration); on non-OK responses also
+ * logs a body preview so anti-bot WAFs are easy to identify in CI logs.
+ * When `SCRAPE_DEBUG=1`, full response bodies are written to
+ * `scripts/.last-html/<host>.<status>.html` for offline diagnosis.
+ */
+export async function politeFetch(url: string, opts: FetchOptions = {}): Promise<string> {
+  const { body } = await politeFetchWithMeta(url, opts);
+  return body;
 }
 
 function sameSite(referer: string, target: URL): boolean {

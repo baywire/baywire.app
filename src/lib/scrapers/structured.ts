@@ -1,7 +1,7 @@
 import { formatInTimeZone } from "date-fns-tz";
 
 import type { CityKey } from "@/lib/cities";
-import type { ExtractedEvent } from "@/lib/extract/schema";
+import type { ExtractedEvent, ExtractedOffer, PriceTier, TicketStatusValue } from "@/lib/extract/schema";
 import { TZ } from "@/lib/time/window";
 
 import { loadHtml } from "./parse";
@@ -45,11 +45,14 @@ export interface SchemaOrgAddress {
 
 export interface SchemaOrgOffer {
   "@type"?: string;
+  url?: string;
+  name?: string;
   price?: string | number;
   highPrice?: string | number;
   lowPrice?: string | number;
   priceCurrency?: string;
   availability?: string;
+  validFrom?: string;
 }
 
 const EVENT_TYPE_RE = /event$/i;
@@ -300,6 +303,7 @@ export function jsonLdEventToExtracted(ev: SchemaOrgEvent): ExtractedEvent | nul
 
   const imageUrl = pickImage(ev.image);
   const cityHint = `${venueName ?? ""} ${address ?? ""}`;
+  const offer = buildOfferFromJsonLd(ev, isFree);
 
   return {
     title: cleanInlineText(ev.name).slice(0, 300),
@@ -315,6 +319,7 @@ export function jsonLdEventToExtracted(ev: SchemaOrgEvent): ExtractedEvent | nul
     isFree: Boolean(isFree),
     categories: dedupeCategories(collectKeywords(ev)),
     imageUrl,
+    offer,
   };
 }
 
@@ -351,6 +356,7 @@ export function icsEventToExtracted(ev: IcsEvent): ExtractedEvent | null {
     isFree: false,
     categories: dedupeCategories(ev.categories ?? []),
     imageUrl: null,
+    offer: null,
   };
 }
 
@@ -471,6 +477,71 @@ function dedupeCategories(input: string[]): string[] {
     if (out.length >= 6) break;
   }
   return out;
+}
+
+const AVAILABILITY_TO_STATUS: Record<string, TicketStatusValue> = {
+  "https://schema.org/InStock": "on_sale",
+  "https://schema.org/SoldOut": "sold_out",
+  "https://schema.org/PreOrder": "not_yet",
+  "https://schema.org/LimitedAvailability": "on_sale",
+  "https://schema.org/OnlineOnly": "on_sale",
+  "https://schema.org/Discontinued": "cancelled",
+  InStock: "on_sale",
+  SoldOut: "sold_out",
+  PreOrder: "not_yet",
+  LimitedAvailability: "on_sale",
+  Discontinued: "cancelled",
+};
+
+function buildOfferFromJsonLd(ev: SchemaOrgEvent, isFree: boolean): ExtractedOffer | null {
+  const allOffers = normalizeOfferArray(ev.offers);
+  if (allOffers.length === 0 && !isFree) return null;
+
+  const first = allOffers[0] ?? null;
+  const ticketUrl = (first?.url ? sanitizeHttp(first.url) : null) ?? (ev.url ? sanitizeHttp(ev.url) : null);
+  const currency = first?.priceCurrency?.toUpperCase().slice(0, 3) ?? null;
+
+  let status: TicketStatusValue | null = null;
+  if (isFree) {
+    status = "free";
+  } else if (first?.availability) {
+    status = AVAILABILITY_TO_STATUS[first.availability] ?? "unknown";
+  }
+
+  const validFromLocal = first?.validFrom ? isoToLocalNyString(first.validFrom) : null;
+
+  let tiers: PriceTier[] | null = null;
+  if (allOffers.length > 1) {
+    const built: PriceTier[] = [];
+    for (const o of allOffers) {
+      const min = parsePrice(o.lowPrice ?? o.price);
+      const max = parsePrice(o.highPrice ?? o.price) ?? min;
+      if (min == null && max == null) continue;
+      built.push({
+        name: o.name ?? o["@type"] ?? "Ticket",
+        min: min ?? null,
+        max: max ?? null,
+        currency: o.priceCurrency?.toUpperCase().slice(0, 3) ?? currency,
+      });
+    }
+    if (built.length > 1) tiers = built.slice(0, 8);
+  }
+
+  if (!ticketUrl && !status && !tiers) return null;
+
+  return {
+    ticketUrl,
+    status,
+    currency,
+    onSaleLocal: null,
+    validFromLocal,
+    tiers,
+  };
+}
+
+function normalizeOfferArray(input: SchemaOrgEvent["offers"]): SchemaOrgOffer[] {
+  if (!input) return [];
+  return Array.isArray(input) ? input : [input];
 }
 
 const CITY_HINTS: Array<{ key: CityKey; matchers: RegExp[] }> = [

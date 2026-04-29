@@ -58,6 +58,18 @@ export const eventbriteAdapter: SourceAdapter = {
     for (const ev of events) {
       const extracted = jsonLdEventToExtracted(ev);
       if (extracted) {
+        if (extracted.offer) {
+          extracted.offer.ticketUrl ??= item.url;
+        } else {
+          extracted.offer = {
+            ticketUrl: item.url,
+            status: extracted.isFree ? "free" : "on_sale",
+            currency: "USD",
+            onSaleLocal: null,
+            validFromLocal: null,
+            tiers: null,
+          };
+        }
         return { event: extracted, canonicalUrl: ev.url || item.url };
       }
     }

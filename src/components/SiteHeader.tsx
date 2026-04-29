@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { Radio } from "lucide-react";
 
@@ -38,6 +39,7 @@ export function SiteHeader({ showPlanLink = true, showNavLinks = true }: SiteHea
             <TextLink href="/?window=tonight">Tonight</TextLink>
             <TextLink href="/?window=weekend">Weekend</TextLink>
             <TextLink href="/?window=week">All week</TextLink>
+            <TextLink href={"/places" as Route}>Places</TextLink>
           </nav>
         )}
       </div>

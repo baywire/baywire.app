@@ -1,6 +1,7 @@
 import { after, NextResponse, type NextRequest } from "next/server";
 
 import { runScrape } from "@/lib/pipeline/run";
+import { runPlaceScrape } from "@/lib/pipeline/runPlaces";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +28,11 @@ export async function GET(req: NextRequest) {
   // alive to finish the scrape after the response is flushed.
   after(async () => {
     try {
-      const stats = await runScrape({ only });
+      const [eventStats, placeStats] = await Promise.all([
+        runScrape({ only }),
+        runPlaceScrape({ only }),
+      ]);
+      const stats = [...eventStats, ...placeStats];
       const totals = stats.reduce(
         (acc, s) => {
           acc.seen += s.seen;
@@ -41,7 +46,8 @@ export async function GET(req: NextRequest) {
       console.log("[scrape] completed", {
         only: only ?? "all",
         totals,
-        sources: stats,
+        events: eventStats,
+        places: placeStats,
       });
     } catch (err) {
       console.error(

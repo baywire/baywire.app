@@ -1,9 +1,14 @@
 import { eventbriteAdapter } from "./eventbrite";
+import { dontTellComedyAdapter } from "./dontTellComedy";
+import { funnyBoneTampaAdapter } from "./funnyBoneTampa";
 import { iLoveTheBurgAdapter } from "./iLoveTheBurg";
 import { safetyHarborAdapter } from "./safetyHarbor";
+import { sideSplittersAdapter } from "./sideSplitters";
+import { strazCenterAdapter } from "./strazCenter";
 import { tampaBayMarketsAdapter } from "./tampaBayMarkets";
 import { tampaBayTimesAdapter } from "./tampaBayTimes";
 import { tampaGovAdapter } from "./tampaGov";
+import { tampaTheatreLiveAdapter } from "./tampaTheatreLive";
 import { thatsSoTampaAdapter } from "./thatsSoTampa";
 import { ticketmasterAdapter } from "./ticketmaster";
 import { visitStPeteAdapter } from "./visitStPete";
@@ -32,6 +37,11 @@ export const ADAPTERS: readonly SourceAdapter[] = [
   safetyHarborAdapter,
   iLoveTheBurgAdapter,
   thatsSoTampaAdapter,
+  sideSplittersAdapter,
+  dontTellComedyAdapter,
+  funnyBoneTampaAdapter,
+  strazCenterAdapter,
+  tampaTheatreLiveAdapter,
 ] as const;
 
 export function getAdapter(slug: string): SourceAdapter | undefined {

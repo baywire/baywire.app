@@ -29,7 +29,7 @@ jobs:
           PICK: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.source || '' }}
         run: |
           # Keep in sync with ADAPTERS in src/lib/scrapers/index.ts.
-          all='["eventbrite","ticketmaster","visit_tampa_bay","visit_st_pete_clearwater","tampa_bay_times","tampa_bay_markets","tampa_gov","safety_harbor","ilovetheburg","thats_so_tampa"]'
+          all='["eventbrite","ticketmaster","visit_tampa_bay","visit_st_pete_clearwater","tampa_bay_times","tampa_bay_markets","tampa_gov","safety_harbor","ilovetheburg","thats_so_tampa","thats_so_tampa_places","ilovetheburg_places","visit_tampa_bay_places"]'
           if [ -n "${PICK// }" ]; then
             sub=$(jq -n --arg s "$PICK" '[$s]')
             echo "matrix={\"source\":$sub}" >> "$GITHUB_OUTPUT"

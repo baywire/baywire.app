@@ -13,6 +13,7 @@ import { getScrapeWindow, overlapsWindow } from "@/lib/time/window";
 
 import { normalizeExtractedEvent } from "./normalize";
 import { resolveCanonicalEventForEvent } from "./canonical";
+import { upsertPlaceFromEvent } from "./placeFromEvent";
 
 const EXTRACTION_CONCURRENCY = 4;
 const MAX_EVENTS_PER_SOURCE = 60;
@@ -317,6 +318,7 @@ async function processItem(args: ProcessArgs): Promise<ProcessResult> {
       }`,
     );
   }
+  await tryUpsertPlace(sourceId, data);
   return {
     outcome: writeResult.outcome,
     structured: false,
@@ -380,6 +382,7 @@ async function persistStructured(
       }`,
     );
   }
+  await tryUpsertPlace(sourceId, normalized.row);
   return writeResult.outcome;
 }
 
@@ -439,4 +442,17 @@ function stableStringify(value: unknown): string {
   const keys = Object.keys(obj).sort();
   const parts = keys.map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`);
   return `{${parts.join(",")}}`;
+}
+
+async function tryUpsertPlace(
+  sourceId: string,
+  row: Prisma.EventUncheckedCreateInput,
+): Promise<void> {
+  try {
+    await upsertPlaceFromEvent(sourceId, row);
+  } catch (err) {
+    console.warn(
+      `[place-from-event] failed: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
 }

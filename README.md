@@ -44,6 +44,11 @@ Baywire pulls candidate events from ten high-signal sources daily. Each source r
 | `tampa_bay_times`          | tampabay.com/things-to-do           | HTML + LLM          | Editorial weekend picks                              |
 | `tampa_bay_markets`        | tampabaymarkets.com                 | HTML + LLM          | Recurring farmers' markets across the bay            |
 | `safety_harbor`            | cityofsafetyharbor.com              | RSS hint + LLM      | CivicPlus RSS feed → SSR detail pages                |
+| `side_splitters`           | sidesplitterscomedy.com             | HTML + LLM          | Comedy club; listings link out to OvationTix         |
+| `dont_tell_comedy`         | donttellcomedy.com                  | HTML + LLM          | Pop-up “secret” comedy shows                         |
+| `funny_bone_tampa`         | tampa.funnybone.com                 | HTML + LLM          | Funny Bone Tampa show listings                        |
+| `straz_center`             | strazcenter.org                     | HTML + LLM (WAF)    | Set `STRAZCENTER_SCRAPE_COOKIE` if Incapsula blocks  |
+| `tampa_theatre`            | tampatheatre.org                    | HTML + LLM          | Live events page + detail pages                      |
 
 **Deferred:** `feverup.com/en/tampa` (JS SPA, no public JSON-LD/sitemap),
 `unation.com` (Cloudflare bot challenge), and

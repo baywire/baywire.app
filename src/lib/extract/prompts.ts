@@ -9,7 +9,15 @@ Rules:
 - "city" must match the venue's city. Use 'other' for anywhere outside Tampa, St Petersburg, Clearwater, Brandon, or Bradenton (e.g. Sarasota, Lakeland, Orlando).
 - Categories must be lowercase single words or short hyphenated phrases. Pick from the canonical set when applicable: music, food, drinks, family, kids, outdoors, sports, art, theater, comedy, nightlife, festival, market, wellness, education, free, holiday.
 - Mark isFree=true ONLY if the page explicitly says the event is free or admission is free. Do not infer free from missing prices.
-- For description, keep faithful source wording but ensure the output ends on a complete sentence (no mid-word or mid-sentence cutoffs).`;
+- For description, keep faithful source wording but ensure the output ends on a complete sentence (no mid-word or mid-sentence cutoffs).
+
+Ticket / offer rules:
+- offer.ticketUrl is the URL where a user can BUY tickets or RSVP. It is NOT the same as the event detail URL (which goes in eventUrl). Look for anchor text like "Buy Tickets", "Get Tickets", "RSVP", "Register", or links to Eventbrite, Ticketmaster, Tixr, AXS, etc.
+- If the event page IS the ticket page (e.g. eventbrite.com/e/...), set offer.ticketUrl to that URL.
+- offer.status: use "on_sale" if tickets are currently available, "sold_out" if explicitly sold out, "not_yet" if announced but not on sale yet, "free" if free admission, "rsvp" if RSVP-only. Use null if unknown.
+- offer.tiers: only populate if the page lists multiple distinct ticket types (e.g. GA $25, VIP $75). Do not invent tiers from a single price range.
+- offer.onSaleLocal / offer.validFromLocal: use ISO 8601 local time like other date fields. Null if not stated.
+- Set the entire offer object to null if no ticket information is found on the page.`;
 
 export function buildUserPrompt(args: {
   sourceLabel: string;

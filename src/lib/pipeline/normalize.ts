@@ -1,8 +1,9 @@
-import type { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 
 import type { CityKey } from "@/lib/cities";
 import { normalizeCategoryTags as normalizeCategoryTagsShared } from "@/lib/events/tagCanonical";
-import type { ExtractedEvent } from "@/lib/extract/schema";
+import type { ExtractedEvent, PriceTier } from "@/lib/extract/schema";
+import { TICKET_STATUSES } from "@/lib/extract/schema";
 import { cleanInlineText, stripHtmlToText } from "@/lib/scrapers/text";
 import { parseLocalDate } from "@/lib/time/window";
 
@@ -51,6 +52,14 @@ export function normalizeExtractedEvent(args: NormalizeArgs): NormalizeResult | 
 
   const categories = dedupeCategories(extracted.categories);
 
+  const offer = extracted.offer;
+  const ticketUrl = sanitizeHttpUrl(offer?.ticketUrl) ?? null;
+  const ticketStatus = offer?.status && TICKET_STATUSES.includes(offer.status) ? offer.status : null;
+  const ticketCurrency = offer?.currency?.toUpperCase().slice(0, 3) ?? null;
+  const onSaleAt = offer?.onSaleLocal ? parseLocalDate(offer.onSaleLocal) ?? null : null;
+  const validFromAt = offer?.validFromLocal ? parseLocalDate(offer.validFromLocal) ?? null : null;
+  const priceTiers = normalizePriceTiers(offer?.tiers ?? null);
+
   const row: Prisma.EventUncheckedCreateInput & { startAt: Date; endAt: Date | null } = {
     sourceId: args.sourceId,
     sourceEventId: args.sourceEventId,
@@ -67,6 +76,12 @@ export function normalizeExtractedEvent(args: NormalizeArgs): NormalizeResult | 
     priceMin: extracted.priceMin == null ? null : extracted.priceMin.toFixed(2),
     priceMax: extracted.priceMax == null ? null : extracted.priceMax.toFixed(2),
     isFree: extracted.isFree,
+    ticketUrl,
+    ticketStatus,
+    ticketCurrency,
+    onSaleAt,
+    validFromAt,
+    priceTiers: priceTiers ?? Prisma.DbNull,
     categories,
     imageUrl: sanitizeHttpUrl(extracted.imageUrl),
     eventUrl: args.eventUrl,
@@ -100,4 +115,14 @@ function dedupeCategories(input: string[]): string[] {
 
 export function normalizeCategoryTags(input: readonly string[], limit = 6): string[] {
   return normalizeCategoryTagsShared(input, limit);
+}
+
+function normalizePriceTiers(tiers: PriceTier[] | null | undefined): PriceTier[] | null {
+  if (!tiers || tiers.length === 0) return null;
+  return tiers.slice(0, 8).map((t) => ({
+    name: (t.name ?? "Ticket").slice(0, 80),
+    min: typeof t.min === "number" && Number.isFinite(t.min) ? t.min : null,
+    max: typeof t.max === "number" && Number.isFinite(t.max) ? t.max : null,
+    currency: t.currency?.toUpperCase().slice(0, 3) ?? null,
+  }));
 }

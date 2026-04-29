@@ -14,7 +14,7 @@ import type { AppEvent } from "@/lib/events/types";
 import { cn } from "@/lib/utils";
 
 export function HomeWithPlanLayout({ children }: { children: ReactNode }) {
-  const { drawerOpen, mobileView, showFeed } = useHomePlan();
+  const { drawerOpen, mobileView } = useHomePlan();
 
   return (
     <div className="flex w-full min-w-0 flex-1 flex-col">
@@ -36,7 +36,7 @@ export function HomeWithPlanLayout({ children }: { children: ReactNode }) {
             "flex min-h-0 min-w-0 flex-col border-ink-200/80 bg-sand-50/98 dark:border-ink-700/80 dark:bg-ink-900/98",
             "md:shrink-0 md:overflow-hidden md:border-l md:transition-[width,box-shadow] md:duration-300 md:ease-out",
             drawerOpen
-              ? "md:sticky md:top-14 md:z-10 md:self-start md:h-[calc(100dvh-3.5rem)] md:min-h-0 md:w-88 md:shadow-[-4px_0_24px_-6px_rgba(0,0,0,0.1)] dark:md:shadow-[-4px_0_24px_-6px_rgba(0,0,0,0.35)]"
+              ? "md:sticky md:top-14 md:z-10 md:self-start md:h-[calc(100dvh-3.5rem)] md:min-h-0 md:w-99 md:shadow-[-4px_0_24px_-6px_rgba(0,0,0,0.1)] dark:md:shadow-[-4px_0_24px_-6px_rgba(0,0,0,0.35)]"
               : "md:h-0 md:max-h-0 md:min-h-0 md:w-0 md:overflow-hidden md:border-0",
             "max-md:fixed max-md:bottom-16 max-md:left-0 max-md:right-0 max-md:top-14 max-md:z-30 max-md:h-auto max-md:max-h-none max-md:border-t max-md:shadow-2xl",
             mobileView === "feed" && "max-md:translate-x-full max-md:pointer-events-none",
@@ -45,18 +45,21 @@ export function HomeWithPlanLayout({ children }: { children: ReactNode }) {
           aria-label="My plan"
         >
           <div
-            className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden md:w-88 md:shrink-0"
+            className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden md:w-99 md:shrink-0"
           >
-            <div className="shrink-0 border-b border-ink-200/70 px-4 py-2.5 dark:border-ink-700/70 md:py-3">
-              <h2 className="font-display text-base font-semibold text-ink-900 md:text-lg dark:text-sand-50">
-                My plan
-              </h2>
-              <p className="mt-0.5 hidden text-[11px] text-ink-500 dark:text-ink-300 sm:block sm:text-xs">
-                Reorder, check overlaps — saved 7 days in this browser.
-              </p>
+            <div className="flex shrink-0 items-center gap-3 border-b border-ink-200/70 px-4 py-2.5 dark:border-ink-700/70 md:py-3">
+              <ListOrdered className="size-8 shrink-0 text-sand-50 dark:text-ink-500" aria-hidden />
+              <div>
+                <h2 className="font-display text-base font-semibold text-ink-900 dark:text-sand-50 md:text-lg">
+                  My plan
+                </h2>
+                <p className="text-[11px] text-ink-500 dark:text-ink-300 sm:text-xs">
+                  Rearrange, check overlaps — saved 7 days in this browser.
+                </p>
+              </div>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 py-1 pb-2 sm:px-3 sm:py-2">
-              <PlanView onBrowseEvents={showFeed} />
+              <PlanView />
             </div>
           </div>
         </aside>

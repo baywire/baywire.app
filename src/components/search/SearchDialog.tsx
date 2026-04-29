@@ -17,7 +17,6 @@ export function SearchDialog() {
     topTags,
     savedIds,
     showSavedOnly,
-    window: windowKey,
     selectedCity,
     freeOnly,
     planOrder,
@@ -107,7 +106,6 @@ export function SearchDialog() {
       try {
         const payload = await searchEvents({
           query: normalized,
-          window: windowKey,
           city: selectedCity,
           freeOnly,
           tags: Array.from(topTags).sort((a, b) => a.localeCompare(b)),
@@ -138,7 +136,6 @@ export function SearchDialog() {
     setSearchResponse,
     showSavedOnly,
     topTags,
-    windowKey,
   ]);
 
   if (!isSearchOpen || typeof window === "undefined" || typeof document === "undefined") {

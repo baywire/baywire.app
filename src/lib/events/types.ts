@@ -1,5 +1,7 @@
 import type { Event } from "@/generated/prisma/client";
 
+export type { PriceTier, TicketStatusValue } from "@/lib/extract/schema";
+
 /**
  * Serializable variant of the Prisma `Event` row used across React Server
  * Components and Client Components.

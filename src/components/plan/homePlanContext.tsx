@@ -6,12 +6,13 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 
 import { setPlanOrderCookie } from "@/lib/cookies/browser";
-import { appendOrMoveToEnd } from "@/lib/plan/order";
+import { insertChronologically } from "@/lib/plan/order";
 
 import type { AppEvent } from "@/lib/events/types";
 
@@ -72,6 +73,10 @@ export function HomePlanProvider({
   const [planEventsById, setPlanEventsById] = useState(() =>
     eventMapFromList(initialPlanEvents),
   );
+  const eventsRef = useRef(planEventsById);
+  useEffect(() => {
+    eventsRef.current = planEventsById;
+  }, [planEventsById]);
 
   const toggleDrawer = useCallback(() => {
     setDrawerOpen((d) => !d);
@@ -86,14 +91,16 @@ export function HomePlanProvider({
   }, []);
 
   const togglePlan = useCallback((e: AppEvent) => {
-    setPlanOrder((prev) => {
-      if (prev.includes(e.id)) return prev.filter((x) => x !== e.id);
-      return appendOrMoveToEnd(prev, e.id);
-    });
     setPlanEventsById((m) => {
       const n = new Map(m);
       n.set(e.id, e);
       return n;
+    });
+    setPlanOrder((prev) => {
+      if (prev.includes(e.id)) return prev.filter((x) => x !== e.id);
+      const withNew = new Map(eventsRef.current);
+      withNew.set(e.id, e);
+      return insertChronologically(prev, e, withNew);
     });
   }, []);
 

@@ -22,6 +22,18 @@ datasource db {
   schemas  = ["baywire"]
 }
 
+enum TicketStatus {
+  on_sale
+  sold_out
+  not_yet
+  cancelled
+  free
+  rsvp
+  unknown
+
+  @@schema("baywire")
+}
+
 enum City {
   tampa
   st_petersburg
@@ -36,17 +48,18 @@ enum City {
 }
 
 model Source {
-  id         String      @id @default(uuid()) @db.Uuid
-  slug       String      @unique
+  id         String    @id @default(uuid()) @db.Uuid
+  slug       String    @unique
   label      String
-  baseUrl    String      @map("base_url")
-  enabled    Boolean     @default(true)
-  lastRunAt  DateTime?   @map("last_run_at") @db.Timestamptz()
-  lastStatus String?     @map("last_status")
-  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  baseUrl    String    @map("base_url")
+  enabled    Boolean   @default(true)
+  lastRunAt  DateTime? @map("last_run_at") @db.Timestamptz()
+  lastStatus String?   @map("last_status")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz()
 
   scrapeRuns ScrapeRun[]
   events     Event[]
+  places     Place[]
 
   @@map("sources")
   @@schema("baywire")
@@ -71,64 +84,178 @@ model ScrapeRun {
 }
 
 model Event {
-  id            String    @id @default(uuid()) @db.Uuid
-  canonicalId   String?   @map("canonical_id") @db.Uuid
-  sourceId      String    @map("source_id") @db.Uuid
-  sourceEventId String    @map("source_event_id")
-  title         String
-  description   String?
-  startAt       DateTime  @map("start_at") @db.Timestamptz()
-  endAt         DateTime? @map("end_at") @db.Timestamptz()
-  allDay        Boolean   @default(false) @map("all_day")
-  venueName     String?   @map("venue_name")
-  address       String?
-  city          City      @default(other)
-  lat           Float?
-  lng           Float?
-  priceMin      Decimal?  @map("price_min") @db.Decimal(10, 2)
-  priceMax      Decimal?  @map("price_max") @db.Decimal(10, 2)
-  isFree        Boolean   @default(false) @map("is_free")
-  categories    String[]  @default([])
-  imageUrl      String?   @map("image_url")
-  eventUrl      String    @map("event_url")
-  contentHash   String    @map("content_hash")
-  lastSeenAt    DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz()
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  id             String        @id @default(uuid()) @db.Uuid
+  canonicalId    String?       @map("canonical_id") @db.Uuid
+  sourceId       String        @map("source_id") @db.Uuid
+  sourceEventId  String        @map("source_event_id")
+  title          String
+  description    String?
+  startAt        DateTime      @map("start_at") @db.Timestamptz()
+  endAt          DateTime?     @map("end_at") @db.Timestamptz()
+  allDay         Boolean       @default(false) @map("all_day")
+  venueName      String?       @map("venue_name")
+  address        String?
+  city           City          @default(other)
+  lat            Float?
+  lng            Float?
+  priceMin       Decimal?      @map("price_min") @db.Decimal(10, 2)
+  priceMax       Decimal?      @map("price_max") @db.Decimal(10, 2)
+  isFree         Boolean       @default(false) @map("is_free")
+  ticketUrl      String?       @map("ticket_url")
+  ticketStatus   TicketStatus? @map("ticket_status")
+  ticketCurrency String?       @map("ticket_currency")
+  onSaleAt       DateTime?     @map("on_sale_at") @db.Timestamptz()
+  validFromAt    DateTime?     @map("valid_from_at") @db.Timestamptz()
+  priceTiers     Json?         @map("price_tiers")
+  categories     String[]      @default([])
+  imageUrl       String?       @map("image_url")
+  eventUrl       String        @map("event_url")
+  contentHash    String        @map("content_hash")
+  lastSeenAt     DateTime      @default(now()) @map("last_seen_at") @db.Timestamptz()
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz()
 
   canonical CanonicalEvent? @relation("EventCanonicalGroup", fields: [canonicalId], references: [id], onDelete: SetNull)
   primaryOf CanonicalEvent? @relation("CanonicalPrimaryEvent")
-  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  source    Source          @relation(fields: [sourceId], references: [id], onDelete: Cascade)
 
   @@unique([sourceId, sourceEventId], map: "events_source_source_event_id_uidx")
   @@index([canonicalId], map: "events_canonical_id_idx")
   @@index([startAt], map: "events_start_at_idx")
   @@index([city, startAt], map: "events_city_start_at_idx")
   @@index([isFree, startAt], map: "events_is_free_start_at_idx")
+  @@index([ticketStatus, startAt], map: "events_ticket_status_start_at_idx")
   @@map("events")
   @@schema("baywire")
 }
 
 model CanonicalEvent {
-  id               String    @id @default(uuid()) @db.Uuid
-  primaryEventId   String?   @unique @map("primary_event_id") @db.Uuid
-  dedupedTitle     String?   @map("deduped_title")
-  summary          String?
-  vibes            String[]  @default([])
-  audience         String?
-  indoorOutdoor    String?   @map("indoor_outdoor")
-  tags             String[]  @default([])
-  whyItsCool       String?   @map("why_its_cool")
-  editorialScore   Float?    @map("editorial_score")
-  editorialHash    String?   @map("editorial_hash")
+  id                 String    @id @default(uuid()) @db.Uuid
+  primaryEventId     String?   @unique @map("primary_event_id") @db.Uuid
+  dedupedTitle       String?   @map("deduped_title")
+  summary            String?
+  vibes              String[]  @default([])
+  audience           String?
+  indoorOutdoor      String?   @map("indoor_outdoor")
+  tags               String[]  @default([])
+  whyItsCool         String?   @map("why_its_cool")
+  editorialScore     Float?    @map("editorial_score")
+  editorialHash      String?   @map("editorial_hash")
   editorialUpdatedAt DateTime? @map("editorial_updated_at") @db.Timestamptz()
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
 
   primaryEvent Event?  @relation("CanonicalPrimaryEvent", fields: [primaryEventId], references: [id], onDelete: SetNull)
   events       Event[] @relation("EventCanonicalGroup")
 
   @@index([editorialScore], map: "canonical_events_editorial_score_idx")
   @@map("canonical_events")
+  @@schema("baywire")
+}
+
+enum PlaceCategory {
+  restaurant
+  brewery
+  bar
+  cafe
+  bakery
+  museum
+  gallery
+  park
+  beach
+  shop
+  venue
+  attraction
+  other
+
+  @@schema("baywire")
+}
+
+model Place {
+  id             String        @id @default(uuid()) @db.Uuid
+  canonicalId    String?       @map("canonical_id") @db.Uuid
+  sourceId       String        @map("source_id") @db.Uuid
+  sourcePlaceId  String        @map("source_place_id")
+  name           String
+  slug           String
+  description    String?
+  category       PlaceCategory @default(other)
+  city           City          @default(other)
+  address        String?
+  lat            Float?
+  lng            Float?
+  imageUrl       String?       @map("image_url")
+  websiteUrl     String?       @map("website_url")
+  phoneNumber    String?       @map("phone_number")
+  priceRange     String?       @map("price_range")
+  hoursJson      Json?         @map("hours_json")
+  sourceUrl      String        @map("source_url")
+  contentHash    String        @map("content_hash")
+  lastSeenAt     DateTime      @default(now()) @map("last_seen_at") @db.Timestamptz()
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz()
+
+  source    Source          @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  canonical CanonicalPlace? @relation("PlaceCanonicalGroup", fields: [canonicalId], references: [id], onDelete: SetNull)
+  primaryOf CanonicalPlace? @relation("CanonicalPrimaryPlace")
+
+  @@unique([sourceId, sourcePlaceId], map: "places_source_source_place_id_uidx")
+  @@index([city, category], map: "places_city_category_idx")
+  @@index([canonicalId], map: "places_canonical_id_idx")
+  @@map("places")
+  @@schema("baywire")
+}
+
+enum MetricAction {
+  add_to_plan
+  remove_from_plan
+  save_event
+  unsave_event
+  view_event
+  view_place
+  filter_tags
+  search
+  share_event
+  share_plan
+  open_ticket_link
+
+  @@schema("baywire")
+}
+
+model Metric {
+  id        String       @id @default(uuid()) @db.Uuid
+  sessionId String       @map("session_id") @db.Uuid
+  action    MetricAction
+  eventId   String?      @map("event_id") @db.Uuid
+  placeId   String?      @map("place_id") @db.Uuid
+  payload   Json?
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([action, createdAt], map: "metrics_action_created_at_idx")
+  @@index([sessionId, createdAt], map: "metrics_session_created_at_idx")
+  @@index([eventId], map: "metrics_event_id_idx")
+  @@map("metrics")
+  @@schema("baywire")
+}
+
+model CanonicalPlace {
+  id                 String    @id @default(uuid()) @db.Uuid
+  primaryPlaceId     String?   @unique @map("primary_place_id") @db.Uuid
+  dedupedName        String?   @map("deduped_name")
+  summary            String?
+  vibes              String[]  @default([])
+  tags               String[]  @default([])
+  whyItsCool         String?   @map("why_its_cool")
+  editorialScore     Float?    @map("editorial_score")
+  editorialHash      String?   @map("editorial_hash")
+  editorialUpdatedAt DateTime? @map("editorial_updated_at") @db.Timestamptz()
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  primaryPlace Place?  @relation("CanonicalPrimaryPlace", fields: [primaryPlaceId], references: [id], onDelete: SetNull)
+  places       Place[] @relation("PlaceCanonicalGroup")
+
+  @@index([editorialScore], map: "canonical_places_editorial_score_idx")
+  @@map("canonical_places")
   @@schema("baywire")
 }

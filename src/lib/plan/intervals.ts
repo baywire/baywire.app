@@ -35,6 +35,7 @@ export function halfOpenRangesOverlap(
 
 export function eventsTimeOverlap(e1: AppEvent, e2: AppEvent): boolean {
   if (e1.id === e2.id) return false;
+  if (e1.allDay || e2.allDay) return false;
   const A = getEffectiveInterval(e1);
   const B = getEffectiveInterval(e2);
   return halfOpenRangesOverlap(A.start, A.end, B.start, B.end);
