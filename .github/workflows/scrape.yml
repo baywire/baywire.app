@@ -2,8 +2,8 @@ name: Scrape Baywire
 
 # Daily Baywire scrape, one matrix job per source. Each job runs the full
 # pipeline (fetch → reduce/structured → extract → DB write) directly on the
-# runner — no Vercel hop. Slugs MUST stay in sync with ADAPTERS in
-# src/lib/scrapers/index.ts.
+# runner — no Vercel hop. Places are upserted as a side effect of every event
+# scrape. Slugs MUST stay in sync with ADAPTERS in src/lib/scrapers/index.ts.
 on:
   schedule:
     - cron: "0 12 * * *"
@@ -22,19 +22,54 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set.outputs.matrix }}
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
-      - name: Set source matrix
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate --no-hints
+
+      - name: Build source matrix from DB
         id: set
         env:
           PICK: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.source || '' }}
         run: |
-          # Keep in sync with ADAPTERS in src/lib/scrapers/index.ts.
-          all='["eventbrite","ticketmaster","visit_tampa_bay","visit_st_pete_clearwater","tampa_bay_times","tampa_bay_markets","tampa_gov","safety_harbor","ilovetheburg","thats_so_tampa","thats_so_tampa_places","ilovetheburg_places","visit_tampa_bay_places"]'
           if [ -n "${PICK// }" ]; then
             sub=$(jq -n --arg s "$PICK" '[$s]')
             echo "matrix={\"source\":$sub}" >> "$GITHUB_OUTPUT"
           else
-            echo "matrix={\"source\":$all}" >> "$GITHUB_OUTPUT"
+            node --input-type=module <<'EOF'
+          import { PrismaClient } from "./src/generated/prisma/client";
+          import fs from "node:fs/promises";
+
+          const prisma = new PrismaClient();
+          try {
+            const rows = await prisma.source.findMany({
+              where: { enabled: true },
+              select: { slug: true },
+              orderBy: { slug: "asc" },
+            });
+            const slugs = rows.map(r => r.slug);
+            const output = process.env.GITHUB_OUTPUT;
+            if (!output) throw new Error("GITHUB_OUTPUT is not set");
+            const matrix = JSON.stringify({ source: slugs });
+            await fs.appendFile(output, `matrix=${matrix}\n`);
+            console.log(`Matrix: ${matrix}`);
+          } finally {
+            await prisma.$disconnect();
+          }
+          EOF
           fi
 
   scrape:
@@ -77,41 +112,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check source enabled
-        id: enabled
-        env:
-          SOURCE: ${{ matrix.source }}
-          MANUAL_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.source != '' }}
-        run: |
-          if [ "$MANUAL_OVERRIDE" = "true" ]; then
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-            echo "reason=manual_override" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          node --input-type=module <<'EOF'
-          import { PrismaClient } from "./src/generated/prisma/client";
-
-          const source = process.env.SOURCE;
-          const prisma = new PrismaClient();
-          try {
-            const row = await prisma.source.findUnique({
-              where: { slug: source },
-              select: { enabled: true },
-            });
-            const shouldRun = row?.enabled !== false;
-            const output = process.env.GITHUB_OUTPUT;
-            if (!output) throw new Error("GITHUB_OUTPUT is not set");
-            const fs = await import("node:fs/promises");
-            await fs.appendFile(output, `should_run=${shouldRun}\n`);
-            await fs.appendFile(output, `reason=${shouldRun ? "enabled_or_missing" : "disabled"}\n`);
-          } finally {
-            await prisma.$disconnect();
-          }
-          EOF
+      - name: Generate Prisma client
+        run: npx prisma generate --no-hints
 
       - name: Run scrape
         id: scrape
-        if: steps.enabled.outputs.should_run == 'true'
         run: |
           set +e
           npm run scrape:local -- "${{ matrix.source }}" 2>&1 | tee scrape.log
@@ -168,17 +173,6 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
           exit "$status"
-
-      - name: Skip disabled source
-        if: steps.enabled.outputs.should_run != 'true'
-        run: |
-          {
-            echo "## Scrape \`${{ matrix.source }}\`"
-            echo ""
-            echo "Status: skipped (source disabled)"
-            echo ""
-            echo "Reason: ${{ steps.enabled.outputs.reason }}"
-          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload scrape log
         if: always()
