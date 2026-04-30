@@ -36,6 +36,7 @@ export const eventbriteAdapter: SourceAdapter = {
             signal,
             label: `${SLUG}:list:${city.key}:p${page}`,
             timeoutMs: 30_000,
+            waitForSelector: "a[href*='/e/']",
           });
           html = result.html;
         } catch (err) {

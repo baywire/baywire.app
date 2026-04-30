@@ -23,6 +23,7 @@ export const funnyBoneTampaAdapter: SourceAdapter = {
       signal,
       label: `${SLUG}:list`,
       timeoutMs: 30_000,
+      waitForSelector: "a[href*='/event']",
     });
     return parseListingHtml(html);
   },

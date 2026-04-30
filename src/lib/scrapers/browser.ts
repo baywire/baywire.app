@@ -1,18 +1,39 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import type { Browser, Page } from "playwright";
+import type { Browser, BrowserContext, Page } from "playwright";
 
 const HOST_LAST_HIT = new Map<string, number>();
 const HOST_GAPS_MS = 1100;
 
 let browser: Browser | null = null;
 
+// Stealth init script: hides webdriver flag and patches common bot-detection
+// vectors so WAFs like DataDome / Eventbrite's "Human Verification" don't
+// immediately fingerprint the session as automated.
+const STEALTH_INIT_SCRIPT = `
+  Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+  Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+  Object.defineProperty(navigator, 'plugins', {
+    get: () => [1, 2, 3, 4, 5],
+  });
+  window.chrome = { runtime: {} };
+  Object.defineProperty(navigator, 'permissions', {
+    get: () => ({
+      query: (params) =>
+        Promise.resolve({ state: params.name === 'notifications' ? 'denied' : 'prompt' }),
+    }),
+  });
+`;
+
 export async function acquireBrowser(): Promise<void> {
   if (browser) return;
   const { chromium } = await import("playwright");
   browser = await chromium.launch({
     headless: process.env.SCRAPE_HEADED !== "1",
+    args: [
+      "--disable-blink-features=AutomationControlled",
+    ],
   });
   console.log("[browser] launched chromium");
 }
@@ -58,12 +79,7 @@ export async function browserFetch(
 
   const timeout = opts.timeoutMs ?? 30_000;
   const startedAt = Date.now();
-  const context = await browser.newContext({
-    userAgent:
-      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
-    locale: "en-US",
-    timezoneId: "America/New_York",
-  });
+  const context = await createStealthContext();
 
   let page: Page | null = null;
   try {
@@ -127,12 +143,7 @@ export async function solveCookies(
 
   const timeout = opts.timeoutMs ?? 30_000;
   const startedAt = Date.now();
-  const context = await browser.newContext({
-    userAgent:
-      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
-    locale: "en-US",
-    timezoneId: "America/New_York",
-  });
+  const context = await createStealthContext();
 
   try {
     const page = await context.newPage();
@@ -226,6 +237,18 @@ export function isChallengeOrBlock(html: string): ChallengeStatus {
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
+
+async function createStealthContext(): Promise<BrowserContext> {
+  if (!browser) throw new Error("Browser not launched");
+  const context = await browser.newContext({
+    userAgent:
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+    locale: "en-US",
+    timezoneId: "America/New_York",
+  });
+  await context.addInitScript(STEALTH_INIT_SCRIPT);
+  return context;
+}
 
 async function paceHost(host: string): Promise<void> {
   const last = HOST_LAST_HIT.get(host) ?? 0;
