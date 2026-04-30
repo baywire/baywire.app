@@ -8,22 +8,53 @@ const HOST_GAPS_MS = 1100;
 
 let browser: Browser | null = null;
 
-// Stealth init script: hides webdriver flag and patches common bot-detection
-// vectors so WAFs like DataDome / Eventbrite's "Human Verification" don't
-// immediately fingerprint the session as automated.
+// Stealth init script: patches common bot-detection vectors so WAFs like
+// DataDome / Eventbrite's "Human Verification" don't immediately fingerprint
+// the session as automated. Covers webdriver, WebGL, plugins, screen
+// dimensions, and Chrome-specific APIs.
 const STEALTH_INIT_SCRIPT = `
   Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
   Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
-  Object.defineProperty(navigator, 'plugins', {
-    get: () => [1, 2, 3, 4, 5],
-  });
-  window.chrome = { runtime: {} };
+
+  // Fake PluginArray with realistic length
+  const fakePlugin = { name: 'Chrome PDF Plugin', filename: 'internal-pdf-viewer',
+    description: 'Portable Document Format', length: 1 };
+  const pluginArr = [fakePlugin, fakePlugin, fakePlugin];
+  pluginArr.refresh = () => {};
+  Object.defineProperty(navigator, 'plugins', { get: () => pluginArr });
+  Object.defineProperty(navigator, 'mimeTypes', { get: () => ['application/pdf'] });
+
+  window.chrome = { runtime: {}, loadTimes: () => ({}), csi: () => ({}) };
+
   Object.defineProperty(navigator, 'permissions', {
     get: () => ({
       query: (params) =>
         Promise.resolve({ state: params.name === 'notifications' ? 'denied' : 'prompt' }),
     }),
   });
+
+  // Screen dimensions (headless defaults to 0x0 for outer)
+  if (window.outerWidth === 0) {
+    Object.defineProperty(window, 'outerWidth', { get: () => window.innerWidth });
+    Object.defineProperty(window, 'outerHeight', { get: () => window.innerHeight + 85 });
+  }
+  Object.defineProperty(screen, 'colorDepth', { get: () => 24 });
+
+  // Patch WebGL renderer to look like a real GPU
+  const origGetParam = WebGLRenderingContext.prototype.getParameter;
+  WebGLRenderingContext.prototype.getParameter = function(param) {
+    if (param === 0x1F00) return 'Google Inc. (Intel)';
+    if (param === 0x1F01) return 'ANGLE (Intel, Mesa Intel(R) UHD Graphics 630, OpenGL 4.6)';
+    return origGetParam.call(this, param);
+  };
+  if (typeof WebGL2RenderingContext !== 'undefined') {
+    const origGetParam2 = WebGL2RenderingContext.prototype.getParameter;
+    WebGL2RenderingContext.prototype.getParameter = function(param) {
+      if (param === 0x1F00) return 'Google Inc. (Intel)';
+      if (param === 0x1F01) return 'ANGLE (Intel, Mesa Intel(R) UHD Graphics 630, OpenGL 4.6)';
+      return origGetParam2.call(this, param);
+    };
+  }
 `;
 
 export async function acquireBrowser(): Promise<void> {
@@ -33,6 +64,10 @@ export async function acquireBrowser(): Promise<void> {
     headless: process.env.SCRAPE_HEADED !== "1",
     args: [
       "--disable-blink-features=AutomationControlled",
+      "--disable-features=IsolateOrigins,site-per-process",
+      "--disable-dev-shm-usage",
+      "--no-first-run",
+      "--no-default-browser-check",
     ],
   });
   console.log("[browser] launched chromium");
@@ -55,6 +90,8 @@ export interface BrowserFetchOptions {
   waitUntil?: "networkidle" | "domcontentloaded" | "load";
   waitForSelector?: string;
   timeoutMs?: number;
+  /** Visit this URL first (same context) to warm up cookies / pass initial WAF challenge */
+  warmUpUrl?: string;
 }
 
 export interface BrowserFetchResult {
@@ -85,6 +122,14 @@ export async function browserFetch(
   try {
     page = await context.newPage();
     wireAbortSignal(page, opts.signal);
+
+    if (opts.warmUpUrl) {
+      await page.goto(opts.warmUpUrl, {
+        waitUntil: "domcontentloaded",
+        timeout: Math.min(timeout, 15_000),
+      });
+      await page.waitForTimeout(2_000);
+    }
 
     await page.goto(url, {
       waitUntil: opts.waitUntil ?? "networkidle",
@@ -245,6 +290,11 @@ async function createStealthContext(): Promise<BrowserContext> {
       "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
     locale: "en-US",
     timezoneId: "America/New_York",
+    viewport: { width: 1920, height: 1080 },
+    screen: { width: 1920, height: 1080 },
+    deviceScaleFactor: 1,
+    hasTouch: false,
+    isMobile: false,
   });
   await context.addInitScript(STEALTH_INIT_SCRIPT);
   return context;

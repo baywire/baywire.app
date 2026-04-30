@@ -52,3 +52,8 @@ export type Metric = Prisma.MetricModel
  * 
  */
 export type CanonicalPlace = Prisma.CanonicalPlaceModel
+/**
+ * Model AiUsage
+ * 
+ */
+export type AiUsage = Prisma.AiUsageModel

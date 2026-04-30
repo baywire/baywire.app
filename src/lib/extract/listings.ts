@@ -2,6 +2,8 @@ import OpenAI from "openai";
 import { z } from "zod";
 import { zodTextFormat } from "openai/helpers/zod";
 
+import { logAiUsage } from "./ai-usage";
+
 const DEFAULT_MODEL = process.env.OPENAI_EXTRACT_MODEL ?? "gpt-4.1-mini";
 
 let client: OpenAI | null = null;
@@ -67,6 +69,7 @@ ${truncated}
 
   const openai = getClient();
   const format = zodTextFormat(ListingResultSchema, "listing_extraction");
+  const startMs = Date.now();
 
   let lastError: unknown = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -101,6 +104,14 @@ ${truncated}
         }
       }
 
+      logAiUsage({
+        feature: "extract_listings",
+        model: DEFAULT_MODEL,
+        usage: response.usage,
+        latencyMs: Date.now() - startMs,
+        success: true,
+        meta: { baseUrl, sourceLabel, urlCount: urls.length },
+      });
       return urls;
     } catch (err) {
       lastError = err;
@@ -108,6 +119,16 @@ ${truncated}
       await sleep(500 * Math.pow(2, attempt));
     }
   }
+
+  logAiUsage({
+    feature: "extract_listings",
+    model: DEFAULT_MODEL,
+    usage: null,
+    latencyMs: Date.now() - startMs,
+    success: false,
+    error: lastError instanceof Error ? lastError.message : String(lastError),
+    meta: { baseUrl, sourceLabel },
+  });
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 

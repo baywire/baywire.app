@@ -3,6 +3,8 @@ import "dotenv/config";
 import { prisma } from "../src/lib/db/client";
 
 const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;
+const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
+const SKIP_PLACE_CLEANUP = true; //process.argv.includes("--skip-places");
 
 const expiredFilter = (cutoff: Date) => ({
   OR: [
@@ -12,37 +14,86 @@ const expiredFilter = (cutoff: Date) => ({
 });
 
 async function main() {
-  const cutoff = new Date(Date.now() - TWO_WEEKS_MS);
+  const eventCutoff = new Date(Date.now() - TWO_WEEKS_MS);
+  const placeCutoff = new Date(Date.now() - NINETY_DAYS_MS);
 
-  // Collect expired event IDs so we can cascade to related tables.
+  // --- Events cleanup ---
+
   const expiredIDs = (
     await prisma.event.findMany({
-      where: expiredFilter(cutoff),
+      where: expiredFilter(eventCutoff),
       select: { id: true },
     })
   ).map((r) => r.id);
 
-  if (expiredIDs.length === 0) {
-    console.log(`[cleanup] no expired events (cutoff: ${cutoff.toISOString()})`);
+  let eventsDeleted = 0;
+  let metricsDeleted = 0;
+  let canonicalEventsDeleted = 0;
+
+  if (expiredIDs.length > 0) {
+    const metrics = await prisma.metric.deleteMany({
+      where: { eventId: { in: expiredIDs } },
+    });
+    metricsDeleted = metrics.count;
+
+    const events = await prisma.event.deleteMany({
+      where: { id: { in: expiredIDs } },
+    });
+    eventsDeleted = events.count;
+
+    const canonicals = await prisma.canonicalEvent.deleteMany({
+      where: { events: { none: {} } },
+    });
+    canonicalEventsDeleted = canonicals.count;
+  }
+
+  console.log(
+    `[cleanup:events] cutoff=${eventCutoff.toISOString()} events=${eventsDeleted} metrics=${metricsDeleted} canonicals=${canonicalEventsDeleted}`,
+  );
+
+  // --- Places cleanup ---
+
+  if (SKIP_PLACE_CLEANUP) {
+    console.log("[cleanup:places] skipped (--skip-places)");
     return;
   }
 
-  // Metrics reference eventId without a FK — clean up dangling rows first.
-  const metrics = await prisma.metric.deleteMany({
-    where: { eventId: { in: expiredIDs } },
-  });
+  const stalePlaceIDs = (
+    await prisma.place.findMany({
+      where: {
+        lastSeenAt: { lt: placeCutoff },
+        OR: [
+          { lastEventAt: null },
+          { lastEventAt: { lt: placeCutoff } },
+        ],
+      },
+      select: { id: true },
+    })
+  ).map((r) => r.id);
 
-  const events = await prisma.event.deleteMany({
-    where: { id: { in: expiredIDs } },
-  });
+  let placesDeleted = 0;
+  let placeMetricsDeleted = 0;
+  let canonicalPlacesDeleted = 0;
 
-  // Remove canonical events that no longer have any linked events.
-  const canonicals = await prisma.canonicalEvent.deleteMany({
-    where: { events: { none: {} } },
-  });
+  if (stalePlaceIDs.length > 0) {
+    const placeMetrics = await prisma.metric.deleteMany({
+      where: { placeId: { in: stalePlaceIDs } },
+    });
+    placeMetricsDeleted = placeMetrics.count;
+
+    const places = await prisma.place.deleteMany({
+      where: { id: { in: stalePlaceIDs } },
+    });
+    placesDeleted = places.count;
+
+    const canonicals = await prisma.canonicalPlace.deleteMany({
+      where: { places: { none: {} } },
+    });
+    canonicalPlacesDeleted = canonicals.count;
+  }
 
   console.log(
-    `[cleanup] cutoff=${cutoff.toISOString()} events=${events.count} metrics=${metrics.count} canonicals=${canonicals.count}`,
+    `[cleanup:places] cutoff=${placeCutoff.toISOString()} places=${placesDeleted} metrics=${placeMetricsDeleted} canonicals=${canonicalPlacesDeleted}`,
   );
 }
 

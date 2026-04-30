@@ -85,11 +85,20 @@ async function findCandidatePlaces(
   tx: CanonicalPlaceTx,
   place: PlaceWithSource,
 ): Promise<PlaceWithSource[]> {
+  // When a venue-category place comes in, search all categories in the same
+  // city so "Side Splitters" (venue) can merge with "Side Splitters" (bar).
+  // When a specific category comes in, also include "venue" rows so the
+  // match works in the other direction.
+  const categoryFilter =
+    place.category === "venue"
+      ? undefined
+      : { in: [place.category, "venue" as const] };
+
   const rows = await tx.place.findMany({
     where: {
       id: { not: place.id },
       city: place.city,
-      category: place.category,
+      ...(categoryFilter ? { category: categoryFilter } : {}),
     },
     include: { source: { select: { slug: true, enabled: true } } },
     take: 500,
@@ -162,6 +171,10 @@ function choosePrimary(places: PlaceWithSource[]): PlaceWithSource {
 }
 
 function comparePrimary(a: PlaceWithSource, b: PlaceWithSource): number {
+  // Prefer specific categories over generic "venue"
+  const specA = a.category !== "venue" && a.category !== "other";
+  const specB = b.category !== "venue" && b.category !== "other";
+  if (specA !== specB) return specA ? -1 : 1;
   const imgA = Boolean(a.imageUrl);
   const imgB = Boolean(b.imageUrl);
   if (imgA !== imgB) return imgA ? -1 : 1;

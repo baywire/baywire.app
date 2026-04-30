@@ -29,11 +29,13 @@ export type AggregatePlace = {
 export type PlaceAvgAggregateOutputType = {
   lat: number | null
   lng: number | null
+  eventCount: number | null
 }
 
 export type PlaceSumAggregateOutputType = {
   lat: number | null
   lng: number | null
+  eventCount: number | null
 }
 
 export type PlaceMinAggregateOutputType = {
@@ -55,6 +57,8 @@ export type PlaceMinAggregateOutputType = {
   priceRange: string | null
   sourceUrl: string | null
   contentHash: string | null
+  eventCount: number | null
+  lastEventAt: Date | null
   lastSeenAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -79,6 +83,8 @@ export type PlaceMaxAggregateOutputType = {
   priceRange: string | null
   sourceUrl: string | null
   contentHash: string | null
+  eventCount: number | null
+  lastEventAt: Date | null
   lastSeenAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -104,6 +110,8 @@ export type PlaceCountAggregateOutputType = {
   hoursJson: number
   sourceUrl: number
   contentHash: number
+  eventCount: number
+  lastEventAt: number
   lastSeenAt: number
   createdAt: number
   updatedAt: number
@@ -114,11 +122,13 @@ export type PlaceCountAggregateOutputType = {
 export type PlaceAvgAggregateInputType = {
   lat?: true
   lng?: true
+  eventCount?: true
 }
 
 export type PlaceSumAggregateInputType = {
   lat?: true
   lng?: true
+  eventCount?: true
 }
 
 export type PlaceMinAggregateInputType = {
@@ -140,6 +150,8 @@ export type PlaceMinAggregateInputType = {
   priceRange?: true
   sourceUrl?: true
   contentHash?: true
+  eventCount?: true
+  lastEventAt?: true
   lastSeenAt?: true
   createdAt?: true
   updatedAt?: true
@@ -164,6 +176,8 @@ export type PlaceMaxAggregateInputType = {
   priceRange?: true
   sourceUrl?: true
   contentHash?: true
+  eventCount?: true
+  lastEventAt?: true
   lastSeenAt?: true
   createdAt?: true
   updatedAt?: true
@@ -189,6 +203,8 @@ export type PlaceCountAggregateInputType = {
   hoursJson?: true
   sourceUrl?: true
   contentHash?: true
+  eventCount?: true
+  lastEventAt?: true
   lastSeenAt?: true
   createdAt?: true
   updatedAt?: true
@@ -301,6 +317,8 @@ export type PlaceGroupByOutputType = {
   hoursJson: runtime.JsonValue | null
   sourceUrl: string
   contentHash: string
+  eventCount: number
+  lastEventAt: Date | null
   lastSeenAt: Date
   createdAt: Date
   updatedAt: Date
@@ -349,6 +367,8 @@ export type PlaceWhereInput = {
   hoursJson?: Prisma.JsonNullableFilter<"Place">
   sourceUrl?: Prisma.StringFilter<"Place"> | string
   contentHash?: Prisma.StringFilter<"Place"> | string
+  eventCount?: Prisma.IntFilter<"Place"> | number
+  lastEventAt?: Prisma.DateTimeNullableFilter<"Place"> | Date | string | null
   lastSeenAt?: Prisma.DateTimeFilter<"Place"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"Place"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Place"> | Date | string
@@ -377,6 +397,8 @@ export type PlaceOrderByWithRelationInput = {
   hoursJson?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceUrl?: Prisma.SortOrder
   contentHash?: Prisma.SortOrder
+  eventCount?: Prisma.SortOrder
+  lastEventAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSeenAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -409,6 +431,8 @@ export type PlaceWhereUniqueInput = Prisma.AtLeast<{
   hoursJson?: Prisma.JsonNullableFilter<"Place">
   sourceUrl?: Prisma.StringFilter<"Place"> | string
   contentHash?: Prisma.StringFilter<"Place"> | string
+  eventCount?: Prisma.IntFilter<"Place"> | number
+  lastEventAt?: Prisma.DateTimeNullableFilter<"Place"> | Date | string | null
   lastSeenAt?: Prisma.DateTimeFilter<"Place"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"Place"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Place"> | Date | string
@@ -437,6 +461,8 @@ export type PlaceOrderByWithAggregationInput = {
   hoursJson?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceUrl?: Prisma.SortOrder
   contentHash?: Prisma.SortOrder
+  eventCount?: Prisma.SortOrder
+  lastEventAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSeenAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -470,6 +496,8 @@ export type PlaceScalarWhereWithAggregatesInput = {
   hoursJson?: Prisma.JsonNullableWithAggregatesFilter<"Place">
   sourceUrl?: Prisma.StringWithAggregatesFilter<"Place"> | string
   contentHash?: Prisma.StringWithAggregatesFilter<"Place"> | string
+  eventCount?: Prisma.IntWithAggregatesFilter<"Place"> | number
+  lastEventAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Place"> | Date | string | null
   lastSeenAt?: Prisma.DateTimeWithAggregatesFilter<"Place"> | Date | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Place"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Place"> | Date | string
@@ -493,6 +521,8 @@ export type PlaceCreateInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
+  eventCount?: number
+  lastEventAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -521,6 +551,8 @@ export type PlaceUncheckedCreateInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
+  eventCount?: number
+  lastEventAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -545,6 +577,8 @@ export type PlaceUpdateInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
+  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
+  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -573,6 +607,8 @@ export type PlaceUncheckedUpdateInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
+  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
+  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -599,6 +635,8 @@ export type PlaceCreateManyInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
+  eventCount?: number
+  lastEventAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -622,6 +660,8 @@ export type PlaceUpdateManyMutationInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
+  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
+  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -647,6 +687,8 @@ export type PlaceUncheckedUpdateManyInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
+  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
+  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -687,6 +729,8 @@ export type PlaceCountOrderByAggregateInput = {
   hoursJson?: Prisma.SortOrder
   sourceUrl?: Prisma.SortOrder
   contentHash?: Prisma.SortOrder
+  eventCount?: Prisma.SortOrder
+  lastEventAt?: Prisma.SortOrder
   lastSeenAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -695,6 +739,7 @@ export type PlaceCountOrderByAggregateInput = {
 export type PlaceAvgOrderByAggregateInput = {
   lat?: Prisma.SortOrder
   lng?: Prisma.SortOrder
+  eventCount?: Prisma.SortOrder
 }
 
 export type PlaceMaxOrderByAggregateInput = {
@@ -716,6 +761,8 @@ export type PlaceMaxOrderByAggregateInput = {
   priceRange?: Prisma.SortOrder
   sourceUrl?: Prisma.SortOrder
   contentHash?: Prisma.SortOrder
+  eventCount?: Prisma.SortOrder
+  lastEventAt?: Prisma.SortOrder
   lastSeenAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -740,6 +787,8 @@ export type PlaceMinOrderByAggregateInput = {
   priceRange?: Prisma.SortOrder
   sourceUrl?: Prisma.SortOrder
   contentHash?: Prisma.SortOrder
+  eventCount?: Prisma.SortOrder
+  lastEventAt?: Prisma.SortOrder
   lastSeenAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -748,6 +797,7 @@ export type PlaceMinOrderByAggregateInput = {
 export type PlaceSumOrderByAggregateInput = {
   lat?: Prisma.SortOrder
   lng?: Prisma.SortOrder
+  eventCount?: Prisma.SortOrder
 }
 
 export type PlaceNullableScalarRelationFilter = {
@@ -877,6 +927,8 @@ export type PlaceCreateWithoutSourceInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
+  eventCount?: number
+  lastEventAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -903,6 +955,8 @@ export type PlaceUncheckedCreateWithoutSourceInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
+  eventCount?: number
+  lastEventAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -958,6 +1012,8 @@ export type PlaceScalarWhereInput = {
   hoursJson?: Prisma.JsonNullableFilter<"Place">
   sourceUrl?: Prisma.StringFilter<"Place"> | string
   contentHash?: Prisma.StringFilter<"Place"> | string
+  eventCount?: Prisma.IntFilter<"Place"> | number
+  lastEventAt?: Prisma.DateTimeNullableFilter<"Place"> | Date | string | null
   lastSeenAt?: Prisma.DateTimeFilter<"Place"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"Place"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Place"> | Date | string
@@ -981,6 +1037,8 @@ export type PlaceCreateWithoutPrimaryOfInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
+  eventCount?: number
+  lastEventAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1008,6 +1066,8 @@ export type PlaceUncheckedCreateWithoutPrimaryOfInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
+  eventCount?: number
+  lastEventAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1036,6 +1096,8 @@ export type PlaceCreateWithoutCanonicalInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
+  eventCount?: number
+  lastEventAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1062,6 +1124,8 @@ export type PlaceUncheckedCreateWithoutCanonicalInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
+  eventCount?: number
+  lastEventAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1107,6 +1171,8 @@ export type PlaceUpdateWithoutPrimaryOfInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
+  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
+  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1134,6 +1200,8 @@ export type PlaceUncheckedUpdateWithoutPrimaryOfInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
+  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
+  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1174,6 +1242,8 @@ export type PlaceCreateManySourceInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
+  eventCount?: number
+  lastEventAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1197,6 +1267,8 @@ export type PlaceUpdateWithoutSourceInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
+  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
+  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1223,6 +1295,8 @@ export type PlaceUncheckedUpdateWithoutSourceInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
+  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
+  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1248,6 +1322,8 @@ export type PlaceUncheckedUpdateManyWithoutSourceInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
+  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
+  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1272,6 +1348,8 @@ export type PlaceCreateManyCanonicalInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
+  eventCount?: number
+  lastEventAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1295,6 +1373,8 @@ export type PlaceUpdateWithoutCanonicalInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
+  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
+  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1321,6 +1401,8 @@ export type PlaceUncheckedUpdateWithoutCanonicalInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
+  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
+  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1346,6 +1428,8 @@ export type PlaceUncheckedUpdateManyWithoutCanonicalInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
+  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
+  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1373,6 +1457,8 @@ export type PlaceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   hoursJson?: boolean
   sourceUrl?: boolean
   contentHash?: boolean
+  eventCount?: boolean
+  lastEventAt?: boolean
   lastSeenAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1401,6 +1487,8 @@ export type PlaceSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   hoursJson?: boolean
   sourceUrl?: boolean
   contentHash?: boolean
+  eventCount?: boolean
+  lastEventAt?: boolean
   lastSeenAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1428,6 +1516,8 @@ export type PlaceSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   hoursJson?: boolean
   sourceUrl?: boolean
   contentHash?: boolean
+  eventCount?: boolean
+  lastEventAt?: boolean
   lastSeenAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1455,12 +1545,14 @@ export type PlaceSelectScalar = {
   hoursJson?: boolean
   sourceUrl?: boolean
   contentHash?: boolean
+  eventCount?: boolean
+  lastEventAt?: boolean
   lastSeenAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type PlaceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "canonicalId" | "sourceId" | "sourcePlaceId" | "name" | "slug" | "description" | "category" | "city" | "address" | "lat" | "lng" | "imageUrl" | "websiteUrl" | "phoneNumber" | "priceRange" | "hoursJson" | "sourceUrl" | "contentHash" | "lastSeenAt" | "createdAt" | "updatedAt", ExtArgs["result"]["place"]>
+export type PlaceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "canonicalId" | "sourceId" | "sourcePlaceId" | "name" | "slug" | "description" | "category" | "city" | "address" | "lat" | "lng" | "imageUrl" | "websiteUrl" | "phoneNumber" | "priceRange" | "hoursJson" | "sourceUrl" | "contentHash" | "eventCount" | "lastEventAt" | "lastSeenAt" | "createdAt" | "updatedAt", ExtArgs["result"]["place"]>
 export type PlaceInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   source?: boolean | Prisma.SourceDefaultArgs<ExtArgs>
   canonical?: boolean | Prisma.Place$canonicalArgs<ExtArgs>
@@ -1502,6 +1594,8 @@ export type $PlacePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     hoursJson: runtime.JsonValue | null
     sourceUrl: string
     contentHash: string
+    eventCount: number
+    lastEventAt: Date | null
     lastSeenAt: Date
     createdAt: Date
     updatedAt: Date
@@ -1950,6 +2044,8 @@ export interface PlaceFieldRefs {
   readonly hoursJson: Prisma.FieldRef<"Place", 'Json'>
   readonly sourceUrl: Prisma.FieldRef<"Place", 'String'>
   readonly contentHash: Prisma.FieldRef<"Place", 'String'>
+  readonly eventCount: Prisma.FieldRef<"Place", 'Int'>
+  readonly lastEventAt: Prisma.FieldRef<"Place", 'DateTime'>
   readonly lastSeenAt: Prisma.FieldRef<"Place", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"Place", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Place", 'DateTime'>

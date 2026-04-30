@@ -261,6 +261,7 @@ export type ScrapeRunWhereInput = {
   eventsSkipped?: Prisma.IntFilter<"ScrapeRun"> | number
   error?: Prisma.StringNullableFilter<"ScrapeRun"> | string | null
   source?: Prisma.XOR<Prisma.SourceScalarRelationFilter, Prisma.SourceWhereInput>
+  aiUsage?: Prisma.AiUsageListRelationFilter
 }
 
 export type ScrapeRunOrderByWithRelationInput = {
@@ -274,6 +275,7 @@ export type ScrapeRunOrderByWithRelationInput = {
   eventsSkipped?: Prisma.SortOrder
   error?: Prisma.SortOrderInput | Prisma.SortOrder
   source?: Prisma.SourceOrderByWithRelationInput
+  aiUsage?: Prisma.AiUsageOrderByRelationAggregateInput
 }
 
 export type ScrapeRunWhereUniqueInput = Prisma.AtLeast<{
@@ -290,6 +292,7 @@ export type ScrapeRunWhereUniqueInput = Prisma.AtLeast<{
   eventsSkipped?: Prisma.IntFilter<"ScrapeRun"> | number
   error?: Prisma.StringNullableFilter<"ScrapeRun"> | string | null
   source?: Prisma.XOR<Prisma.SourceScalarRelationFilter, Prisma.SourceWhereInput>
+  aiUsage?: Prisma.AiUsageListRelationFilter
 }, "id">
 
 export type ScrapeRunOrderByWithAggregationInput = {
@@ -334,6 +337,7 @@ export type ScrapeRunCreateInput = {
   eventsSkipped?: number
   error?: string | null
   source: Prisma.SourceCreateNestedOneWithoutScrapeRunsInput
+  aiUsage?: Prisma.AiUsageCreateNestedManyWithoutScrapeRunInput
 }
 
 export type ScrapeRunUncheckedCreateInput = {
@@ -346,6 +350,7 @@ export type ScrapeRunUncheckedCreateInput = {
   eventsUpdated?: number
   eventsSkipped?: number
   error?: string | null
+  aiUsage?: Prisma.AiUsageUncheckedCreateNestedManyWithoutScrapeRunInput
 }
 
 export type ScrapeRunUpdateInput = {
@@ -358,6 +363,7 @@ export type ScrapeRunUpdateInput = {
   eventsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
   error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.SourceUpdateOneRequiredWithoutScrapeRunsNestedInput
+  aiUsage?: Prisma.AiUsageUpdateManyWithoutScrapeRunNestedInput
 }
 
 export type ScrapeRunUncheckedUpdateInput = {
@@ -370,6 +376,7 @@ export type ScrapeRunUncheckedUpdateInput = {
   eventsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   eventsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
   error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsage?: Prisma.AiUsageUncheckedUpdateManyWithoutScrapeRunNestedInput
 }
 
 export type ScrapeRunCreateManyInput = {
@@ -467,6 +474,11 @@ export type ScrapeRunSumOrderByAggregateInput = {
   eventsSkipped?: Prisma.SortOrder
 }
 
+export type ScrapeRunNullableScalarRelationFilter = {
+  is?: Prisma.ScrapeRunWhereInput | null
+  isNot?: Prisma.ScrapeRunWhereInput | null
+}
+
 export type ScrapeRunCreateNestedManyWithoutSourceInput = {
   create?: Prisma.XOR<Prisma.ScrapeRunCreateWithoutSourceInput, Prisma.ScrapeRunUncheckedCreateWithoutSourceInput> | Prisma.ScrapeRunCreateWithoutSourceInput[] | Prisma.ScrapeRunUncheckedCreateWithoutSourceInput[]
   connectOrCreate?: Prisma.ScrapeRunCreateOrConnectWithoutSourceInput | Prisma.ScrapeRunCreateOrConnectWithoutSourceInput[]
@@ -517,6 +529,22 @@ export type IntFieldUpdateOperationsInput = {
   divide?: number
 }
 
+export type ScrapeRunCreateNestedOneWithoutAiUsageInput = {
+  create?: Prisma.XOR<Prisma.ScrapeRunCreateWithoutAiUsageInput, Prisma.ScrapeRunUncheckedCreateWithoutAiUsageInput>
+  connectOrCreate?: Prisma.ScrapeRunCreateOrConnectWithoutAiUsageInput
+  connect?: Prisma.ScrapeRunWhereUniqueInput
+}
+
+export type ScrapeRunUpdateOneWithoutAiUsageNestedInput = {
+  create?: Prisma.XOR<Prisma.ScrapeRunCreateWithoutAiUsageInput, Prisma.ScrapeRunUncheckedCreateWithoutAiUsageInput>
+  connectOrCreate?: Prisma.ScrapeRunCreateOrConnectWithoutAiUsageInput
+  upsert?: Prisma.ScrapeRunUpsertWithoutAiUsageInput
+  disconnect?: Prisma.ScrapeRunWhereInput | boolean
+  delete?: Prisma.ScrapeRunWhereInput | boolean
+  connect?: Prisma.ScrapeRunWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ScrapeRunUpdateToOneWithWhereWithoutAiUsageInput, Prisma.ScrapeRunUpdateWithoutAiUsageInput>, Prisma.ScrapeRunUncheckedUpdateWithoutAiUsageInput>
+}
+
 export type ScrapeRunCreateWithoutSourceInput = {
   id?: string
   startedAt?: Date | string
@@ -526,6 +554,7 @@ export type ScrapeRunCreateWithoutSourceInput = {
   eventsUpdated?: number
   eventsSkipped?: number
   error?: string | null
+  aiUsage?: Prisma.AiUsageCreateNestedManyWithoutScrapeRunInput
 }
 
 export type ScrapeRunUncheckedCreateWithoutSourceInput = {
@@ -537,6 +566,7 @@ export type ScrapeRunUncheckedCreateWithoutSourceInput = {
   eventsUpdated?: number
   eventsSkipped?: number
   error?: string | null
+  aiUsage?: Prisma.AiUsageUncheckedCreateNestedManyWithoutScrapeRunInput
 }
 
 export type ScrapeRunCreateOrConnectWithoutSourceInput = {
@@ -580,6 +610,70 @@ export type ScrapeRunScalarWhereInput = {
   error?: Prisma.StringNullableFilter<"ScrapeRun"> | string | null
 }
 
+export type ScrapeRunCreateWithoutAiUsageInput = {
+  id?: string
+  startedAt?: Date | string
+  finishedAt?: Date | string | null
+  eventsSeen?: number
+  eventsInserted?: number
+  eventsUpdated?: number
+  eventsSkipped?: number
+  error?: string | null
+  source: Prisma.SourceCreateNestedOneWithoutScrapeRunsInput
+}
+
+export type ScrapeRunUncheckedCreateWithoutAiUsageInput = {
+  id?: string
+  sourceId: string
+  startedAt?: Date | string
+  finishedAt?: Date | string | null
+  eventsSeen?: number
+  eventsInserted?: number
+  eventsUpdated?: number
+  eventsSkipped?: number
+  error?: string | null
+}
+
+export type ScrapeRunCreateOrConnectWithoutAiUsageInput = {
+  where: Prisma.ScrapeRunWhereUniqueInput
+  create: Prisma.XOR<Prisma.ScrapeRunCreateWithoutAiUsageInput, Prisma.ScrapeRunUncheckedCreateWithoutAiUsageInput>
+}
+
+export type ScrapeRunUpsertWithoutAiUsageInput = {
+  update: Prisma.XOR<Prisma.ScrapeRunUpdateWithoutAiUsageInput, Prisma.ScrapeRunUncheckedUpdateWithoutAiUsageInput>
+  create: Prisma.XOR<Prisma.ScrapeRunCreateWithoutAiUsageInput, Prisma.ScrapeRunUncheckedCreateWithoutAiUsageInput>
+  where?: Prisma.ScrapeRunWhereInput
+}
+
+export type ScrapeRunUpdateToOneWithWhereWithoutAiUsageInput = {
+  where?: Prisma.ScrapeRunWhereInput
+  data: Prisma.XOR<Prisma.ScrapeRunUpdateWithoutAiUsageInput, Prisma.ScrapeRunUncheckedUpdateWithoutAiUsageInput>
+}
+
+export type ScrapeRunUpdateWithoutAiUsageInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  eventsSeen?: Prisma.IntFieldUpdateOperationsInput | number
+  eventsInserted?: Prisma.IntFieldUpdateOperationsInput | number
+  eventsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
+  eventsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
+  error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  source?: Prisma.SourceUpdateOneRequiredWithoutScrapeRunsNestedInput
+}
+
+export type ScrapeRunUncheckedUpdateWithoutAiUsageInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  sourceId?: Prisma.StringFieldUpdateOperationsInput | string
+  startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  eventsSeen?: Prisma.IntFieldUpdateOperationsInput | number
+  eventsInserted?: Prisma.IntFieldUpdateOperationsInput | number
+  eventsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
+  eventsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
+  error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
 export type ScrapeRunCreateManySourceInput = {
   id?: string
   startedAt?: Date | string
@@ -600,6 +694,7 @@ export type ScrapeRunUpdateWithoutSourceInput = {
   eventsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   eventsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
   error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsage?: Prisma.AiUsageUpdateManyWithoutScrapeRunNestedInput
 }
 
 export type ScrapeRunUncheckedUpdateWithoutSourceInput = {
@@ -611,6 +706,7 @@ export type ScrapeRunUncheckedUpdateWithoutSourceInput = {
   eventsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   eventsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
   error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsage?: Prisma.AiUsageUncheckedUpdateManyWithoutScrapeRunNestedInput
 }
 
 export type ScrapeRunUncheckedUpdateManyWithoutSourceInput = {
@@ -625,6 +721,35 @@ export type ScrapeRunUncheckedUpdateManyWithoutSourceInput = {
 }
 
 
+/**
+ * Count Type ScrapeRunCountOutputType
+ */
+
+export type ScrapeRunCountOutputType = {
+  aiUsage: number
+}
+
+export type ScrapeRunCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  aiUsage?: boolean | ScrapeRunCountOutputTypeCountAiUsageArgs
+}
+
+/**
+ * ScrapeRunCountOutputType without action
+ */
+export type ScrapeRunCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ScrapeRunCountOutputType
+   */
+  select?: Prisma.ScrapeRunCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * ScrapeRunCountOutputType without action
+ */
+export type ScrapeRunCountOutputTypeCountAiUsageArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AiUsageWhereInput
+}
+
 
 export type ScrapeRunSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -637,6 +762,8 @@ export type ScrapeRunSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   eventsSkipped?: boolean
   error?: boolean
   source?: boolean | Prisma.SourceDefaultArgs<ExtArgs>
+  aiUsage?: boolean | Prisma.ScrapeRun$aiUsageArgs<ExtArgs>
+  _count?: boolean | Prisma.ScrapeRunCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["scrapeRun"]>
 
 export type ScrapeRunSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -680,6 +807,8 @@ export type ScrapeRunSelectScalar = {
 export type ScrapeRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sourceId" | "startedAt" | "finishedAt" | "eventsSeen" | "eventsInserted" | "eventsUpdated" | "eventsSkipped" | "error", ExtArgs["result"]["scrapeRun"]>
 export type ScrapeRunInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   source?: boolean | Prisma.SourceDefaultArgs<ExtArgs>
+  aiUsage?: boolean | Prisma.ScrapeRun$aiUsageArgs<ExtArgs>
+  _count?: boolean | Prisma.ScrapeRunCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ScrapeRunIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   source?: boolean | Prisma.SourceDefaultArgs<ExtArgs>
@@ -692,6 +821,7 @@ export type $ScrapeRunPayload<ExtArgs extends runtime.Types.Extensions.InternalA
   name: "ScrapeRun"
   objects: {
     source: Prisma.$SourcePayload<ExtArgs>
+    aiUsage: Prisma.$AiUsagePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1098,6 +1228,7 @@ readonly fields: ScrapeRunFieldRefs;
 export interface Prisma__ScrapeRunClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   source<T extends Prisma.SourceDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SourceDefaultArgs<ExtArgs>>): Prisma.Prisma__SourceClient<runtime.Types.Result.GetResult<Prisma.$SourcePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  aiUsage<T extends Prisma.ScrapeRun$aiUsageArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ScrapeRun$aiUsageArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AiUsagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1534,6 +1665,30 @@ export type ScrapeRunDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Limit how many ScrapeRuns to delete.
    */
   limit?: number
+}
+
+/**
+ * ScrapeRun.aiUsage
+ */
+export type ScrapeRun$aiUsageArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AiUsage
+   */
+  select?: Prisma.AiUsageSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AiUsage
+   */
+  omit?: Prisma.AiUsageOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AiUsageInclude<ExtArgs> | null
+  where?: Prisma.AiUsageWhereInput
+  orderBy?: Prisma.AiUsageOrderByWithRelationInput | Prisma.AiUsageOrderByWithRelationInput[]
+  cursor?: Prisma.AiUsageWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AiUsageScalarFieldEnum | Prisma.AiUsageScalarFieldEnum[]
 }
 
 /**

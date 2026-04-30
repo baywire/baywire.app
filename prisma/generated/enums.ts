@@ -70,3 +70,15 @@ export const MetricAction = {
 } as const
 
 export type MetricAction = (typeof MetricAction)[keyof typeof MetricAction]
+
+
+export const AiFeature = {
+  extract_event: 'extract_event',
+  extract_place: 'extract_place',
+  extract_listings: 'extract_listings',
+  editorial_event: 'editorial_event',
+  editorial_place: 'editorial_place',
+  search_rerank: 'search_rerank'
+} as const
+
+export type AiFeature = (typeof AiFeature)[keyof typeof AiFeature]

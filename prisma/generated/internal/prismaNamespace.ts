@@ -390,7 +390,8 @@ export const ModelName = {
   CanonicalEvent: 'CanonicalEvent',
   Place: 'Place',
   Metric: 'Metric',
-  CanonicalPlace: 'CanonicalPlace'
+  CanonicalPlace: 'CanonicalPlace',
+  AiUsage: 'AiUsage'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -406,7 +407,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "source" | "scrapeRun" | "event" | "canonicalEvent" | "place" | "metric" | "canonicalPlace"
+    modelProps: "source" | "scrapeRun" | "event" | "canonicalEvent" | "place" | "metric" | "canonicalPlace" | "aiUsage"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -928,6 +929,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    AiUsage: {
+      payload: Prisma.$AiUsagePayload<ExtArgs>
+      fields: Prisma.AiUsageFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AiUsageFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiUsagePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AiUsageFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiUsagePayload>
+        }
+        findFirst: {
+          args: Prisma.AiUsageFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiUsagePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AiUsageFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiUsagePayload>
+        }
+        findMany: {
+          args: Prisma.AiUsageFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiUsagePayload>[]
+        }
+        create: {
+          args: Prisma.AiUsageCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiUsagePayload>
+        }
+        createMany: {
+          args: Prisma.AiUsageCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AiUsageCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiUsagePayload>[]
+        }
+        delete: {
+          args: Prisma.AiUsageDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiUsagePayload>
+        }
+        update: {
+          args: Prisma.AiUsageUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiUsagePayload>
+        }
+        deleteMany: {
+          args: Prisma.AiUsageDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AiUsageUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AiUsageUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiUsagePayload>[]
+        }
+        upsert: {
+          args: Prisma.AiUsageUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiUsagePayload>
+        }
+        aggregate: {
+          args: Prisma.AiUsageAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAiUsage>
+        }
+        groupBy: {
+          args: Prisma.AiUsageGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AiUsageGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AiUsageCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AiUsageCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1072,6 +1147,8 @@ export const PlaceScalarFieldEnum = {
   hoursJson: 'hoursJson',
   sourceUrl: 'sourceUrl',
   contentHash: 'contentHash',
+  eventCount: 'eventCount',
+  lastEventAt: 'lastEventAt',
   lastSeenAt: 'lastSeenAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -1109,6 +1186,25 @@ export const CanonicalPlaceScalarFieldEnum = {
 } as const
 
 export type CanonicalPlaceScalarFieldEnum = (typeof CanonicalPlaceScalarFieldEnum)[keyof typeof CanonicalPlaceScalarFieldEnum]
+
+
+export const AiUsageScalarFieldEnum = {
+  id: 'id',
+  feature: 'feature',
+  model: 'model',
+  promptTokens: 'promptTokens',
+  completionTokens: 'completionTokens',
+  totalTokens: 'totalTokens',
+  estimatedCostUsd: 'estimatedCostUsd',
+  latencyMs: 'latencyMs',
+  success: 'success',
+  error: 'error',
+  scrapeRunId: 'scrapeRunId',
+  meta: 'meta',
+  createdAt: 'createdAt'
+} as const
+
+export type AiUsageScalarFieldEnum = (typeof AiUsageScalarFieldEnum)[keyof typeof AiUsageScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1304,6 +1400,20 @@ export type EnumMetricActionFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 export type ListEnumMetricActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MetricAction[]'>
     
 
+
+/**
+ * Reference to a field of type 'AiFeature'
+ */
+export type EnumAiFeatureFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiFeature'>
+    
+
+
+/**
+ * Reference to a field of type 'AiFeature[]'
+ */
+export type ListEnumAiFeatureFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiFeature[]'>
+    
+
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */
@@ -1421,6 +1531,7 @@ export type GlobalOmitConfig = {
   place?: Prisma.PlaceOmit
   metric?: Prisma.MetricOmit
   canonicalPlace?: Prisma.CanonicalPlaceOmit
+  aiUsage?: Prisma.AiUsageOmit
 }
 
 /* Types for Logging */

@@ -6,6 +6,7 @@ import { TZ } from "@/lib/time/window";
 
 import { EXTRACTION_SYSTEM_PROMPT, buildUserPrompt } from "./prompts";
 import { ExtractionResultSchema, type ExtractionResult } from "./schema";
+import { logAiUsage } from "./ai-usage";
 
 const DEFAULT_MODEL = process.env.OPENAI_EXTRACT_MODEL ?? "gpt-4.1-mini";
 
@@ -31,6 +32,7 @@ export interface ExtractInput {
   url: string;
   reducedHtml: string;
   now?: Date;
+  scrapeRunId?: string;
 }
 
 const RETRYABLE_STATUSES = new Set([408, 409, 429, 500, 502, 503, 504]);
@@ -63,6 +65,7 @@ export async function extractEvent(input: ExtractInput): Promise<ExtractionResul
 
   const openai = getClient();
   const format = zodTextFormat(ExtractionResultSchema, "extraction");
+  const startMs = Date.now();
 
   let lastError: unknown = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -80,6 +83,15 @@ export async function extractEvent(input: ExtractInput): Promise<ExtractionResul
       if (!parsed) {
         throw new Error("OpenAI returned no parsed output");
       }
+      logAiUsage({
+        feature: "extract_event",
+        model: DEFAULT_MODEL,
+        usage: response.usage,
+        latencyMs: Date.now() - startMs,
+        success: true,
+        scrapeRunId: input.scrapeRunId,
+        meta: { url: input.url },
+      });
       return ExtractionResultSchema.parse(parsed);
     } catch (err) {
       lastError = err;
@@ -87,6 +99,17 @@ export async function extractEvent(input: ExtractInput): Promise<ExtractionResul
       await sleep(500 * Math.pow(2, attempt));
     }
   }
+
+  logAiUsage({
+    feature: "extract_event",
+    model: DEFAULT_MODEL,
+    usage: null,
+    latencyMs: Date.now() - startMs,
+    success: false,
+    error: lastError instanceof Error ? lastError.message : String(lastError),
+    scrapeRunId: input.scrapeRunId,
+    meta: { url: input.url },
+  });
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 

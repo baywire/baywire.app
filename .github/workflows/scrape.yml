@@ -53,7 +53,7 @@ jobs:
     needs: source-matrix
     name: "Scrape ${{ matrix.source }}"
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.source-matrix.outputs.matrix) }}

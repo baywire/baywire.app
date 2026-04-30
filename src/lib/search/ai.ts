@@ -3,6 +3,7 @@ import { z } from "zod";
 import { zodTextFormat } from "openai/helpers/zod";
 
 import type { AppEvent } from "@/lib/events/types";
+import { logAiUsage } from "@/lib/extract/ai-usage";
 
 const DEFAULT_MODEL = process.env.OPENAI_SEARCH_MODEL
   ?? process.env.OPENAI_EDITORIAL_MODEL
@@ -54,7 +55,8 @@ export async function rerankWithAI(
 ): Promise<SearchAIResult> {
   const openai = getClient();
   const format = zodTextFormat(SearchAIResultSchema, "search");
-  const input = buildUserPrompt(query, candidates);
+  const userInput = buildUserPrompt(query, candidates);
+  const startMs = Date.now();
 
   let lastError: unknown = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -63,7 +65,7 @@ export async function rerankWithAI(
         model: DEFAULT_MODEL,
         input: [
           { role: "system", content: SEARCH_SYSTEM_PROMPT },
-          { role: "user", content: input },
+          { role: "user", content: userInput },
         ],
         text: { format },
       });
@@ -74,6 +76,14 @@ export async function rerankWithAI(
       for (const entry of raw.reasons) {
         if (entry.reason) reasonByID[entry.id] = entry.reason;
       }
+      logAiUsage({
+        feature: "search_rerank",
+        model: DEFAULT_MODEL,
+        usage: response.usage,
+        latencyMs: Date.now() - startMs,
+        success: true,
+        meta: { query, candidateCount: candidates.length },
+      });
       return { intentLine: raw.intentLine, aiPickIDs: raw.aiPickIDs, reasonByID };
     } catch (err) {
       lastError = err;
@@ -81,6 +91,16 @@ export async function rerankWithAI(
       await sleep(500 * Math.pow(2, attempt));
     }
   }
+
+  logAiUsage({
+    feature: "search_rerank",
+    model: DEFAULT_MODEL,
+    usage: null,
+    latencyMs: Date.now() - startMs,
+    success: false,
+    error: lastError instanceof Error ? lastError.message : String(lastError),
+    meta: { query, candidateCount: candidates.length },
+  });
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 

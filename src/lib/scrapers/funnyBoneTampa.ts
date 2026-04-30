@@ -1,4 +1,5 @@
 import { browserFetch } from "./browser";
+import { extractListings } from "../extract/listings";
 import { loadHtml } from "./parse";
 import { reduceHtml } from "./reduce";
 import { extractJsonLdEvents, jsonLdEventToExtracted } from "./structured";
@@ -11,6 +12,7 @@ const LIST_URL = `${BASE}/shows/`;
 /**
  * Tampa Funny Bone. DataDome requires full JS execution on every page, not
  * just cookie transfer, so we use browserFetch for all requests.
+ * Warm-up navigation to homepage helps pass initial DataDome challenge.
  */
 export const funnyBoneTampaAdapter: SourceAdapter = {
   slug: SLUG,
@@ -22,17 +24,29 @@ export const funnyBoneTampaAdapter: SourceAdapter = {
     const { html } = await browserFetch(LIST_URL, {
       signal,
       label: `${SLUG}:list`,
-      timeoutMs: 30_000,
+      timeoutMs: 45_000,
+      warmUpUrl: BASE,
       waitForSelector: "a[href*='/event']",
     });
-    return parseListingHtml(html);
+
+    const items = parseListingHtml(html);
+    if (items.length > 0) return items;
+
+    // Fallback: use AI listing extraction if CSS selectors find nothing
+    console.log(`[${SLUG}] CSS selectors found 0 events — trying AI listing extraction`);
+    const aiUrls = await extractListings(html, BASE, SLUG);
+    return aiUrls.map((url) => ({
+      sourceEventId: parseEventId(url) ?? url,
+      url,
+    }));
   },
 
   async tryStructured(item, signal): Promise<StructuredEvent | null> {
     const { html } = await browserFetch(item.url, {
       signal,
       label: `${SLUG}:structured`,
-      timeoutMs: 25_000,
+      timeoutMs: 30_000,
+      warmUpUrl: BASE,
     });
     const events = extractJsonLdEvents(html);
     for (const ev of events) {
@@ -57,7 +71,8 @@ export const funnyBoneTampaAdapter: SourceAdapter = {
     const { html, finalUrl } = await browserFetch(item.url, {
       signal,
       label: `${SLUG}:detail`,
-      timeoutMs: 25_000,
+      timeoutMs: 30_000,
+      warmUpUrl: BASE,
     });
     return {
       reducedHtml: reduceHtml(html, finalUrl),

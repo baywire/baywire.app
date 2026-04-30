@@ -7,7 +7,7 @@ import { cleanInlineText, stripHtmlToText } from "@/lib/scrapers/text";
 
 type PlaceWithSource = Prisma.PlaceGetPayload<{
   include: { source: { select: { slug: true } } };
-}>;
+}> & { eventCount?: number };
 
 export async function refreshEditorialForCanonicalPlace(
   tx: Pick<AppPrismaClient, "canonicalPlace">,
@@ -28,7 +28,8 @@ export async function refreshEditorialForCanonicalPlace(
   ).slice(0, 8);
   const sourceSlugs = uniqueCompact(places.map((p) => p.source.slug)).sort();
 
-  const fallback = buildFallback(primary);
+  const totalEventCount = places.reduce((sum, p) => sum + (p.eventCount ?? 0), 0);
+  const fallback = buildFallback(primary, totalEventCount);
 
   try {
     if (!process.env.OPENAI_API_KEY) {
@@ -47,7 +48,10 @@ export async function refreshEditorialForCanonicalPlace(
       category: primary.category,
       city: primary.city,
       address: primary.address,
+      totalEventCount,
     });
+
+    const finalScore = blendScore(curated.editorialScore, totalEventCount);
 
     await tx.canonicalPlace.update({
       where: { id: canonicalID },
@@ -57,7 +61,7 @@ export async function refreshEditorialForCanonicalPlace(
         vibes: uniqueCompact(curated.vibes).slice(0, 5),
         tags: uniqueCompact(curated.tags).slice(0, 6),
         whyItsCool: curated.whyItsCool,
-        editorialScore: curated.editorialScore,
+        editorialScore: finalScore,
         editorialHash: hash,
         editorialUpdatedAt: new Date(),
       },
@@ -99,15 +103,29 @@ function uniqueCompact(input: readonly string[]): string[] {
   return out;
 }
 
-function buildFallback(primary: PlaceWithSource) {
+/**
+ * Blends the LLM editorial score with an activity signal derived from
+ * event count. Places that host many events get a boost; places with
+ * no events get a slight penalty. The activity signal is capped and
+ * logarithmic to avoid runaway scores from high-volume venues.
+ */
+function blendScore(llmScore: number, totalEventCount: number): number {
+  if (totalEventCount <= 0) return llmScore * 0.8;
+  // log2(eventCount) / log2(50) gives ~1.0 at 50 events, ~0.6 at 5 events
+  const activitySignal = Math.min(1, Math.log2(totalEventCount + 1) / Math.log2(50));
+  return Math.min(1, llmScore * 0.65 + activitySignal * 0.35);
+}
+
+function buildFallback(primary: PlaceWithSource, totalEventCount: number) {
   const summarySource = stripHtmlToText(primary.description) || cleanInlineText(primary.name);
   const summary = summarySource.length > 200 ? `${summarySource.slice(0, 197)}...` : summarySource;
+  const baseScore = blendScore(0.5, totalEventCount);
   return {
     dedupedName: cleanInlineText(primary.name).slice(0, 200),
     summary,
     vibes: [] as string[],
     tags: [primary.category],
     whyItsCool: null as string | null,
-    editorialScore: 0.5,
+    editorialScore: baseScore,
   };
 }

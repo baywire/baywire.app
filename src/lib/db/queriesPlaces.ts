@@ -163,6 +163,9 @@ function choosePrimaryPlace(places: PlaceWithSourceSlug[]): PlaceWithSourceSlug 
 }
 
 function comparePrimary(a: PlaceWithSourceSlug, b: PlaceWithSourceSlug): number {
+  const specA = a.category !== "venue" && a.category !== "other";
+  const specB = b.category !== "venue" && b.category !== "other";
+  if (specA !== specB) return specA ? -1 : 1;
   const imgA = Boolean(a.imageUrl);
   const imgB = Boolean(b.imageUrl);
   if (imgA !== imgB) return imgA ? -1 : 1;

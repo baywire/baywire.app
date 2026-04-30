@@ -76,7 +76,8 @@ model ScrapeRun {
   eventsSkipped  Int       @default(0) @map("events_skipped")
   error          String?
 
-  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  source  Source    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  aiUsage AiUsage[]
 
   @@index([sourceId, startedAt], map: "scrape_runs_source_started_idx")
   @@map("scrape_runs")
@@ -191,6 +192,8 @@ model Place {
   hoursJson      Json?         @map("hours_json")
   sourceUrl      String        @map("source_url")
   contentHash    String        @map("content_hash")
+  eventCount     Int           @default(0) @map("event_count")
+  lastEventAt    DateTime?     @map("last_event_at") @db.Timestamptz()
   lastSeenAt     DateTime      @default(now()) @map("last_seen_at") @db.Timestamptz()
   createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz()
@@ -257,5 +260,40 @@ model CanonicalPlace {
 
   @@index([editorialScore], map: "canonical_places_editorial_score_idx")
   @@map("canonical_places")
+  @@schema("baywire")
+}
+
+enum AiFeature {
+  extract_event
+  extract_place
+  extract_listings
+  editorial_event
+  editorial_place
+  search_rerank
+
+  @@schema("baywire")
+}
+
+model AiUsage {
+  id               String     @id @default(uuid()) @db.Uuid
+  feature          AiFeature
+  model            String
+  promptTokens     Int        @map("prompt_tokens")
+  completionTokens Int        @map("completion_tokens")
+  totalTokens      Int        @map("total_tokens")
+  estimatedCostUsd Float      @map("estimated_cost_usd")
+  latencyMs        Int        @map("latency_ms")
+  success          Boolean    @default(true)
+  error            String?
+  scrapeRunId      String?    @map("scrape_run_id") @db.Uuid
+  meta             Json?
+  createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+
+  scrapeRun ScrapeRun? @relation(fields: [scrapeRunId], references: [id], onDelete: SetNull)
+
+  @@index([feature, createdAt], map: "ai_usage_feature_created_at_idx")
+  @@index([scrapeRunId], map: "ai_usage_scrape_run_id_idx")
+  @@index([model, createdAt], map: "ai_usage_model_created_at_idx")
+  @@map("ai_usage")
   @@schema("baywire")
 }

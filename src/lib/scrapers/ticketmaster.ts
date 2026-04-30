@@ -14,7 +14,7 @@ import type { ListingItem, SourceAdapter, StructuredEvent } from "./types";
  * LLM cost. Free tier is 5,000 requests/day; we issue ~3 per scrape (one
  * listing fetch, plus retries on cold cache).
  *
- * DMA 635 = "Tampa-St. Petersburg-Sarasota", which covers every city the
+ * DMA 396 = "Tampa - Saint Petersburg (Sarasota)", which covers every city the
  * aggregator displays. Page size is capped at 200 by the API. We stay on the
  * structured path entirely; `fetchAndReduce` is a defensive fallback that
  * synthesizes a JSON-LD blob from the cached payload so the LLM path keeps
@@ -105,7 +105,7 @@ interface TicketmasterListResponse {
 
 const SLUG = "ticketmaster";
 const API_ORIGIN = "https://app.ticketmaster.com";
-const DMA_ID = 635;
+const DMA_ID = 396;
 const PAGE_SIZE = 200;
 const MAX_PAGES = 1;
 

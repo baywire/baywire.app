@@ -57,7 +57,8 @@ export const ModelName = {
   CanonicalEvent: 'CanonicalEvent',
   Place: 'Place',
   Metric: 'Metric',
-  CanonicalPlace: 'CanonicalPlace'
+  CanonicalPlace: 'CanonicalPlace',
+  AiUsage: 'AiUsage'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -181,6 +182,8 @@ export const PlaceScalarFieldEnum = {
   hoursJson: 'hoursJson',
   sourceUrl: 'sourceUrl',
   contentHash: 'contentHash',
+  eventCount: 'eventCount',
+  lastEventAt: 'lastEventAt',
   lastSeenAt: 'lastSeenAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -218,6 +221,25 @@ export const CanonicalPlaceScalarFieldEnum = {
 } as const
 
 export type CanonicalPlaceScalarFieldEnum = (typeof CanonicalPlaceScalarFieldEnum)[keyof typeof CanonicalPlaceScalarFieldEnum]
+
+
+export const AiUsageScalarFieldEnum = {
+  id: 'id',
+  feature: 'feature',
+  model: 'model',
+  promptTokens: 'promptTokens',
+  completionTokens: 'completionTokens',
+  totalTokens: 'totalTokens',
+  estimatedCostUsd: 'estimatedCostUsd',
+  latencyMs: 'latencyMs',
+  success: 'success',
+  error: 'error',
+  scrapeRunId: 'scrapeRunId',
+  meta: 'meta',
+  createdAt: 'createdAt'
+} as const
+
+export type AiUsageScalarFieldEnum = (typeof AiUsageScalarFieldEnum)[keyof typeof AiUsageScalarFieldEnum]
 
 
 export const SortOrder = {
