@@ -14,8 +14,6 @@ import { getScrapeWindow, overlapsWindow } from "@/lib/time/window";
 
 import { normalizeExtractedEvent } from "./normalize";
 import { resolveCanonicalEventForEvent } from "./canonical";
-import { upsertPlaceFromEvent } from "./placeFromEvent";
-import { resolveCanonicalPlaceForPlace } from "./canonicalPlace";
 
 const EXTRACTION_CONCURRENCY = 4;
 const MAX_EVENTS_PER_SOURCE = 60;
@@ -156,7 +154,6 @@ async function runSingleSource(
     const limit = pLimit(EXTRACTION_CONCURRENCY);
     let llmHits = 0;
     let errors = 0;
-    const placeIDs = new Set<string>();
 
     await Promise.all(
       limited.map((item) =>
@@ -182,7 +179,6 @@ async function runSingleSource(
             else stats.skipped += 1;
             if (result.structured) stats.structuredHits += 1;
             else llmHits += 1;
-            if (result.placeID) placeIDs.add(result.placeID);
             const reasonSuffix = result.reason ? ` reason=${result.reason}` : "";
             console.log(
               `[item] slug=${adapter.slug} outcome=${result.outcome} path=${result.structured ? "structured" : "llm"
@@ -203,20 +199,6 @@ async function runSingleSource(
     console.log(
       `[run:process] slug=${adapter.slug} structured=${stats.structuredHits} llm=${llmHits} errors=${errors}`,
     );
-
-    // Batch-resolve canonical places after all events are processed
-    if (placeIDs.size > 0) {
-      console.log(`[run:places] slug=${adapter.slug} resolving=${placeIDs.size} canonical places`);
-      for (const placeID of placeIDs) {
-        try {
-          await resolveCanonicalPlaceForPlace(placeID);
-        } catch (err) {
-          console.warn(
-            `[canonical-place] slug=${adapter.slug} placeId=${placeID} failed: ${err instanceof Error ? err.message : String(err)}`,
-          );
-        }
-      }
-    }
   } catch (err) {
     stats.ok = false;
     stats.error = err instanceof Error ? err.message : String(err);
@@ -284,7 +266,6 @@ interface ProcessResult {
   outcome: ProcessOutcome;
   structured: boolean;
   reason?: SkipReason;
-  placeID?: string;
 }
 
 async function processItem(args: ProcessArgs): Promise<ProcessResult> {
@@ -372,12 +353,7 @@ async function processItem(args: ProcessArgs): Promise<ProcessResult> {
       }`,
     );
   }
-  const placeID = await tryUpsertPlace(sourceId, data);
-  return {
-    outcome: writeResult.outcome,
-    structured: false,
-    placeID: placeID ?? undefined,
-  };
+  return { outcome: writeResult.outcome, structured: false };
 }
 
 interface PersistOpts {
@@ -388,7 +364,6 @@ interface PersistOpts {
 interface PersistResult {
   outcome: ProcessOutcome;
   reason?: SkipReason;
-  placeID?: string;
 }
 
 async function persistStructured(
@@ -442,8 +417,7 @@ async function persistStructured(
       }`,
     );
   }
-  const placeID = await tryUpsertPlace(sourceId, normalized.row);
-  return { outcome: writeResult.outcome, placeID: placeID ?? undefined };
+  return { outcome: writeResult.outcome };
 }
 
 async function writeEvent(
@@ -504,16 +478,3 @@ function stableStringify(value: unknown): string {
   return `{${parts.join(",")}}`;
 }
 
-async function tryUpsertPlace(
-  sourceId: string,
-  row: Prisma.EventUncheckedCreateInput,
-): Promise<string | null> {
-  try {
-    return await upsertPlaceFromEvent(sourceId, row);
-  } catch (err) {
-    console.warn(
-      `[place-from-event] failed: ${err instanceof Error ? err.message : String(err)}`,
-    );
-    return null;
-  }
-}
