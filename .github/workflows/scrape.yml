@@ -46,27 +46,7 @@ jobs:
             sub=$(jq -n --arg s "$PICK" '[$s]')
             echo "matrix={\"source\":$sub}" >> "$GITHUB_OUTPUT"
           else
-            npx tsx <<'EOF'
-          import { PrismaClient } from "./prisma/generated/client.ts";
-          import fs from "node:fs/promises";
-
-          const prisma = new PrismaClient();
-          try {
-            const rows = await prisma.source.findMany({
-              where: { enabled: true },
-              select: { slug: true },
-              orderBy: { slug: "asc" },
-            });
-            const slugs = rows.map(r => r.slug);
-            const output = process.env.GITHUB_OUTPUT;
-            if (!output) throw new Error("GITHUB_OUTPUT is not set");
-            const matrix = JSON.stringify({ source: slugs });
-            await fs.appendFile(output, `matrix=${matrix}\n`);
-            console.log(`Matrix: ${matrix}`);
-          } finally {
-            await prisma.$disconnect();
-          }
-          EOF
+            npx tsx scripts/build-matrix.ts
           fi
 
   scrape:
