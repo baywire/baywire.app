@@ -10,7 +10,7 @@ import { COOKIE_PLAN } from "@/lib/cookies/constants";
 import { parsePlanOrderCookie } from "@/lib/cookies/parse";
 import { CITY_KEYS, type CityKey } from "@/lib/cities";
 import { listUpcomingEventsByIds } from "@/lib/db/queries";
-import { countPlacesByCity, listPlaces } from "@/lib/db/queriesPlaces";
+import { countPlacesByCity, listPlaces, listPlacesByIds } from "@/lib/db/queriesPlaces";
 import type { PlaceCategoryValue } from "@/lib/places/types";
 
 import { cookies } from "next/headers";
@@ -34,13 +34,17 @@ export async function MainColumnPlaces({
 
   const jar = await cookies();
   const rawPlan = parsePlanOrderCookie(jar.get(COOKIE_PLAN)?.value);
-  const [facets, planUpcoming] = await Promise.all([
+  const [facets, planUpcoming, planPlaces] = await Promise.all([
     countPlacesByCity().catch(() => [] as { city: string; count: number }[]),
     listUpcomingEventsByIds(rawPlan),
+    listPlacesByIds(rawPlan),
   ]);
 
-  const planIdSet = new Set(planUpcoming.map((e) => e.id));
-  const initialPlanOrder = rawPlan.filter((id) => planIdSet.has(id));
+  const validPlanIds = new Set([
+    ...planUpcoming.map((e) => e.id),
+    ...planPlaces.map((p) => p.id),
+  ]);
+  const initialPlanOrder = rawPlan.filter((id) => validPlanIds.has(id));
 
   const facetMap: Record<string, number> = Object.fromEntries(
     facets.map((f) => [f.city, f.count]),
@@ -51,6 +55,7 @@ export async function MainColumnPlaces({
     <HomePlanClient
       orderIds={initialPlanOrder}
       planEvents={planUpcoming}
+      planPlaces={planPlaces}
       defaultOpenFromQuery={defaultOpenFromQuery}
     >
       <PlacesProvider

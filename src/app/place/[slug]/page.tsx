@@ -1,14 +1,18 @@
 import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, ExternalLink as ExternalLinkIcon, Globe, MapPin, Phone, Tag as TagIcon } from "lucide-react";
+import { cookies } from "next/headers";
 
 import type { Metadata } from "next";
 
 import { Callout, Chip, Heading, MetaRow, Tag, Text, TextLink, navLinkClass } from "@/design-system";
 import { cn } from "@/lib/utils";
+import { AddPlaceToPlanButton } from "@/components/plan/AddPlaceToPlanButton";
 import { PlaceDetailHeroImage } from "@/components/PlaceDetailHeroImage";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { COOKIE_PLAN } from "@/lib/cookies/constants";
+import { parsePlanOrderCookie } from "@/lib/cookies/parse";
 import { CATEGORY_LABELS, VIBE_LABELS } from "@/lib/places/labels";
 import { cityLabel } from "@/lib/cities";
 import { getPlaceBySlug } from "@/lib/db/queriesPlaces";
@@ -43,6 +47,10 @@ export default async function PlaceDetailPage({ params }: RouteParams) {
   const city = cityLabel(place.city);
   const hours = parseHoursJson(place.hoursJson);
 
+  const jar = await cookies();
+  const rawPlan = parsePlanOrderCookie(jar.get(COOKIE_PLAN)?.value);
+  const initialInPlan = rawPlan.includes(place.id);
+
   return (
     <div className="flex min-h-dvh flex-col">
       <SiteHeader />
@@ -56,11 +64,14 @@ export default async function PlaceDetailPage({ params }: RouteParams) {
         <div className="mt-6 flex flex-col gap-6">
           <PlaceDetailHeroImage imageUrl={place.imageUrl} name={place.name} categoryLabel={categoryLabel} />
 
-          <MetaRow>
-            <Chip tone="gulf" icon={<MapPin className="size-3" />}>{city}</Chip>
-            <Chip tone="sunset">{categoryLabel}</Chip>
-            {place.priceRange && <Chip tone="sand">{place.priceRange}</Chip>}
-          </MetaRow>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <MetaRow>
+              <Chip tone="gulf" icon={<MapPin className="size-3" />}>{city}</Chip>
+              <Chip tone="sunset">{categoryLabel}</Chip>
+              {place.priceRange && <Chip tone="sand">{place.priceRange}</Chip>}
+            </MetaRow>
+            <AddPlaceToPlanButton place={place} initialInPlan={initialInPlan} />
+          </div>
 
           <Heading level="page" className="font-bold sm:text-4xl">
             {place.name}

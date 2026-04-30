@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { Button, EmptyState, Heading, StickyDayHeading, Text } from "@/design-system";
 import { PlaceCard } from "@/components/PlaceCard";
 import { usePlaces } from "@/components/places/PlacesProvider";
+import { useHomePlan } from "@/components/plan/homePlanContext";
 
 import { CATEGORY_LABELS_PLURAL } from "@/lib/places/labels";
 import type { AppPlace } from "@/lib/places/types";
@@ -54,6 +55,7 @@ function groupByCategory(places: AppPlace[]): CategoryGroup[] {
 
 export function PlacesList() {
   const { filtered, category, setCategory, clearVibes, selectedVibes } = usePlaces();
+  const { planOrder, togglePlacePlan } = useHomePlan();
 
   const standoutPlaces = useMemo(
     () =>
@@ -112,12 +114,27 @@ export function PlacesList() {
             Top-rated spots curated by our AI.
           </Text>
           <div className="mt-4 space-y-4">
-            <PlaceCard place={featured} variant="feature" />
+            <PlaceCard
+              place={featured}
+              variant="feature"
+              plan={{
+                inPlan: planOrder.includes(featured.id),
+                onToggle: () => togglePlacePlan(featured),
+              }}
+              initialInPlan={planOrder.includes(featured.id)}
+            />
             {standoutPlaces.length > 1 && (
               <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
                 {standoutPlaces.slice(1).map((place) => (
                   <div key={place.id} className="min-w-0">
-                    <PlaceCard place={place} />
+                    <PlaceCard
+                      place={place}
+                      plan={{
+                        inPlan: planOrder.includes(place.id),
+                        onToggle: () => togglePlacePlan(place),
+                      }}
+                      initialInPlan={planOrder.includes(place.id)}
+                    />
                   </div>
                 ))}
               </div>
@@ -138,7 +155,14 @@ export function PlacesList() {
             <div className="mt-4 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {group.places.map((place) => (
                 <div key={place.id} className="min-w-0">
-                  <PlaceCard place={place} />
+                  <PlaceCard
+                    place={place}
+                    plan={{
+                      inPlan: planOrder.includes(place.id),
+                      onToggle: () => togglePlacePlan(place),
+                    }}
+                    initialInPlan={planOrder.includes(place.id)}
+                  />
                 </div>
               ))}
             </div>
@@ -153,7 +177,14 @@ export function PlacesList() {
             <div className="mt-4 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {remaining.map((place) => (
                 <div key={place.id} className="min-w-0">
-                  <PlaceCard place={place} />
+                  <PlaceCard
+                    place={place}
+                    plan={{
+                      inPlan: planOrder.includes(place.id),
+                      onToggle: () => togglePlacePlan(place),
+                    }}
+                    initialInPlan={planOrder.includes(place.id)}
+                  />
                 </div>
               ))}
             </div>

@@ -10,6 +10,7 @@ import { HomePlanProvider, useHomePlan } from "@/components/plan/homePlanContext
 import { SearchDialog } from "@/components/search/SearchDialog";
 
 import type { AppEvent } from "@/lib/events/types";
+import type { AppPlace } from "@/lib/places/types";
 
 import { cn } from "@/lib/utils";
 
@@ -220,11 +221,13 @@ function HomeMobilePlanTabs() {
 export function HomePlanClient({
   orderIds: initialOrderIds,
   planEvents: initialPlanEvents,
+  planPlaces: initialPlanPlaces = [],
   defaultOpenFromQuery,
   children,
 }: {
   orderIds: string[];
   planEvents: AppEvent[];
+  planPlaces?: AppPlace[];
   defaultOpenFromQuery: boolean;
   children: ReactNode;
 }) {
@@ -233,6 +236,7 @@ export function HomePlanClient({
       defaultOpenPlan={defaultOpenFromQuery}
       initialPlanOrder={initialOrderIds}
       initialPlanEvents={initialPlanEvents}
+      initialPlanPlaces={initialPlanPlaces}
     >
       {children}
     </HomePlanProvider>

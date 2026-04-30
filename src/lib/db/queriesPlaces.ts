@@ -47,6 +47,14 @@ export async function countPlacesByCity(): Promise<{ city: string; count: number
   return groups.map((g) => ({ city: g.city, count: g._count._all }));
 }
 
+export async function listPlacesByIds(ids: string[]): Promise<AppPlace[]> {
+  if (ids.length === 0) return [];
+  const rows = await prisma.place.findMany(
+    withReadCache({ where: { id: { in: ids } } }),
+  );
+  return rows.map(serializePlace);
+}
+
 export async function getPlaceBySlug(slug: string): Promise<AppPlace | null> {
   const row = await prisma.place.findUnique(
     withReadCache({ where: { slug } }),

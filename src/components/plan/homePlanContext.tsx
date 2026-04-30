@@ -15,6 +15,7 @@ import { setPlanOrderCookie } from "@/lib/cookies/browser";
 import { insertChronologically } from "@/lib/plan/order";
 
 import type { AppEvent } from "@/lib/events/types";
+import type { AppPlace } from "@/lib/places/types";
 import type { SearchMode, SearchResponse } from "@/lib/search/types";
 
 export type HomeMobileView = "feed" | "places" | "plan";
@@ -22,6 +23,12 @@ export type HomeMobileView = "feed" | "places" | "plan";
 function eventMapFromList(events: AppEvent[]): Map<string, AppEvent> {
   const m = new Map<string, AppEvent>();
   for (const e of events) m.set(e.id, e);
+  return m;
+}
+
+function placeMapFromList(places: AppPlace[]): Map<string, AppPlace> {
+  const m = new Map<string, AppPlace>();
+  for (const p of places) m.set(p.id, p);
   return m;
 }
 
@@ -38,7 +45,9 @@ export interface HomePlanContextValue {
   planOrder: string[];
   setPlanOrder: (next: string[] | ((p: string[]) => string[])) => void;
   planEventsById: ReadonlyMap<string, AppEvent>;
+  planPlacesById: ReadonlyMap<string, AppPlace>;
   togglePlan: (e: AppEvent) => void;
+  togglePlacePlan: (place: AppPlace) => void;
   isSearchOpen: boolean;
   openSearch: () => void;
   closeSearch: () => void;
@@ -69,11 +78,13 @@ export function HomePlanProvider({
   defaultOpenPlan = false,
   initialPlanOrder,
   initialPlanEvents,
+  initialPlanPlaces = [],
 }: {
   children: ReactNode;
   defaultOpenPlan?: boolean;
   initialPlanOrder: string[];
   initialPlanEvents: AppEvent[];
+  initialPlanPlaces?: AppPlace[];
 }) {
   const [drawerOpen, setDrawerOpen] = useState(() => defaultOpenPlan);
   const [mobileView, setMobileView] = useState<HomeMobileView>(() =>
@@ -82,6 +93,9 @@ export function HomePlanProvider({
   const [planOrder, setPlanOrder] = useState(() => [...initialPlanOrder]);
   const [planEventsById, setPlanEventsById] = useState(() =>
     eventMapFromList(initialPlanEvents),
+  );
+  const [planPlacesById, setPlanPlacesById] = useState(() =>
+    placeMapFromList(initialPlanPlaces),
   );
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -118,6 +132,19 @@ export function HomePlanProvider({
     });
   }, []);
 
+  const togglePlacePlan = useCallback((place: AppPlace) => {
+    setPlanPlacesById((m) => {
+      const n = new Map(m);
+      n.set(place.id, place);
+      return n;
+    });
+    setPlanOrder((prev) => {
+      if (prev.includes(place.id)) return prev.filter((x) => x !== place.id);
+      if (prev.length >= 80) return prev;
+      return [...prev, place.id];
+    });
+  }, []);
+
   useEffect(() => {
     setPlanOrderCookie(planOrder);
   }, [planOrder]);
@@ -137,7 +164,9 @@ export function HomePlanProvider({
       planOrder,
       setPlanOrder,
       planEventsById,
+      planPlacesById,
       togglePlan,
+      togglePlacePlan,
       isSearchOpen,
       openSearch,
       closeSearch,
@@ -148,7 +177,7 @@ export function HomePlanProvider({
       searchResponse,
       setSearchResponse,
     }),
-    [drawerOpen, mobileView, toggleDrawer, showFeed, showPlan, planOrder, planEventsById, togglePlan, isSearchOpen, openSearch, closeSearch, searchQuery, searchMode, searchResponse],
+    [drawerOpen, mobileView, toggleDrawer, showFeed, showPlan, planOrder, planEventsById, planPlacesById, togglePlan, togglePlacePlan, isSearchOpen, openSearch, closeSearch, searchQuery, searchMode, searchResponse],
   );
 
   return <HomePlanContext.Provider value={value}>{children}</HomePlanContext.Provider>;

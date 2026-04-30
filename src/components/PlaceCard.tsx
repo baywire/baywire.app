@@ -2,13 +2,14 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { Globe, MapPin, Phone, Tag as TagIcon } from "lucide-react";
+import { Globe, ListOrdered, MapPin, Phone, Tag as TagIcon } from "lucide-react";
 
 import {
   Callout,
   CardAffordance,
   CardTitle,
   Chip,
+  IconButton,
   MetaRow,
   Tag,
   Text,
@@ -24,9 +25,14 @@ import { cn } from "@/lib/utils";
 interface PlaceCardProps {
   place: AppPlace;
   variant?: "default" | "feature";
+  plan?: {
+    inPlan: boolean;
+    onToggle: (e: React.MouseEvent) => void;
+  };
+  initialInPlan?: boolean;
 }
 
-export function PlaceCard({ place, variant = "default" }: PlaceCardProps) {
+export function PlaceCard({ place, variant = "default", plan, initialInPlan = false }: PlaceCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const city = cityLabel(place.city);
   const categoryLabel = CATEGORY_LABELS[place.category] ?? "Place";
@@ -45,7 +51,27 @@ export function PlaceCard({ place, variant = "default" }: PlaceCardProps) {
         place={place}
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
+        initialInPlan={plan?.inPlan ?? initialInPlan}
       />
+
+      {plan && (
+        <IconButton
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            plan.onToggle(e);
+          }}
+          className="absolute left-4 top-4"
+          aria-pressed={plan.inPlan}
+          aria-label={plan.inPlan ? "Remove from My plan" : "Add to My plan"}
+        >
+          <ListOrdered
+            className={cn("size-4 text-sand-100", plan.inPlan && "text-gulf-200")}
+            strokeWidth={2.25}
+          />
+        </IconButton>
+      )}
 
       <PlaceCardImage
         imageUrl={place.imageUrl}

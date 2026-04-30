@@ -15,6 +15,7 @@ import {
   listEvents,
   listUpcomingEventsByIds,
 } from "@/lib/db/queries";
+import { listPlacesByIds } from "@/lib/db/queriesPlaces";
 import type { AppEvent } from "@/lib/events/types";
 import type { WindowKey } from "@/lib/time/window";
 
@@ -91,14 +92,18 @@ export async function MainColumn({
   const initialTop = parseTopTagsCookie(jar.get(COOKIE_TOP_TAGS)?.value);
   const rawSaved = parseSavedEventIdsCookie(jar.get(COOKIE_SAVED_EVENTS)?.value);
   const rawPlan = parsePlanOrderCookie(jar.get(COOKIE_PLAN)?.value);
-  const [facets, savedFromServer, planUpcoming] = await Promise.all([
+  const [facets, savedFromServer, planUpcoming, planPlaces] = await Promise.all([
     countEventsByCity({ window, freeOnly }).catch(() => [] as { city: string; count: number }[]),
     listUpcomingEventsByIds(rawSaved),
     listUpcomingEventsByIds(rawPlan),
+    listPlacesByIds(rawPlan),
   ]);
   const initialSaved = savedFromServer.map((e) => e.id);
-  const planIdSet = new Set(planUpcoming.map((e) => e.id));
-  const initialPlanOrder = rawPlan.filter((id) => planIdSet.has(id));
+  const validPlanIds = new Set([
+    ...planUpcoming.map((e) => e.id),
+    ...planPlaces.map((p) => p.id),
+  ]);
+  const initialPlanOrder = rawPlan.filter((id) => validPlanIds.has(id));
 
   const tagOptions = buildTagOptions(eventRows);
   const facetMap: Record<string, number> = Object.fromEntries(
@@ -110,6 +115,7 @@ export async function MainColumn({
     <HomePlanClient
       orderIds={initialPlanOrder}
       planEvents={planUpcoming}
+      planPlaces={planPlaces}
       defaultOpenFromQuery={defaultOpenFromQuery}
     >
       <HomeProvider
