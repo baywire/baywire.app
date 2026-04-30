@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/prisma/client";
 import { prisma } from "@/lib/db/client";
 import type { CityKey } from "@/lib/cities";
 

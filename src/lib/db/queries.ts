@@ -1,4 +1,4 @@
-import type { Prisma } from "@/generated/prisma/client";
+import type { Prisma } from "@/prisma/client";
 import type { CityKey } from "@/lib/cities";
 import { type AppEvent, serializeEvent, serializeEvents } from "@/lib/events/types";
 import { sourcePriorityRank } from "@/lib/sources/priority";

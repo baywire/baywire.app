@@ -1,4 +1,4 @@
-import type { City, Prisma } from "@/generated/prisma/client";
+import type { City, Prisma } from "@/prisma/client";
 
 import type { CityKey } from "@/lib/cities";
 

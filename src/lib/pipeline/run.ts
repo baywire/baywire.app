@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import pLimit from "p-limit";
 
 import { prisma } from "@/lib/db/client";
-import type { Prisma } from "@/generated/prisma/client";
+import type { Prisma } from "@/prisma/client";
 import type { ExtractedEvent } from "@/lib/extract/schema";
 import { extractEvent } from "@/lib/extract/openai";
 import { ADAPTERS, getAdapter } from "@/lib/scrapers";
@@ -117,8 +117,7 @@ async function runSingleSource(
     const limited = items.slice(0, MAX_EVENTS_PER_SOURCE);
     stats.seen = limited.length;
     console.log(
-      `[run:list] slug=${adapter.slug} found=${items.length} processing=${limited.length} ms=${
-        Date.now() - listStart
+      `[run:list] slug=${adapter.slug} found=${items.length} processing=${limited.length} ms=${Date.now() - listStart
       }`,
     );
 
@@ -146,16 +145,14 @@ async function runSingleSource(
             if (result.structured) stats.structuredHits += 1;
             else llmHits += 1;
             console.log(
-              `[item] slug=${adapter.slug} outcome=${result.outcome} path=${
-                result.structured ? "structured" : "llm"
+              `[item] slug=${adapter.slug} outcome=${result.outcome} path=${result.structured ? "structured" : "llm"
               } ms=${Date.now() - itemStart} url=${item.url}`,
             );
           } catch (err) {
             stats.skipped += 1;
             errors += 1;
             console.warn(
-              `[item] slug=${adapter.slug} outcome=error ms=${Date.now() - itemStart} url=${
-                item.url
+              `[item] slug=${adapter.slug} outcome=error ms=${Date.now() - itemStart} url=${item.url
               } error="${err instanceof Error ? err.message : String(err)}"`,
             );
           }
@@ -176,8 +173,7 @@ async function runSingleSource(
 
   stats.durationMs = Date.now() - startedAt;
   console.log(
-    `[run:finish] slug=${adapter.slug} ok=${stats.ok} seen=${stats.seen} inserted=${stats.inserted} updated=${stats.updated} skipped=${stats.skipped} structuredHits=${stats.structuredHits} durationMs=${stats.durationMs}${
-      stats.error ? ` error="${stats.error}"` : ""
+    `[run:finish] slug=${adapter.slug} ok=${stats.ok} seen=${stats.seen} inserted=${stats.inserted} updated=${stats.updated} skipped=${stats.skipped} structuredHits=${stats.structuredHits} durationMs=${stats.durationMs}${stats.error ? ` error="${stats.error}"` : ""
     }`,
   );
 
@@ -313,8 +309,7 @@ async function processItem(args: ProcessArgs): Promise<ProcessResult> {
     await resolveCanonicalEventForEvent(writeResult.eventID);
   } catch (err) {
     console.warn(
-      `[canonical] slug=${adapter.slug} eventId=${writeResult.eventID} failed: ${
-        err instanceof Error ? err.message : String(err)
+      `[canonical] slug=${adapter.slug} eventId=${writeResult.eventID} failed: ${err instanceof Error ? err.message : String(err)
       }`,
     );
   }
@@ -377,8 +372,7 @@ async function persistStructured(
     await resolveCanonicalEventForEvent(writeResult.eventID);
   } catch (err) {
     console.warn(
-      `[canonical] slug=${args.adapter.slug} eventId=${writeResult.eventID} failed: ${
-        err instanceof Error ? err.message : String(err)
+      `[canonical] slug=${args.adapter.slug} eventId=${writeResult.eventID} failed: ${err instanceof Error ? err.message : String(err)
       }`,
     );
   }

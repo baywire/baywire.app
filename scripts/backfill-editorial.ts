@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-import type { Prisma } from "../src/generated/prisma/client";
+import type { Prisma } from "@/prisma/client";
 import { prisma } from "../src/lib/db/client";
 import { refreshEditorialForCanonical } from "../src/lib/pipeline/editorial";
 

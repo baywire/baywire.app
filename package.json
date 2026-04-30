@@ -4,11 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate --no-hints && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
-    "postinstall": "prisma generate --no-hints",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",

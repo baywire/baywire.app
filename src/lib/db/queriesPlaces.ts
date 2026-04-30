@@ -1,4 +1,4 @@
-import type { Prisma } from "@/generated/prisma/client";
+import type { Prisma } from "@/prisma/client";
 import type { CityKey } from "@/lib/cities";
 import type { PlaceCategoryValue } from "@/lib/extract/schemaPlace";
 import { type AppPlace, serializePlace } from "@/lib/places/types";

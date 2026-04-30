@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import type { Event } from "@/generated/prisma/client";
+import type { Event } from "@/prisma/client";
 import {
   isLikelySameEvent,
   normalizeMatchText,

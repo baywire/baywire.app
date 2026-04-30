@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import pLimit from "p-limit";
 
 import { prisma } from "@/lib/db/client";
-import type { Prisma } from "@/generated/prisma/client";
+import type { Prisma } from "@/prisma/client";
 import type { ExtractedPlace } from "@/lib/extract/schemaPlace";
 import { extractPlace } from "@/lib/extract/openaiPlace";
 import { PLACE_ADAPTERS, getPlaceAdapter } from "@/lib/scrapers/places";

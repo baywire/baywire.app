@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { MetricAction, type Prisma } from "@/generated/prisma/client";
+import { MetricAction, type Prisma } from "@/prisma/client";
 import { prisma } from "@/lib/db/client";
 
 const VALID_ACTIONS = new Set(Object.values(MetricAction));

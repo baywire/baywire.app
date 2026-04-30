@@ -1,4 +1,4 @@
-import type { City, Prisma } from "@/generated/prisma/client";
+import type { City, Prisma } from "@/prisma/client";
 
 const MATCH_WINDOW_HOURS = 12;
 const ALLDAY_MATCH_WINDOW_HOURS = 48;

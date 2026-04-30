@@ -1,4 +1,4 @@
-import type { Place } from "@/generated/prisma/client";
+import type { Place } from "@/prisma/client";
 
 export type { PlaceCategoryValue } from "@/lib/extract/schemaPlace";
 

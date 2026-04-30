@@ -1,4 +1,4 @@
-import type { Event } from "@/generated/prisma/client";
+import type { Event } from "@/prisma/client";
 
 const TZ = "America/New_York";
 const MATCH_WINDOW_HOURS = 12;

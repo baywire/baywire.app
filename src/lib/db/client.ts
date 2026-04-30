@@ -1,11 +1,11 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { withAccelerate } from "@prisma/extension-accelerate";
 
-import type { CanonicalEventDelegate } from "@/generated/prisma/models/CanonicalEvent";
-import type { EventDelegate } from "@/generated/prisma/models/Event";
-import type { MetricDelegate } from "@/generated/prisma/models/Metric";
-import type { SourceDelegate } from "@/generated/prisma/models/Source";
-import { PrismaClient } from "@/generated/prisma/client";
+import type { CanonicalEventDelegate } from "@/prisma/models/CanonicalEvent";
+import type { EventDelegate } from "@/prisma/models/Event";
+import type { MetricDelegate } from "@/prisma/models/Metric";
+import type { SourceDelegate } from "@/prisma/models/Source";
+import { PrismaClient } from "@/prisma/client";
 
 export type AppPrismaClient = PrismaClient & {
   source: SourceDelegate;

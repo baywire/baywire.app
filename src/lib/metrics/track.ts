@@ -1,6 +1,6 @@
 "use client";
 
-import type { MetricAction } from "@/generated/prisma/client";
+import type { MetricAction } from "@/prisma/client";
 import { getOrCreateSessionId } from "@/lib/cookies/browser";
 import { recordMetric } from "@/lib/metrics/actions";
 
@@ -25,5 +25,5 @@ export function trackMetric(opts: TrackOptions): void {
     eventId: opts.eventId ?? null,
     placeId: opts.placeId ?? null,
     payload: opts.payload ?? null,
-  }).catch(() => {});
+  }).catch(() => { });
 }

@@ -1,4 +1,4 @@
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/prisma/client";
 
 import type { CityKey } from "@/lib/cities";
 import type { ExtractedPlace } from "@/lib/extract/schemaPlace";

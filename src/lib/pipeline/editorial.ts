@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-import type { Prisma } from "@/generated/prisma/client";
+import type { Prisma } from "@/prisma/client";
 import type { AppPrismaClient } from "@/lib/db/client";
 import { curateCanonicalEvent } from "@/lib/extract/editorial";
 import { normalizeCategoryTags } from "@/lib/events/tagCanonical";

@@ -1,4 +1,4 @@
-import type { Event } from "@/generated/prisma/client";
+import type { Event } from "@/prisma/client";
 
 export type { PriceTier, TicketStatusValue } from "@/lib/extract/schema";
 
