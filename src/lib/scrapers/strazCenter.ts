@@ -169,7 +169,11 @@ function absolutize(href: string, base: string): string {
 }
 
 function looksLikeWafInterstitial(html: string): boolean {
-  return /incapsula/i.test(html) || /_incapsula_resource/i.test(html);
+  if (/incapsula/i.test(html) || /_incapsula_resource/i.test(html)) return true;
+  // Incapsula challenge stubs can be as small as ~200 bytes and may not
+  // contain the word "incapsula" when heavily compressed or truncated.
+  if (html.length < 500 && /<iframe/i.test(html)) return true;
+  return false;
 }
 
 /**
