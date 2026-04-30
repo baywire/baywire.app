@@ -2,6 +2,7 @@
 
 import type { MetricAction } from "@/generated/prisma/client";
 import { getOrCreateSessionId } from "@/lib/cookies/browser";
+import { recordMetric } from "@/lib/metrics/actions";
 
 interface TrackOptions {
   action: MetricAction;
@@ -11,33 +12,18 @@ interface TrackOptions {
 }
 
 /**
- * Fire-and-forget metric recording. Sends a beacon to `/api/metrics`.
- * Falls back to `fetch` when `sendBeacon` is unavailable.
+ * Fire-and-forget metric recording via Server Action.
+ * Silently swallows errors — metrics should never break the UI.
  */
 export function trackMetric(opts: TrackOptions): void {
   const sessionId = getOrCreateSessionId();
   if (!sessionId) return;
 
-  const body = JSON.stringify({
+  recordMetric({
     sessionId,
     action: opts.action,
     eventId: opts.eventId ?? null,
     placeId: opts.placeId ?? null,
     payload: opts.payload ?? null,
-  });
-
-  if (typeof navigator !== "undefined" && navigator.sendBeacon) {
-    navigator.sendBeacon(
-      "/api/metrics",
-      new Blob([body], { type: "application/json" }),
-    );
-    return;
-  }
-
-  fetch("/api/metrics", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body,
-    keepalive: true,
   }).catch(() => {});
 }

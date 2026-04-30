@@ -1,14 +1,13 @@
-import { NextResponse, type NextRequest } from "next/server";
+"use server";
+
 import { z } from "zod";
 
-import { MetricAction } from "@/generated/prisma/client";
+import { MetricAction, type Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db/client";
-
-export const runtime = "nodejs";
 
 const VALID_ACTIONS = new Set(Object.values(MetricAction));
 
-const bodySchema = z.object({
+const schema = z.object({
   sessionId: z.uuid(),
   action: z.string().refine((v) => VALID_ACTIONS.has(v as MetricAction), {
     message: "Invalid action",
@@ -18,14 +17,9 @@ const bodySchema = z.object({
   payload: z.record(z.string(), z.unknown()).nullish(),
 });
 
-export async function POST(req: NextRequest) {
-  const parsed = bodySchema.safeParse(await req.json().catch(() => null));
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Bad request", issues: parsed.error.issues },
-      { status: 400 },
-    );
-  }
+export async function recordMetric(input: z.input<typeof schema>): Promise<void> {
+  const parsed = schema.safeParse(input);
+  if (!parsed.success) return;
 
   const { sessionId, action, eventId, placeId, payload } = parsed.data;
 
@@ -35,9 +29,7 @@ export async function POST(req: NextRequest) {
       action: action as MetricAction,
       eventId: eventId ?? undefined,
       placeId: placeId ?? undefined,
-      payload: payload ?? undefined,
+      payload: (payload as Prisma.InputJsonValue) ?? undefined,
     },
   });
-
-  return new NextResponse(null, { status: 204 });
 }
