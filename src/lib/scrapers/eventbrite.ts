@@ -1,6 +1,6 @@
 import { CITIES } from "@/lib/cities";
 
-import { politeFetch } from "./fetch";
+import { browserFetch } from "./browser";
 import { loadHtml } from "./parse";
 import { reduceHtml } from "./reduce";
 import { extractJsonLdEvents, jsonLdEventToExtracted } from "./structured";
@@ -8,18 +8,21 @@ import type { ListingItem, SourceAdapter, StructuredEvent } from "./types";
 
 const PAGES_PER_CITY = 2;
 const SLUG = "eventbrite";
-const DETAIL_REFERER = "https://www.eventbrite.com/";
 
 /**
  * Eventbrite adapter. Eventbrite shut down their public API for new apps in
  * 2020, so we walk the public HTML listing per city and follow event detail
  * links. Detail pages embed schema.org/Event JSON-LD with the full record;
  * we parse that directly via `tryStructured` and skip the LLM.
+ *
+ * Eventbrite now serves a "Human Verification" interstitial on listing and
+ * detail pages, requiring a real browser to pass.
  */
 export const eventbriteAdapter: SourceAdapter = {
   slug: "eventbrite",
   label: "Eventbrite",
   baseUrl: "https://www.eventbrite.com",
+  needsBrowser: "render",
 
   async listEvents({ signal }) {
     const seen = new Map<string, ListingItem>();
@@ -29,11 +32,12 @@ export const eventbriteAdapter: SourceAdapter = {
         const url = `https://www.eventbrite.com/d/${city.eventbriteSlug}/all-events/?page=${page}`;
         let html: string;
         try {
-          html = await politeFetch(url, {
+          const result = await browserFetch(url, {
             signal,
-            referer: "https://www.google.com/",
             label: `${SLUG}:list:${city.key}:p${page}`,
+            timeoutMs: 30_000,
           });
+          html = result.html;
         } catch (err) {
           console.warn(
             `[${SLUG}] warn="page fetch failed" city=${city.key} page=${page} error="${err instanceof Error ? err.message : String(err)}"`,
@@ -52,10 +56,10 @@ export const eventbriteAdapter: SourceAdapter = {
   },
 
   async tryStructured(item, signal): Promise<StructuredEvent | null> {
-    const html = await politeFetch(item.url, {
+    const { html } = await browserFetch(item.url, {
       signal,
-      referer: DETAIL_REFERER,
       label: `${SLUG}:structured`,
+      timeoutMs: 25_000,
     });
     const events = extractJsonLdEvents(html);
     for (const ev of events) {
@@ -80,14 +84,14 @@ export const eventbriteAdapter: SourceAdapter = {
   },
 
   async fetchAndReduce(item, signal) {
-    const html = await politeFetch(item.url, {
+    const { html, finalUrl } = await browserFetch(item.url, {
       signal,
-      referer: DETAIL_REFERER,
       label: `${SLUG}:detail`,
+      timeoutMs: 25_000,
     });
     return {
-      reducedHtml: reduceHtml(html, item.url),
-      canonicalUrl: item.url,
+      reducedHtml: reduceHtml(html, finalUrl),
+      canonicalUrl: finalUrl,
     };
   },
 };

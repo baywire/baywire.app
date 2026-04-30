@@ -79,8 +79,11 @@ export function extractJsonLdEvents(html: string): SchemaOrgEvent[] {
   const out: SchemaOrgEvent[] = [];
 
   $("script[type='application/ld+json']").each((_, el) => {
-    const txt = $(el).text().trim();
-    if (!txt) return;
+    const raw = $(el).text().trim();
+    if (!raw) return;
+    // Strip ASCII control characters (0x00-0x1F) except tab, newline, CR.
+    // Common in CMS-generated JSON-LD and rejected by JSON.parse.
+    const txt = raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
     let parsed: unknown;
     try {
       parsed = JSON.parse(txt);

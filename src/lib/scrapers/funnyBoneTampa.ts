@@ -1,5 +1,4 @@
-import { solveCookies } from "./browser";
-import { politeFetch } from "./fetch";
+import { browserFetch } from "./browser";
 import { loadHtml } from "./parse";
 import { reduceHtml } from "./reduce";
 import { extractJsonLdEvents, jsonLdEventToExtracted } from "./structured";
@@ -7,56 +6,32 @@ import type { ListingItem, SourceAdapter, StructuredEvent } from "./types";
 
 const SLUG = "funny_bone_tampa";
 const BASE = "https://tampa.funnybone.com";
-const HOME_URL = `${BASE}/`;
 const LIST_URL = `${BASE}/shows/`;
 
-let cachedCookies: { value: string; expiresAt: number } | null = null;
-const COOKIE_TTL_MS = 10 * 60_000;
-
-async function getCookies(signal?: AbortSignal): Promise<string | undefined> {
-  if (cachedCookies && cachedCookies.expiresAt > Date.now()) {
-    return cachedCookies.value;
-  }
-
-  try {
-    const cookies = await solveCookies(HOME_URL, { signal, label: `${SLUG}:cookies` });
-    if (cookies) {
-      cachedCookies = { value: cookies, expiresAt: Date.now() + COOKIE_TTL_MS };
-    }
-    return cookies;
-  } catch (err) {
-    console.warn(
-      `[${SLUG}] cookie solve failed: ${err instanceof Error ? err.message : String(err)}`,
-    );
-    return undefined;
-  }
-}
-
+/**
+ * Tampa Funny Bone. DataDome requires full JS execution on every page, not
+ * just cookie transfer, so we use browserFetch for all requests.
+ */
 export const funnyBoneTampaAdapter: SourceAdapter = {
   slug: SLUG,
   label: "Tampa Funny Bone",
   baseUrl: BASE,
-  needsBrowser: "cookies",
+  needsBrowser: "render",
 
   async listEvents({ signal }) {
-    const cookie = await getCookies(signal);
-    const html = await politeFetch(LIST_URL, {
+    const { html } = await browserFetch(LIST_URL, {
       signal,
-      referer: HOME_URL,
       label: `${SLUG}:list`,
-      headers: cookie ? { Cookie: cookie } : undefined,
+      timeoutMs: 30_000,
     });
-
     return parseListingHtml(html);
   },
 
   async tryStructured(item, signal): Promise<StructuredEvent | null> {
-    const cookie = await getCookies(signal);
-    const html = await politeFetch(item.url, {
+    const { html } = await browserFetch(item.url, {
       signal,
-      referer: LIST_URL,
       label: `${SLUG}:structured`,
-      headers: cookie ? { Cookie: cookie } : undefined,
+      timeoutMs: 25_000,
     });
     const events = extractJsonLdEvents(html);
     for (const ev of events) {
@@ -78,16 +53,14 @@ export const funnyBoneTampaAdapter: SourceAdapter = {
   },
 
   async fetchAndReduce(item, signal) {
-    const cookie = await getCookies(signal);
-    const html = await politeFetch(item.url, {
+    const { html, finalUrl } = await browserFetch(item.url, {
       signal,
-      referer: LIST_URL,
       label: `${SLUG}:detail`,
-      headers: cookie ? { Cookie: cookie } : undefined,
+      timeoutMs: 25_000,
     });
     return {
-      reducedHtml: reduceHtml(html, item.url),
-      canonicalUrl: item.url,
+      reducedHtml: reduceHtml(html, finalUrl),
+      canonicalUrl: finalUrl,
     };
   },
 };

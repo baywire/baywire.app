@@ -8,6 +8,15 @@ const SLUG = "side_splitters";
 const LIST_URL = "https://sidesplitterscomedy.com/locations/tampa/";
 const LIST_REFERER = "https://www.google.com/";
 
+/**
+ * Side Splitters Comedy Club. The listing page is rich (179KB) with full show
+ * details. OvationTix detail pages are minimal JS iframes that produce
+ * short_html, so we extract from the listing page instead and use OvationTix
+ * URLs as ticket links only.
+ */
+
+let cachedListingHtml: string | null = null;
+
 export const sideSplittersAdapter: SourceAdapter = {
   slug: SLUG,
   label: "Side Splitters Comedy Club",
@@ -19,13 +28,15 @@ export const sideSplittersAdapter: SourceAdapter = {
       referer: LIST_REFERER,
       label: `${SLUG}:list`,
     });
+    cachedListingHtml = html;
     return parseListingHtml(html);
   },
 
   async tryStructured(item, signal): Promise<StructuredEvent | null> {
-    const html = await politeFetch(item.url, {
+    // Try JSON-LD from the listing page (some venue sites embed per-show JSON-LD)
+    const html = cachedListingHtml ?? await politeFetch(LIST_URL, {
       signal,
-      referer: LIST_URL,
+      referer: LIST_REFERER,
       label: `${SLUG}:structured`,
     });
     const events = extractJsonLdEvents(html);
@@ -43,20 +54,24 @@ export const sideSplittersAdapter: SourceAdapter = {
       };
       extracted.offer.ticketUrl ??= item.url;
 
-      return { event: extracted, canonicalUrl: ev.url || item.url };
+      return { event: extracted, canonicalUrl: item.url };
     }
     return null;
   },
 
   async fetchAndReduce(item, signal) {
-    const html = await politeFetch(item.url, {
+    // Use the rich listing page for LLM extraction instead of the minimal
+    // OvationTix iframe page. Include the ticket URL as a hint so the LLM
+    // can match the right show.
+    const html = cachedListingHtml ?? await politeFetch(LIST_URL, {
       signal,
-      referer: LIST_URL,
+      referer: LIST_REFERER,
       label: `${SLUG}:detail`,
     });
+    const reduced = reduceHtml(html, LIST_URL);
     return {
-      reducedHtml: reduceHtml(html, item.url),
-      canonicalUrl: item.url,
+      reducedHtml: reduced,
+      canonicalUrl: LIST_URL,
     };
   },
 };
@@ -78,9 +93,6 @@ function parseListingHtml(html: string): ListingItem[] {
 }
 
 function parseOvationEventUrl(url: string): ListingItem | null {
-  // Examples:
-  //   https://ci.ovationtix.com/35578/production/1259166?performanceId=11729414
-  //   https://ci.ovationtix.com/35578/production/1266534?performanceId=11769809
   let u: URL;
   try {
     u = new URL(url);
@@ -103,4 +115,3 @@ function absolutize(href: string, base: string): string {
     return href;
   }
 }
-

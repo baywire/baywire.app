@@ -1,77 +1,73 @@
-import { solveCookies } from "./browser";
-import { politeFetch } from "./fetch";
+import { browserFetch } from "./browser";
 import { loadHtml } from "./parse";
 import { reduceHtml } from "./reduce";
+import { extractListings } from "@/lib/extract/listings";
 import { extractJsonLdEvents, jsonLdEventToExtracted } from "./structured";
 import type { ListingItem, SourceAdapter, StructuredEvent } from "./types";
 
 const SLUG = "straz_center";
-const HOME_URL = "https://www.strazcenter.org/";
+const BASE = "https://www.strazcenter.org";
 
 const LIST_URLS: readonly string[] = [
   "https://www.strazcenter.org/tickets-events/find-an-event/",
   "https://www.strazcenter.org/calendar/",
 ];
 
-let cachedCookies: { value: string; expiresAt: number } | null = null;
-const COOKIE_TTL_MS = 10 * 60_000;
-
-async function getCookies(signal?: AbortSignal): Promise<string | undefined> {
-  if (cachedCookies && cachedCookies.expiresAt > Date.now()) {
-    return cachedCookies.value;
-  }
-
-  try {
-    const cookies = await solveCookies(HOME_URL, { signal, label: `${SLUG}:cookies` });
-    if (cookies) {
-      cachedCookies = { value: cookies, expiresAt: Date.now() + COOKIE_TTL_MS };
-    }
-    return cookies;
-  } catch (err) {
-    console.warn(
-      `[${SLUG}] cookie solve failed: ${err instanceof Error ? err.message : String(err)}`,
-    );
-    return undefined;
-  }
-}
-
+/**
+ * Straz Center. The listing pages are JS-rendered and behind Incapsula, so
+ * we use browserFetch for everything. When CSS selectors return 0 events,
+ * AI listing extraction is used as a fallback.
+ */
 export const strazCenterAdapter: SourceAdapter = {
   slug: SLUG,
   label: "Straz Center",
-  baseUrl: "https://www.strazcenter.org",
-  needsBrowser: "cookies",
+  baseUrl: BASE,
+  needsBrowser: "render",
 
   async listEvents({ signal }) {
-    const cookie = await getCookies(signal);
-    const baseFetchOpts = {
-      signal,
-      referer: HOME_URL,
-      timeoutMs: 25_000,
-      retries: 1,
-    } as const;
-
     for (const listUrl of LIST_URLS) {
-      const html = await politeFetch(listUrl, {
-        ...baseFetchOpts,
+      const { html } = await browserFetch(listUrl, {
+        signal,
         label: `${SLUG}:list`,
-        headers: cookie ? { Cookie: cookie } : undefined,
+        timeoutMs: 30_000,
       });
+
+      // Try CSS selectors first
       const items = parseListingHtml(html);
       if (items.length > 0) return items;
+
+      // AI fallback when selectors return nothing (site structure may have changed)
+      try {
+        const urls = await extractListings(html, BASE, "Straz Center");
+        const aiItems = urls
+          .filter((url) => {
+            try { return new URL(url).host === "www.strazcenter.org"; } catch { return false; }
+          })
+          .map((url) => {
+            const id = parseEventId(url);
+            return id ? { sourceEventId: id, url } : null;
+          })
+          .filter((item): item is ListingItem => item !== null);
+
+        if (aiItems.length > 0) {
+          console.log(`[${SLUG}] CSS selectors found 0 events, AI extraction found ${aiItems.length}`);
+          return aiItems;
+        }
+      } catch (err) {
+        console.warn(
+          `[${SLUG}] AI listing extraction failed: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
     }
 
     return [];
   },
 
   async tryStructured(item, signal): Promise<StructuredEvent | null> {
-    const cookie = await getCookies(signal);
-    const html = await politeFetch(item.url, {
+    const { html } = await browserFetch(item.url, {
       signal,
-      referer: HOME_URL,
       label: `${SLUG}:structured`,
       timeoutMs: 25_000,
-      retries: 1,
-      headers: cookie ? { Cookie: cookie } : undefined,
     });
     const events = extractJsonLdEvents(html);
     for (const ev of events) {
@@ -93,18 +89,14 @@ export const strazCenterAdapter: SourceAdapter = {
   },
 
   async fetchAndReduce(item, signal) {
-    const cookie = await getCookies(signal);
-    const html = await politeFetch(item.url, {
+    const { html, finalUrl } = await browserFetch(item.url, {
       signal,
-      referer: HOME_URL,
       label: `${SLUG}:detail`,
       timeoutMs: 25_000,
-      retries: 1,
-      headers: cookie ? { Cookie: cookie } : undefined,
     });
     return {
-      reducedHtml: reduceHtml(html, item.url),
-      canonicalUrl: item.url,
+      reducedHtml: reduceHtml(html, finalUrl),
+      canonicalUrl: finalUrl,
     };
   },
 };
@@ -116,7 +108,7 @@ function parseListingHtml(html: string): ListingItem[] {
   $("a[href*='/events/']").each((_, el) => {
     const href = $(el).attr("href");
     if (!href) return;
-    const url = absolutize(href, "https://www.strazcenter.org");
+    const url = absolutize(href, BASE);
     const id = parseEventId(url);
     if (!id) return;
     if (!out.has(url)) out.set(url, { sourceEventId: id, url });
