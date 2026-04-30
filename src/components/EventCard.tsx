@@ -109,43 +109,7 @@ export function EventCard({
         </IconButton>
       )}
 
-      {event.imageUrl ? (
-        <div
-          className={cn(
-            "relative aspect-video w-full overflow-hidden bg-sand-100",
-            isFeature && "lg:aspect-auto lg:w-2/5",
-          )}
-        >
-          <Image
-            src={event.imageUrl}
-            alt=""
-            fill
-            sizes="(min-width: 1024px) 480px, (min-width: 640px) 50vw, 100vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            loading={isFeature ? "eager" : "lazy"}
-            fetchPriority={isFeature ? "high" : "auto"}
-            priority={isFeature}
-            unoptimized
-          />
-          <div
-            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[42%] bg-linear-to-b from-black/45 to-transparent"
-            aria-hidden
-          />
-        </div>
-      ) : (
-        <div
-          className={cn(
-            "relative flex aspect-video w-full items-center justify-center bg-linear-to-br from-gulf-100 via-sand-100 to-sunset-100 text-ink-500",
-            isFeature && "lg:aspect-auto lg:w-2/5",
-          )}
-        >
-          <span className="font-display text-2xl">{city}</span>
-          <div
-            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[46%] bg-linear-to-b from-black/35 to-transparent"
-            aria-hidden
-          />
-        </div>
-      )}
+      <EventCardImage imageUrl={event.imageUrl} city={city} isFeature={isFeature} />
 
       <div className="flex min-w-0 flex-1 flex-col gap-3 p-5">
         <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wide text-gulf-600 dark:text-gulf-200">
@@ -245,5 +209,64 @@ export function EventCard({
         </span>
       </div>
     </article>
+  );
+}
+
+function EventImagePlaceholder({ city, isFeature }: { city: string; isFeature: boolean }) {
+  return (
+    <div
+      className={cn(
+        "relative flex aspect-video w-full items-center justify-center bg-linear-to-br from-gulf-100 via-sand-100 to-sunset-100 text-ink-500",
+        isFeature && "lg:aspect-auto lg:w-2/5",
+      )}
+    >
+      <span className="font-display text-2xl">{city}</span>
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[46%] bg-linear-to-b from-black/35 to-transparent"
+        aria-hidden
+      />
+    </div>
+  );
+}
+
+function EventCardImage({
+  imageUrl,
+  city,
+  isFeature,
+}: {
+  imageUrl: string | null;
+  city: string;
+  isFeature: boolean;
+}) {
+  const [imgFailed, setImgFailed] = useState(false);
+
+  if (!imageUrl || imgFailed) {
+    return <EventImagePlaceholder city={city} isFeature={isFeature} />;
+  }
+
+  return (
+    <div
+      className={cn(
+        "relative aspect-video w-full overflow-hidden bg-sand-100",
+        isFeature && "lg:aspect-auto lg:w-2/5",
+      )}
+    >
+      <Image
+        src={imageUrl}
+        alt=""
+        fill
+        sizes="(min-width: 1024px) 480px, (min-width: 640px) 50vw, 100vw"
+        className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+        loading={isFeature ? "eager" : "lazy"}
+        fetchPriority={isFeature ? "high" : "auto"}
+        priority={isFeature}
+        unoptimized
+        onError={() => setImgFailed(true)}
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[42%] bg-linear-to-b from-black/45 to-transparent"
+        aria-hidden
+      />
+    </div>
   );
 }

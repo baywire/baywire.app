@@ -1,9 +1,11 @@
 import type { Route } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, ExternalLink, Globe, MapPin, Phone, Tag } from "lucide-react";
+
 import type { Metadata } from "next";
+
+import { PlaceDetailHeroImage } from "@/components/PlaceDetailHeroImage";
 
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -51,13 +53,12 @@ export async function generateMetadata({ params }: RouteParams): Promise<Metadat
   const { slug } = await params;
   const place = await getPlaceBySlug(slug).catch(() => null);
   if (!place) return { title: "Place not found" };
-  const displayName = place.dedupedName ?? place.name;
   return {
-    title: `${displayName} — Baywire`,
+    title: `${place.name} — Baywire`,
     description:
-      place.summary ?? place.description ?? `${displayName} in ${cityLabel(place.city)}.`,
+      place.summary ?? place.description ?? `${place.name} in ${cityLabel(place.city)}.`,
     openGraph: {
-      title: displayName,
+      title: place.name,
       description: place.summary ?? place.description ?? undefined,
       images: place.imageUrl ? [place.imageUrl] : undefined,
       type: "article",
@@ -70,7 +71,6 @@ export default async function PlaceDetailPage({ params }: RouteParams) {
   const place = await getPlaceBySlug(slug).catch(() => null);
   if (!place) notFound();
 
-  const displayName = place.dedupedName ?? place.name;
   const categoryLabel = CATEGORY_LABELS[place.category] ?? "Place";
   const city = cityLabel(place.city);
   const hours = parseHoursJson(place.hoursJson);
@@ -89,26 +89,14 @@ export default async function PlaceDetailPage({ params }: RouteParams) {
         </Link>
 
         <div className="mt-6 flex flex-col gap-6">
-          {place.imageUrl && (
-            <div className="relative aspect-video w-full overflow-hidden rounded-card bg-sand-100">
-              <Image
-                src={place.imageUrl}
-                alt={displayName}
-                fill
-                sizes="(min-width: 896px) 896px, 100vw"
-                className="object-cover"
-                priority
-                unoptimized
-              />
-            </div>
-          )}
+          <PlaceDetailHeroImage imageUrl={place.imageUrl} name={place.name} categoryLabel={categoryLabel} />
 
           <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wide text-gulf-600 dark:text-gulf-200">
             <span className="inline-flex items-center gap-1 rounded-full bg-gulf-50 px-2.5 py-1 dark:bg-gulf-700/40">
               <MapPin className="size-3" />
               {city}
             </span>
-            <span className="inline-flex items-center rounded-full bg-sunset-50 px-2.5 py-1 text-sunset-700 dark:bg-sunset-700/30 dark:text-sunset-200">
+            <span className="inline-flex items-center rounded-full bg-sunset-200 px-2 py-0.5 text-sunset-600 dark:bg-sunset-500/20 dark:text-sunset-300">
               {categoryLabel}
             </span>
             {place.priceRange && (
@@ -119,7 +107,7 @@ export default async function PlaceDetailPage({ params }: RouteParams) {
           </div>
 
           <h1 className="font-display text-3xl font-bold text-ink-900 dark:text-sand-50 sm:text-4xl">
-            {displayName}
+            {place.name}
           </h1>
 
           {place.whyItsCool && (

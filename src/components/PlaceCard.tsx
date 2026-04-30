@@ -1,9 +1,10 @@
 "use client";
 
-import type { Route } from "next";
 import Image from "next/image";
-import Link from "next/link";
+import { useState } from "react";
 import { ArrowUpRight, Globe, MapPin, Phone, Tag } from "lucide-react";
+
+import { PlaceDialog } from "@/components/place/PlaceDialog";
 
 import type { AppPlace } from "@/lib/places/types";
 import { cityLabel } from "@/lib/cities";
@@ -48,10 +49,11 @@ const VIBE_LABELS: Record<string, string> = {
 };
 
 export function PlaceCard({ place, variant = "default" }: PlaceCardProps) {
+  const [dialogOpen, setDialogOpen] = useState(false);
   const city = cityLabel(place.city);
   const categoryLabel = CATEGORY_LABELS[place.category] ?? "Place";
   const isFeature = variant === "feature";
-  const displayName = place.dedupedName ?? place.name;
+  const displayName = place.name;
 
   return (
     <article
@@ -60,49 +62,23 @@ export function PlaceCard({ place, variant = "default" }: PlaceCardProps) {
         isFeature && "lg:min-h-0 lg:flex-row",
       )}
     >
-      <Link
-        href={`/place/${place.slug}` as Route}
-        className="absolute inset-0 z-10 rounded-card"
-        aria-label={`View details: ${displayName}`}
+      <button
+        type="button"
+        onClick={() => setDialogOpen(true)}
+        className="absolute inset-0 z-10 cursor-pointer rounded-card border-0 bg-transparent p-0 text-left"
+        aria-label={`Open details: ${displayName}`}
+      />
+      <PlaceDialog
+        place={place}
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
       />
 
-      {place.imageUrl ? (
-        <div
-          className={cn(
-            "relative aspect-video w-full overflow-hidden bg-sand-100",
-            isFeature && "lg:aspect-auto lg:w-2/5",
-          )}
-        >
-          <Image
-            src={place.imageUrl}
-            alt=""
-            fill
-            sizes="(min-width: 1024px) 480px, (min-width: 640px) 50vw, 100vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            loading={isFeature ? "eager" : "lazy"}
-            fetchPriority={isFeature ? "high" : "auto"}
-            priority={isFeature}
-            unoptimized
-          />
-          <div
-            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[42%] bg-linear-to-b from-black/45 to-transparent"
-            aria-hidden
-          />
-        </div>
-      ) : (
-        <div
-          className={cn(
-            "relative flex aspect-video w-full items-center justify-center bg-linear-to-br from-gulf-100 via-sand-100 to-sunset-100 text-ink-500",
-            isFeature && "lg:aspect-auto lg:w-2/5",
-          )}
-        >
-          <span className="font-display text-2xl">{categoryLabel}</span>
-          <div
-            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[46%] bg-linear-to-b from-black/35 to-transparent"
-            aria-hidden
-          />
-        </div>
-      )}
+      <PlaceCardImage
+        imageUrl={place.imageUrl}
+        categoryLabel={categoryLabel}
+        isFeature={isFeature}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col gap-3 p-5">
         <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wide text-gulf-600 dark:text-gulf-200">
@@ -110,7 +86,7 @@ export function PlaceCard({ place, variant = "default" }: PlaceCardProps) {
             <MapPin className="size-3" />
             {city}
           </span>
-          <span className="inline-flex items-center rounded-full bg-sunset-50 px-2 py-0.5 text-sunset-700 dark:bg-sunset-700/30 dark:text-sunset-200">
+          <span className="inline-flex items-center rounded-full bg-sunset-200 px-2 py-0.5 text-sunset-600 dark:bg-sunset-500/20 dark:text-sunset-300">
             {categoryLabel}
           </span>
           {place.priceRange && (
@@ -185,5 +161,64 @@ export function PlaceCard({ place, variant = "default" }: PlaceCardProps) {
         </span>
       </div>
     </article>
+  );
+}
+
+function PlaceImagePlaceholder({ categoryLabel, isFeature }: { categoryLabel: string; isFeature: boolean }) {
+  return (
+    <div
+      className={cn(
+        "relative flex aspect-video w-full items-center justify-center bg-linear-to-br from-gulf-100 via-sand-100 to-sunset-100 text-ink-500",
+        isFeature && "lg:aspect-auto lg:w-2/5",
+      )}
+    >
+      <span className="font-display text-2xl">{categoryLabel}</span>
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[46%] bg-linear-to-b from-black/35 to-transparent"
+        aria-hidden
+      />
+    </div>
+  );
+}
+
+function PlaceCardImage({
+  imageUrl,
+  categoryLabel,
+  isFeature,
+}: {
+  imageUrl: string | null;
+  categoryLabel: string;
+  isFeature: boolean;
+}) {
+  const [imgFailed, setImgFailed] = useState(false);
+
+  if (!imageUrl || imgFailed) {
+    return <PlaceImagePlaceholder categoryLabel={categoryLabel} isFeature={isFeature} />;
+  }
+
+  return (
+    <div
+      className={cn(
+        "relative aspect-video w-full overflow-hidden bg-sand-100",
+        isFeature && "lg:aspect-auto lg:w-2/5",
+      )}
+    >
+      <Image
+        src={imageUrl}
+        alt=""
+        fill
+        sizes="(min-width: 1024px) 480px, (min-width: 640px) 50vw, 100vw"
+        className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+        loading={isFeature ? "eager" : "lazy"}
+        fetchPriority={isFeature ? "high" : "auto"}
+        priority={isFeature}
+        unoptimized
+        onError={() => setImgFailed(true)}
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[42%] bg-linear-to-b from-black/45 to-transparent"
+        aria-hidden
+      />
+    </div>
   );
 }

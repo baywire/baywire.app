@@ -173,38 +173,45 @@ enum PlaceCategory {
 }
 
 model Place {
-  id             String        @id @default(uuid()) @db.Uuid
-  canonicalId    String?       @map("canonical_id") @db.Uuid
-  sourceId       String        @map("source_id") @db.Uuid
-  sourcePlaceId  String        @map("source_place_id")
-  name           String
-  slug           String
-  description    String?
-  category       PlaceCategory @default(other)
-  city           City          @default(other)
-  address        String?
-  lat            Float?
-  lng            Float?
-  imageUrl       String?       @map("image_url")
-  websiteUrl     String?       @map("website_url")
-  phoneNumber    String?       @map("phone_number")
-  priceRange     String?       @map("price_range")
-  hoursJson      Json?         @map("hours_json")
-  sourceUrl      String        @map("source_url")
-  contentHash    String        @map("content_hash")
-  eventCount     Int           @default(0) @map("event_count")
-  lastEventAt    DateTime?     @map("last_event_at") @db.Timestamptz()
-  lastSeenAt     DateTime      @default(now()) @map("last_seen_at") @db.Timestamptz()
-  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz()
+  id                 String        @id @default(uuid()) @db.Uuid
+  sourceId           String        @map("source_id") @db.Uuid
+  sourcePlaceId      String        @map("source_place_id")
+  name               String
+  slug               String        @unique
+  description        String?
+  category           PlaceCategory @default(other)
+  city               City          @default(other)
+  address            String?
+  lat                Float?
+  lng                Float?
+  imageUrl           String?       @map("image_url")
+  websiteUrl         String?       @map("website_url")
+  phoneNumber        String?       @map("phone_number")
+  priceRange         String?       @map("price_range")
+  hoursJson          Json?         @map("hours_json")
+  sourceUrl          String        @map("source_url")
+  contentHash        String        @map("content_hash")
+  searchType         String?       @map("search_type")
+  overtureId         String?       @unique @map("overture_id")
+  verified           Boolean       @default(false)
+  webRating          Float?        @map("web_rating")
+  webReviewCount     Int?          @map("web_review_count")
+  summary            String?
+  vibes              String[]      @default([])
+  tags               String[]      @default([])
+  whyItsCool         String?       @map("why_its_cool")
+  editorialScore     Float?        @map("editorial_score")
+  editorialHash      String?       @map("editorial_hash")
+  editorialUpdatedAt DateTime?     @map("editorial_updated_at") @db.Timestamptz()
+  lastSeenAt         DateTime      @default(now()) @map("last_seen_at") @db.Timestamptz()
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime      @updatedAt @map("updated_at") @db.Timestamptz()
 
-  source    Source          @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-  canonical CanonicalPlace? @relation("PlaceCanonicalGroup", fields: [canonicalId], references: [id], onDelete: SetNull)
-  primaryOf CanonicalPlace? @relation("CanonicalPrimaryPlace")
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
 
   @@unique([sourceId, sourcePlaceId], map: "places_source_source_place_id_uidx")
   @@index([city, category], map: "places_city_category_idx")
-  @@index([canonicalId], map: "places_canonical_id_idx")
+  @@index([editorialScore], map: "places_editorial_score_idx")
   @@map("places")
   @@schema("baywire")
 }
@@ -241,27 +248,6 @@ model Metric {
   @@schema("baywire")
 }
 
-model CanonicalPlace {
-  id                 String    @id @default(uuid()) @db.Uuid
-  primaryPlaceId     String?   @unique @map("primary_place_id") @db.Uuid
-  dedupedName        String?   @map("deduped_name")
-  summary            String?
-  vibes              String[]  @default([])
-  tags               String[]  @default([])
-  whyItsCool         String?   @map("why_its_cool")
-  editorialScore     Float?    @map("editorial_score")
-  editorialHash      String?   @map("editorial_hash")
-  editorialUpdatedAt DateTime? @map("editorial_updated_at") @db.Timestamptz()
-  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
-
-  primaryPlace Place?  @relation("CanonicalPrimaryPlace", fields: [primaryPlaceId], references: [id], onDelete: SetNull)
-  places       Place[] @relation("PlaceCanonicalGroup")
-
-  @@index([editorialScore], map: "canonical_places_editorial_score_idx")
-  @@map("canonical_places")
-  @@schema("baywire")
-}
 
 enum AiFeature {
   extract_event

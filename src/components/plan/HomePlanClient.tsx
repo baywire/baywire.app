@@ -2,12 +2,12 @@
 
 import { useCallback, type ReactNode } from "react";
 import Link from "next/link";
-import { ListOrdered, Radio, Search } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { CalendarDays, ListOrdered, MapPin, Radio, Search } from "lucide-react";
 
 import { PlanView } from "@/components/plan/PlanView";
 import { HomePlanProvider, useHomePlan } from "@/components/plan/homePlanContext";
 import { SearchDialog } from "@/components/search/SearchDialog";
-import { useHomeOptional } from "@/components/home/homeState";
 
 import type { AppEvent } from "@/lib/events/types";
 
@@ -39,7 +39,7 @@ export function HomeWithPlanLayout({ children }: { children: ReactNode }) {
               ? "md:sticky md:top-14 md:z-10 md:self-start md:h-[calc(100dvh-3.5rem)] md:min-h-0 md:w-99 md:shadow-[-4px_0_24px_-6px_rgba(0,0,0,0.1)] dark:md:shadow-[-4px_0_24px_-6px_rgba(0,0,0,0.35)]"
               : "md:h-0 md:max-h-0 md:min-h-0 md:w-0 md:overflow-hidden md:border-0",
             "max-md:fixed max-md:bottom-16 max-md:left-0 max-md:right-0 max-md:top-14 max-md:z-30 max-md:h-auto max-md:max-h-none max-md:border-t max-md:shadow-2xl",
-            mobileView === "feed" && "max-md:translate-x-full max-md:pointer-events-none",
+            mobileView !== "plan" && "max-md:translate-x-full max-md:pointer-events-none",
             "transition-transform duration-300 ease-out max-md:will-change-transform",
           )}
           aria-label="My plan"
@@ -71,8 +71,9 @@ export function HomeWithPlanLayout({ children }: { children: ReactNode }) {
 }
 
 function HomePlanHeaderBar() {
-  const { toggleDrawer, showPlan, showFeed, drawerOpen, mobileView } = useHomePlan();
-  const home = useHomeOptional();
+  const { toggleDrawer, showPlan, showFeed, openSearch, drawerOpen, mobileView } = useHomePlan();
+  const pathname = usePathname();
+  const isPlacesRoute = pathname.startsWith("/places");
 
   const onPlanClick = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -114,13 +115,25 @@ function HomePlanHeaderBar() {
         <div className="inline-flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => home?.openSearch()}
+            onClick={openSearch}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-ink-500 transition hover:bg-ink-100/80 hover:text-ink-900 dark:text-ink-300 dark:hover:bg-ink-800/80 dark:hover:text-sand-50"
-            aria-label="Search events"
+            aria-label="Search"
           >
             <Search className="size-4 shrink-0" aria-hidden />
             <span className="max-sm:sr-only">Search</span>
           </button>
+          <Link
+            href="/places"
+            className={cn(
+              "hidden shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition md:inline-flex",
+              isPlacesRoute
+                ? "bg-gulf-200 text-ink-900 dark:bg-gulf-600 dark:text-sand-50"
+                : "text-ink-500 hover:bg-ink-100/80 hover:text-ink-900 dark:text-ink-300 dark:hover:bg-ink-800/80 dark:hover:text-sand-50",
+            )}
+          >
+            <MapPin className="size-4 shrink-0" aria-hidden />
+            <span className="max-sm:sr-only">Places</span>
+          </Link>
           <button
             type="button"
             onClick={onPlanClick}
@@ -143,7 +156,39 @@ function HomePlanHeaderBar() {
 }
 
 function HomeMobilePlanTabs() {
-  const { mobileView, setMobileView } = useHomePlan();
+  const { mobileView, setMobileView, showPlan, showFeed } = useHomePlan();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const isPlacesRoute = pathname.startsWith("/places");
+  const isFeedRoute = !isPlacesRoute && mobileView !== "plan";
+  const isPlanActive = mobileView === "plan";
+
+  const onEventsClick = useCallback(() => {
+    showFeed();
+    if (isPlacesRoute) router.push("/");
+  }, [isPlacesRoute, router, showFeed]);
+
+  const onPlacesClick = useCallback(() => {
+    showFeed();
+    if (!isPlacesRoute) router.push("/places");
+  }, [isPlacesRoute, router, showFeed]);
+
+  const onPlanClick = useCallback(() => {
+    if (mobileView === "plan") {
+      showFeed();
+    } else {
+      showPlan();
+    }
+  }, [mobileView, showFeed, showPlan]);
+
+  const tabClass = (active: boolean) =>
+    cn(
+      "inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-semibold transition",
+      active
+        ? "bg-ink-900 text-sand-50 shadow-sm dark:bg-sand-50 dark:text-ink-900"
+        : "text-ink-500 hover:bg-ink-100/80 dark:hover:bg-ink-800/80",
+    );
 
   return (
     <div
@@ -155,28 +200,15 @@ function HomeMobilePlanTabs() {
       }}
     >
       <div className="mx-auto flex w-full max-w-7xl gap-1.5 p-1.5">
-        <button
-          type="button"
-          onClick={() => setMobileView("feed")}
-          className={cn(
-            "flex-1 rounded-xl py-2.5 text-sm font-semibold transition",
-            mobileView === "feed"
-              ? "bg-ink-900 text-sand-50 shadow-sm dark:bg-sand-50 dark:text-ink-900"
-              : "text-ink-500 hover:bg-ink-100/80 dark:hover:bg-ink-800/80",
-          )}
-        >
+        <button type="button" onClick={onEventsClick} className={tabClass(!isPlacesRoute && isFeedRoute)}>
+          <CalendarDays className="size-4" />
           Events
         </button>
-        <button
-          type="button"
-          onClick={() => setMobileView("plan")}
-          className={cn(
-            "inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-semibold transition",
-            mobileView === "plan"
-              ? "bg-ink-900 text-sand-50 shadow-sm dark:bg-sand-50 dark:text-ink-900"
-              : "text-ink-500 hover:bg-ink-100/80 dark:hover:bg-ink-800/80",
-          )}
-        >
+        <button type="button" onClick={onPlacesClick} className={tabClass(isPlacesRoute && !isPlanActive)}>
+          <MapPin className="size-4" />
+          Places
+        </button>
+        <button type="button" onClick={onPlanClick} className={tabClass(isPlanActive)}>
           <ListOrdered className="size-4" />
           My plan
         </button>

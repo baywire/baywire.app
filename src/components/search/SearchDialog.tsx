@@ -1,24 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, Search, Sparkles, X } from "lucide-react";
+import { Loader2, MapPin, Search, Sparkles, X } from "lucide-react";
 
 import { SearchResultRow } from "@/components/search/SearchResultRow";
-import { useHome } from "@/components/home/homeState";
+import { SearchPlaceResultRow } from "@/components/search/SearchPlaceResultRow";
+import { useHomePlan } from "@/components/plan/homePlanContext";
 import { Button, IconButton } from "@/components/ui";
 
-import { searchEvents } from "@/lib/search/actions";
+import { search } from "@/lib/search/actions";
 
 export function SearchDialog() {
   const {
-    events,
-    savedFromServer,
-    topTags,
-    savedIds,
-    showSavedOnly,
-    selectedCity,
-    freeOnly,
     planOrder,
     isSearchOpen,
     openSearch,
@@ -29,33 +23,10 @@ export function SearchDialog() {
     setSearchMode,
     searchResponse,
     setSearchResponse,
-  } = useHome();
+  } = useHomePlan();
+
   const inputRef = useRef<HTMLInputElement>(null);
   const prevOverflow = useRef("");
-
-  const byID = useMemo(() => {
-    const out = new Map<string, (typeof events)[0]>();
-    for (const event of events) out.set(event.id, event);
-    for (const event of savedFromServer) {
-      if (!out.has(event.id)) out.set(event.id, event);
-    }
-    return out;
-  }, [events, savedFromServer]);
-
-  const aiPicks = useMemo(
-    () => (searchResponse?.aiPickIDs ?? [])
-      .map((id) => byID.get(id))
-      .filter((event): event is NonNullable<typeof event> => Boolean(event)),
-    [byID, searchResponse],
-  );
-
-  const directMatches = useMemo(() => {
-    const aiSet = new Set(aiPicks.map((event) => event.id));
-    return (searchResponse?.directMatchIDs ?? [])
-      .filter((id) => !aiSet.has(id))
-      .map((id) => byID.get(id))
-      .filter((event): event is NonNullable<typeof event> => Boolean(event));
-  }, [aiPicks, byID, searchResponse]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -104,14 +75,7 @@ export function SearchDialog() {
     const timeout = window.setTimeout(async () => {
       setSearchMode("loading");
       try {
-        const payload = await searchEvents({
-          query: normalized,
-          city: selectedCity,
-          freeOnly,
-          tags: Array.from(topTags).sort((a, b) => a.localeCompare(b)),
-          savedOnly: showSavedOnly,
-          savedIDs: showSavedOnly ? Array.from(savedIds) : [],
-        });
+        const payload = await search({ query: normalized });
         if (cancelled) return;
         setSearchResponse(payload);
         setSearchMode(payload.metadata.mode);
@@ -126,27 +90,26 @@ export function SearchDialog() {
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, [
-    freeOnly,
-    isSearchOpen,
-    savedIds,
-    searchQuery,
-    selectedCity,
-    setSearchMode,
-    setSearchResponse,
-    showSavedOnly,
-    topTags,
-  ]);
+  }, [isSearchOpen, searchQuery, setSearchMode, setSearchResponse]);
 
   if (!isSearchOpen || typeof window === "undefined" || typeof document === "undefined") {
     return null;
   }
 
-  const totalResults = aiPicks.length + directMatches.length;
+  const aiPicks = searchResponse?.aiPicks ?? [];
+  const events = searchResponse?.events ?? [];
+  const places = searchResponse?.places ?? [];
+  const totalResults = aiPicks.length + events.length + places.length;
   const hasResults = totalResults > 0;
   const queryReady = searchQuery.trim().length >= 2;
-  const showEmpty = searchMode !== "loading" && queryReady && !hasResults;
   const intentLine = searchResponse?.intentLine;
+
+  const clearAll = () => {
+    setSearchQuery("");
+    setSearchResponse(null);
+    setSearchMode("idle");
+    inputRef.current?.focus();
+  };
 
   return createPortal(
     <div className="fixed inset-0 z-120 flex items-start justify-center p-3 sm:p-6 sm:pt-[8vh]" role="presentation">
@@ -159,30 +122,20 @@ export function SearchDialog() {
       <section
         role="dialog"
         aria-modal
-        aria-label="Search events"
+        aria-label="Search events and places"
         className="relative z-121 flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-ink-100 bg-sand-50 shadow-2xl dark:border-ink-700 dark:bg-ink-900"
       >
-        {/* Input */}
         <div className="flex items-center gap-2 border-b border-ink-100 px-4 py-3 dark:border-ink-700">
           <Search className="size-4 shrink-0 text-ink-400 dark:text-ink-400" />
           <input
             ref={inputRef}
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search events, venues, or tags"
+            placeholder="Search events, places, or tags"
             className="w-full min-w-0 bg-transparent text-sm text-ink-900 outline-none placeholder:text-ink-400 dark:text-sand-50 dark:placeholder:text-ink-500"
           />
           {searchQuery.length > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery("");
-                setSearchResponse(null);
-                setSearchMode("idle");
-                inputRef.current?.focus();
-              }}
-              className="shrink-0 text-xs text-ink-400 transition hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-200"
-            >
+            <button type="button" onClick={clearAll} className="shrink-0 text-xs text-ink-400 transition hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-200">
               Clear
             </button>
           )}
@@ -197,7 +150,6 @@ export function SearchDialog() {
           </IconButton>
         </div>
 
-        {/* Status / intent */}
         {queryReady && (
           <div className="border-b border-ink-100 px-4 py-2 dark:border-ink-700">
             {searchMode === "loading" ? (
@@ -218,7 +170,6 @@ export function SearchDialog() {
           </div>
         )}
 
-        {/* Results */}
         <div className="max-h-[min(70dvh,40rem)] overflow-y-auto overscroll-contain">
           {aiPicks.length > 0 && (
             <div className="px-4 pt-3 pb-1">
@@ -226,26 +177,35 @@ export function SearchDialog() {
                 <Sparkles className="size-3" />
                 AI Picks
               </h3>
-              {aiPicks.map((event) => (
-                <SearchResultRow
-                  key={event.id}
-                  event={event}
-                  reason={searchResponse?.reasonByID[event.id]}
-                  initialInPlan={planOrder.includes(event.id)}
-                />
-              ))}
+              {aiPicks.map((pick) =>
+                pick.type === "event" && pick.event ? (
+                  <SearchResultRow
+                    key={pick.event.id}
+                    event={pick.event}
+                    reason={pick.reason}
+                    initialInPlan={planOrder.includes(pick.event.id)}
+                  />
+                ) : pick.type === "place" && pick.place ? (
+                  <SearchPlaceResultRow
+                    key={pick.place.id}
+                    place={pick.place}
+                    onClose={closeSearch}
+                    reason={pick.reason}
+                  />
+                ) : null,
+              )}
             </div>
           )}
 
-          {directMatches.length > 0 ? (
+          {events.length > 0 && (
             <div className="px-4 pt-3 pb-1">
               {aiPicks.length > 0 && (
                 <div className="mb-2 border-t border-ink-100 dark:border-ink-700" />
               )}
               <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-400 dark:text-ink-400">
-                More results
+                Events
               </h3>
-              {directMatches.slice(0, 20).map((event) => (
+              {events.slice(0, 20).map((event) => (
                 <SearchResultRow
                   key={event.id}
                   event={event}
@@ -253,30 +213,30 @@ export function SearchDialog() {
                 />
               ))}
             </div>
-          ) : aiPicks.length > 0 && searchMode !== "loading" && (
-            <div className="border-t border-ink-100 px-4 py-3 dark:border-ink-700">
-              <p className="text-center text-xs text-ink-400 dark:text-ink-500">
-                All matching events curated above
-              </p>
+          )}
+
+          {places.length > 0 && (
+            <div className="px-4 pt-3 pb-1">
+              {(aiPicks.length > 0 || events.length > 0) && (
+                <div className="mb-2 border-t border-ink-100 dark:border-ink-700" />
+              )}
+              <h3 className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-400 dark:text-ink-400">
+                <MapPin className="size-3" />
+                Places
+              </h3>
+              {places.slice(0, 10).map((place) => (
+                <SearchPlaceResultRow key={place.id} place={place} onClose={closeSearch} />
+              ))}
             </div>
           )}
 
-          {showEmpty && (
+          {!hasResults && searchMode !== "loading" && queryReady && (
             <div className="px-4 py-8 text-center">
               <p className="text-sm text-ink-500 dark:text-ink-300">
-                No events match &ldquo;{searchQuery.trim()}&rdquo;
+                No results match &ldquo;{searchQuery.trim()}&rdquo;
               </p>
               <div className="mt-3">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSearchResponse(null);
-                    setSearchMode("idle");
-                    inputRef.current?.focus();
-                  }}
-                >
+                <Button type="button" variant="ghost" onClick={clearAll}>
                   Clear search
                 </Button>
               </div>
@@ -285,7 +245,7 @@ export function SearchDialog() {
 
           {!queryReady && (
             <div className="px-4 py-8 text-center text-xs text-ink-400 dark:text-ink-400">
-              Type to search events, venues, or tags.
+              Type to search events, places, or tags.
             </div>
           )}
         </div>

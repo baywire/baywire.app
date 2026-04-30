@@ -17,7 +17,6 @@ import { setSavedEventIdsCookie, setTopTagsCookie } from "@/lib/cookies/browser"
 import { useHomePlan } from "@/components/plan/homePlanContext";
 import type { CityKey } from "@/lib/cities";
 import { eventMatchesTopTags, type TagOption } from "@/lib/events/tagOptions";
-import type { SearchMode, SearchResponse } from "@/lib/search/types";
 import type { WindowKey } from "@/lib/time/window";
 
 interface HomeProviderProps {
@@ -47,10 +46,6 @@ export function HomeProvider({
   );
   const [savedIds, setSavedIds] = useState<Set<string>>(() => new Set(initialSavedIds));
   const [showSavedOnly, setShowSavedOnly] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchMode, setSearchMode] = useState<SearchMode>("idle");
-  const [searchResponse, setSearchResponse] = useState<SearchResponse | null>(null);
 
   useEffect(() => {
     setTopTagsCookie([...topTags]);
@@ -111,15 +106,6 @@ export function HomeProvider({
       filtered,
       planOrder,
       togglePlan,
-      isSearchOpen,
-      openSearch: () => setIsSearchOpen(true),
-      closeSearch: () => setIsSearchOpen(false),
-      searchQuery,
-      setSearchQuery,
-      searchMode,
-      setSearchMode,
-      searchResponse,
-      setSearchResponse,
     }),
     [
       events,
@@ -136,10 +122,6 @@ export function HomeProvider({
       filtered,
       planOrder,
       togglePlan,
-      isSearchOpen,
-      searchQuery,
-      searchMode,
-      searchResponse,
     ],
   );
 

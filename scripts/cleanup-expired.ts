@@ -4,7 +4,7 @@ import { prisma } from "../src/lib/db/client";
 
 const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;
 const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
-const SKIP_PLACE_CLEANUP = true; //process.argv.includes("--skip-places");
+const SKIP_PLACE_CLEANUP = process.argv.includes("--skip-places");
 
 const expiredFilter = (cutoff: Date) => ({
   OR: [
@@ -60,20 +60,13 @@ async function main() {
 
   const stalePlaceIDs = (
     await prisma.place.findMany({
-      where: {
-        lastSeenAt: { lt: placeCutoff },
-        OR: [
-          { lastEventAt: null },
-          { lastEventAt: { lt: placeCutoff } },
-        ],
-      },
+      where: { lastSeenAt: { lt: placeCutoff } },
       select: { id: true },
     })
   ).map((r) => r.id);
 
   let placesDeleted = 0;
   let placeMetricsDeleted = 0;
-  let canonicalPlacesDeleted = 0;
 
   if (stalePlaceIDs.length > 0) {
     const placeMetrics = await prisma.metric.deleteMany({
@@ -85,15 +78,10 @@ async function main() {
       where: { id: { in: stalePlaceIDs } },
     });
     placesDeleted = places.count;
-
-    const canonicals = await prisma.canonicalPlace.deleteMany({
-      where: { places: { none: {} } },
-    });
-    canonicalPlacesDeleted = canonicals.count;
   }
 
   console.log(
-    `[cleanup:places] cutoff=${placeCutoff.toISOString()} places=${placesDeleted} metrics=${placeMetricsDeleted} canonicals=${canonicalPlacesDeleted}`,
+    `[cleanup:places] cutoff=${placeCutoff.toISOString()} places=${placesDeleted} metrics=${placeMetricsDeleted}`,
   );
 }
 

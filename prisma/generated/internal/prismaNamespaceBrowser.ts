@@ -57,7 +57,6 @@ export const ModelName = {
   CanonicalEvent: 'CanonicalEvent',
   Place: 'Place',
   Metric: 'Metric',
-  CanonicalPlace: 'CanonicalPlace',
   AiUsage: 'AiUsage'
 } as const
 
@@ -164,7 +163,6 @@ export type CanonicalEventScalarFieldEnum = (typeof CanonicalEventScalarFieldEnu
 
 export const PlaceScalarFieldEnum = {
   id: 'id',
-  canonicalId: 'canonicalId',
   sourceId: 'sourceId',
   sourcePlaceId: 'sourcePlaceId',
   name: 'name',
@@ -182,8 +180,18 @@ export const PlaceScalarFieldEnum = {
   hoursJson: 'hoursJson',
   sourceUrl: 'sourceUrl',
   contentHash: 'contentHash',
-  eventCount: 'eventCount',
-  lastEventAt: 'lastEventAt',
+  searchType: 'searchType',
+  overtureId: 'overtureId',
+  verified: 'verified',
+  webRating: 'webRating',
+  webReviewCount: 'webReviewCount',
+  summary: 'summary',
+  vibes: 'vibes',
+  tags: 'tags',
+  whyItsCool: 'whyItsCool',
+  editorialScore: 'editorialScore',
+  editorialHash: 'editorialHash',
+  editorialUpdatedAt: 'editorialUpdatedAt',
   lastSeenAt: 'lastSeenAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -203,24 +211,6 @@ export const MetricScalarFieldEnum = {
 } as const
 
 export type MetricScalarFieldEnum = (typeof MetricScalarFieldEnum)[keyof typeof MetricScalarFieldEnum]
-
-
-export const CanonicalPlaceScalarFieldEnum = {
-  id: 'id',
-  primaryPlaceId: 'primaryPlaceId',
-  dedupedName: 'dedupedName',
-  summary: 'summary',
-  vibes: 'vibes',
-  tags: 'tags',
-  whyItsCool: 'whyItsCool',
-  editorialScore: 'editorialScore',
-  editorialHash: 'editorialHash',
-  editorialUpdatedAt: 'editorialUpdatedAt',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type CanonicalPlaceScalarFieldEnum = (typeof CanonicalPlaceScalarFieldEnum)[keyof typeof CanonicalPlaceScalarFieldEnum]
 
 
 export const AiUsageScalarFieldEnum = {

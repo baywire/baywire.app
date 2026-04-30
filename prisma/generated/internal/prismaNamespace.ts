@@ -390,7 +390,6 @@ export const ModelName = {
   CanonicalEvent: 'CanonicalEvent',
   Place: 'Place',
   Metric: 'Metric',
-  CanonicalPlace: 'CanonicalPlace',
   AiUsage: 'AiUsage'
 } as const
 
@@ -407,7 +406,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "source" | "scrapeRun" | "event" | "canonicalEvent" | "place" | "metric" | "canonicalPlace" | "aiUsage"
+    modelProps: "source" | "scrapeRun" | "event" | "canonicalEvent" | "place" | "metric" | "aiUsage"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -855,80 +854,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    CanonicalPlace: {
-      payload: Prisma.$CanonicalPlacePayload<ExtArgs>
-      fields: Prisma.CanonicalPlaceFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.CanonicalPlaceFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CanonicalPlacePayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.CanonicalPlaceFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CanonicalPlacePayload>
-        }
-        findFirst: {
-          args: Prisma.CanonicalPlaceFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CanonicalPlacePayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.CanonicalPlaceFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CanonicalPlacePayload>
-        }
-        findMany: {
-          args: Prisma.CanonicalPlaceFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CanonicalPlacePayload>[]
-        }
-        create: {
-          args: Prisma.CanonicalPlaceCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CanonicalPlacePayload>
-        }
-        createMany: {
-          args: Prisma.CanonicalPlaceCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.CanonicalPlaceCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CanonicalPlacePayload>[]
-        }
-        delete: {
-          args: Prisma.CanonicalPlaceDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CanonicalPlacePayload>
-        }
-        update: {
-          args: Prisma.CanonicalPlaceUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CanonicalPlacePayload>
-        }
-        deleteMany: {
-          args: Prisma.CanonicalPlaceDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.CanonicalPlaceUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.CanonicalPlaceUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CanonicalPlacePayload>[]
-        }
-        upsert: {
-          args: Prisma.CanonicalPlaceUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CanonicalPlacePayload>
-        }
-        aggregate: {
-          args: Prisma.CanonicalPlaceAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateCanonicalPlace>
-        }
-        groupBy: {
-          args: Prisma.CanonicalPlaceGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.CanonicalPlaceGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.CanonicalPlaceCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.CanonicalPlaceCountAggregateOutputType> | number
-        }
-      }
-    }
     AiUsage: {
       payload: Prisma.$AiUsagePayload<ExtArgs>
       fields: Prisma.AiUsageFieldRefs
@@ -1129,7 +1054,6 @@ export type CanonicalEventScalarFieldEnum = (typeof CanonicalEventScalarFieldEnu
 
 export const PlaceScalarFieldEnum = {
   id: 'id',
-  canonicalId: 'canonicalId',
   sourceId: 'sourceId',
   sourcePlaceId: 'sourcePlaceId',
   name: 'name',
@@ -1147,8 +1071,18 @@ export const PlaceScalarFieldEnum = {
   hoursJson: 'hoursJson',
   sourceUrl: 'sourceUrl',
   contentHash: 'contentHash',
-  eventCount: 'eventCount',
-  lastEventAt: 'lastEventAt',
+  searchType: 'searchType',
+  overtureId: 'overtureId',
+  verified: 'verified',
+  webRating: 'webRating',
+  webReviewCount: 'webReviewCount',
+  summary: 'summary',
+  vibes: 'vibes',
+  tags: 'tags',
+  whyItsCool: 'whyItsCool',
+  editorialScore: 'editorialScore',
+  editorialHash: 'editorialHash',
+  editorialUpdatedAt: 'editorialUpdatedAt',
   lastSeenAt: 'lastSeenAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -1168,24 +1102,6 @@ export const MetricScalarFieldEnum = {
 } as const
 
 export type MetricScalarFieldEnum = (typeof MetricScalarFieldEnum)[keyof typeof MetricScalarFieldEnum]
-
-
-export const CanonicalPlaceScalarFieldEnum = {
-  id: 'id',
-  primaryPlaceId: 'primaryPlaceId',
-  dedupedName: 'dedupedName',
-  summary: 'summary',
-  vibes: 'vibes',
-  tags: 'tags',
-  whyItsCool: 'whyItsCool',
-  editorialScore: 'editorialScore',
-  editorialHash: 'editorialHash',
-  editorialUpdatedAt: 'editorialUpdatedAt',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type CanonicalPlaceScalarFieldEnum = (typeof CanonicalPlaceScalarFieldEnum)[keyof typeof CanonicalPlaceScalarFieldEnum]
 
 
 export const AiUsageScalarFieldEnum = {
@@ -1530,7 +1446,6 @@ export type GlobalOmitConfig = {
   canonicalEvent?: Prisma.CanonicalEventOmit
   place?: Prisma.PlaceOmit
   metric?: Prisma.MetricOmit
-  canonicalPlace?: Prisma.CanonicalPlaceOmit
   aiUsage?: Prisma.AiUsageOmit
 }
 

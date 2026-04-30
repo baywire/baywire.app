@@ -26,7 +26,6 @@ const VIBE_VALUES = [
 ] as const;
 
 const PlaceEditorialResultSchema = z.object({
-  dedupedName: z.string().min(1).max(200),
   summary: z.string().min(1).max(200),
   vibes: z.array(z.enum(VIBE_VALUES)).min(1).max(5),
   tags: z.array(z.string().min(1).max(30)).min(1).max(6),
@@ -37,29 +36,28 @@ const PlaceEditorialResultSchema = z.object({
 export type PlaceEditorialResult = z.infer<typeof PlaceEditorialResultSchema>;
 
 export interface PlaceEditorialInput {
-  canonicalID: string;
-  sourceSlugs: string[];
-  names: string[];
-  descriptions: string[];
+  placeID: string;
+  name: string;
+  description: string | null;
   category: string;
   city: string;
   address: string | null;
-  totalEventCount?: number;
+  webRating: number | null;
+  webReviewCount: number | null;
 }
 
-const EDITORIAL_SYSTEM_PROMPT = `You are the Baywire editorial curation pass for local places (restaurants, bars, breweries, etc.) in the Tampa Bay area.
+const EDITORIAL_SYSTEM_PROMPT = `You are the Baywire editorial curation pass for local places (restaurants, bars, breweries, beaches, etc.) in the Tampa Bay area.
 
 Rules:
-- You are curating one canonical place from multiple source records.
-- Use only information present in the provided source data.
+- Use only information present in the provided data.
 - Write concise, natural copy. No fluff.
 - summary must be one or two sentences, <= 200 chars.
-- dedupedName should be the cleanest canonical name across variants.
 - tags should describe cuisine, specialty, or notable features (e.g. "seafood", "cocktails", "rooftop", "brunch").
 - vibes must include 1-5 values from the provided vibe enum.
 - whyItsCool is optional and only for distinctive places.
 - editorialScore: 1.0 = must-visit destination, 0.0 = generic or low-interest.
-- If "Recent events hosted" is provided, places with high event counts are active and popular — factor that into the score. A venue hosting many events is more relevant to visitors.`;
+- If web rating and review count are provided, factor them into the score. High ratings with many reviews indicate popular, well-regarded spots.
+- Places with ratings above 4.5 and 100+ reviews are strong candidates for higher scores.`;
 
 let client: OpenAI | null = null;
 
@@ -72,23 +70,20 @@ function getClient(): OpenAI {
   return client;
 }
 
-export async function curateCanonicalPlace(
+export async function curatePlaceEditorial(
   input: PlaceEditorialInput,
 ): Promise<PlaceEditorialResult> {
   const openai = getClient();
   const format = zodTextFormat(PlaceEditorialResultSchema, "placeEditorial");
 
   const userContent = [
-    `Canonical ID: ${input.canonicalID}`,
-    `Sources: ${input.sourceSlugs.join(", ")}`,
+    `Place: ${input.name}`,
     `Category: ${input.category}`,
     `City: ${input.city}`,
     input.address ? `Address: ${input.address}` : null,
-    input.totalEventCount != null ? `Recent events hosted: ${input.totalEventCount}` : null,
-    `Names:\n${input.names.map((n) => `- ${n}`).join("\n")}`,
-    input.descriptions.length > 0
-      ? `Descriptions:\n${input.descriptions.map((d) => `- ${d}`).join("\n")}`
-      : null,
+    input.description ? `Description: ${input.description}` : null,
+    input.webRating != null ? `Web Rating: ${input.webRating}/5` : null,
+    input.webReviewCount != null ? `Review Count: ${input.webReviewCount}` : null,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -113,7 +108,7 @@ export async function curateCanonicalPlace(
         usage: response.usage,
         latencyMs: Date.now() - startMs,
         success: true,
-        meta: { canonicalID: input.canonicalID },
+        meta: { placeID: input.placeID },
       });
       return PlaceEditorialResultSchema.parse(parsed);
     } catch (err) {
@@ -130,7 +125,7 @@ export async function curateCanonicalPlace(
     latencyMs: Date.now() - startMs,
     success: false,
     error: lastError instanceof Error ? lastError.message : String(lastError),
-    meta: { canonicalID: input.canonicalID },
+    meta: { placeID: input.placeID },
   });
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }

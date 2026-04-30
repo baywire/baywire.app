@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { Clock, MapPin, Sparkles, Tag } from "lucide-react";
+
+import { FallbackImage } from "@/components/FallbackImage";
 
 import { EventDialog } from "@/components/event/EventDialog";
 
@@ -39,27 +40,7 @@ export function SearchResultRow({
           "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-gulf-400 dark:focus-visible:outline-sand-200",
         )}
       >
-        <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
-          {event.imageUrl ? (
-            <Image
-              src={event.imageUrl}
-              alt=""
-              fill
-              sizes="48px"
-              className="object-cover"
-              unoptimized
-            />
-          ) : (
-            <div
-              aria-hidden
-              className="flex size-full items-center justify-center bg-linear-to-br from-gulf-100 via-sand-100 to-sunset-100 text-ink-500"
-            >
-              <span className="font-display text-[10px] font-semibold uppercase tracking-tight">
-                {city.replace(/[^A-Za-z]/g, "").slice(0, 3)}
-              </span>
-            </div>
-          )}
-        </div>
+        <SearchEventThumb imageUrl={event.imageUrl} city={city} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-ink-900 dark:text-sand-50">
             {event.title}
@@ -107,5 +88,39 @@ export function SearchResultRow({
         initialInPlan={initialInPlan}
       />
     </>
+  );
+}
+
+function SearchEventThumbPlaceholder({ city }: { city: string }) {
+  return (
+    <div
+      aria-hidden
+      className="flex size-full items-center justify-center bg-linear-to-br from-gulf-100 via-sand-100 to-sunset-100 text-ink-500"
+    >
+      <span className="font-display text-[10px] font-semibold uppercase tracking-tight">
+        {city.replace(/[^A-Za-z]/g, "").slice(0, 3)}
+      </span>
+    </div>
+  );
+}
+
+function SearchEventThumb({ imageUrl, city }: { imageUrl: string | null; city: string }) {
+  const placeholder = <SearchEventThumbPlaceholder city={city} />;
+  return (
+    <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
+      {imageUrl ? (
+        <FallbackImage
+          src={imageUrl}
+          alt=""
+          fill
+          sizes="48px"
+          className="object-cover"
+          unoptimized
+          fallback={placeholder}
+        />
+      ) : (
+        placeholder
+      )}
+    </div>
   );
 }

@@ -2,7 +2,6 @@ import OpenAI from "openai";
 import { z } from "zod";
 import { zodTextFormat } from "openai/helpers/zod";
 
-import type { AppEvent } from "@/lib/events/types";
 import { logAiUsage } from "@/lib/extract/ai-usage";
 
 const DEFAULT_MODEL = process.env.OPENAI_SEARCH_MODEL
@@ -39,19 +38,32 @@ function getClient(): OpenAI {
   return client;
 }
 
-const SEARCH_SYSTEM_PROMPT = `You rank Tampa Bay events for search relevance.
+export interface SearchCandidate {
+  id: string;
+  type: "event" | "place";
+  title: string;
+  summary: string;
+  categories: string[];
+  city: string;
+  venueName: string;
+  editorialScore: number | null;
+  vibes: string[];
+  audience: string | null;
+}
+
+const SEARCH_SYSTEM_PROMPT = `You rank Tampa Bay events and places for search relevance.
 
 Rules:
-- Use only provided candidate events.
+- Use only provided candidates (events and places).
 - Prioritize relevance to the query first, then editorial quality.
-- Return up to 5 aiPickIDs from candidate IDs.
+- Return up to 5 aiPickIDs from candidate IDs. Mix events and places when relevant.
 - reasons is an array of {id, reason} for the top picks. Only include IDs from aiPickIDs.
 - intentLine is a concise interpretation of the query intent.
-- Do not invent events.`;
+- Do not invent results.`;
 
 export async function rerankWithAI(
   query: string,
-  candidates: readonly AppEvent[],
+  candidates: readonly SearchCandidate[],
 ): Promise<SearchAIResult> {
   const openai = getClient();
   const format = zodTextFormat(SearchAIResultSchema, "search");
@@ -104,19 +116,8 @@ export async function rerankWithAI(
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
-function buildUserPrompt(query: string, candidates: readonly AppEvent[]): string {
-  const rows = candidates.map((event) => ({
-    id: event.id,
-    title: event.title,
-    summary: event.description ?? "",
-    categories: event.categories,
-    city: event.city,
-    venueName: event.venueName ?? "",
-    editorialScore: event.editorialScore ?? null,
-    vibes: event.vibes ?? [],
-    audience: event.audience ?? null,
-  }));
-  return JSON.stringify({ query, candidates: rows });
+function buildUserPrompt(query: string, candidates: readonly SearchCandidate[]): string {
+  return JSON.stringify({ query, candidates });
 }
 
 function isRetryable(err: unknown): boolean {

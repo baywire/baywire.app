@@ -1,0 +1,64 @@
+name: Discover Places
+
+on:
+  schedule:
+    - cron: "0 8 * * 0"  # Sundays at 08:00 UTC
+  workflow_dispatch:
+    inputs:
+      city:
+        description: "Optional city key (e.g. tampa, st_petersburg). Leave blank for all."
+        required: false
+        default: ""
+      type:
+        description: "Optional search type (beaches, bars, restaurants, breweries, hidden_gems, live_music). Leave blank for all."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: baywire-discover-places
+      cancel-in-progress: false
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
+      OPENAI_EXTRACT_MODEL: ${{ secrets.OPENAI_EXTRACT_MODEL }}
+      OVERTURE_API_KEY: ${{ secrets.OVERTURE_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run discovery pipeline
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.city }}" ]; then
+            ARGS="$ARGS --city ${{ github.event.inputs.city }}"
+          fi
+          if [ -n "${{ github.event.inputs.type }}" ]; then
+            ARGS="$ARGS --type ${{ github.event.inputs.type }}"
+          fi
+          npm run discover:places -- $ARGS 2>&1 | tee discover.log
+
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: discover-places-log
+          path: discover.log
+          if-no-files-found: ignore
+          retention-days: 14

@@ -72,11 +72,6 @@ export type Place = Prisma.PlaceModel
  */
 export type Metric = Prisma.MetricModel
 /**
- * Model CanonicalPlace
- * 
- */
-export type CanonicalPlace = Prisma.CanonicalPlaceModel
-/**
  * Model AiUsage
  * 
  */

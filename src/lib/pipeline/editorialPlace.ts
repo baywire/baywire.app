@@ -1,65 +1,58 @@
 import crypto from "node:crypto";
 
-import type { Prisma } from "@/prisma/client";
-import type { AppPrismaClient } from "@/lib/db/client";
-import { curateCanonicalPlace } from "@/lib/extract/editorialPlace";
-import { cleanInlineText, stripHtmlToText } from "@/lib/scrapers/text";
+import { prisma } from "@/lib/db/client";
+import { curatePlaceEditorial } from "@/lib/extract/editorialPlace";
 
-type PlaceWithSource = Prisma.PlaceGetPayload<{
-  include: { source: { select: { slug: true } } };
-}> & { eventCount?: number };
-
-export async function refreshEditorialForCanonicalPlace(
-  tx: Pick<AppPrismaClient, "canonicalPlace">,
-  canonicalID: string,
-  places: PlaceWithSource[],
-  primary: PlaceWithSource,
-): Promise<void> {
-  const hash = hashEditorialInput(places);
-  const canonical = await tx.canonicalPlace.findUnique({
-    where: { id: canonicalID },
-    select: { editorialHash: true },
+export async function refreshEditorialForPlace(placeID: string): Promise<void> {
+  const place = await prisma.place.findUnique({
+    where: { id: placeID },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      category: true,
+      city: true,
+      address: true,
+      webRating: true,
+      webReviewCount: true,
+      editorialHash: true,
+    },
   });
-  if (canonical?.editorialHash === hash) return;
+  if (!place) return;
 
-  const names = uniqueCompact(places.map((p) => cleanInlineText(p.name))).slice(0, 8);
-  const descriptions = uniqueCompact(
-    places.map((p) => stripHtmlToText(p.description)).filter((v) => v.length >= 10),
-  ).slice(0, 8);
-  const sourceSlugs = uniqueCompact(places.map((p) => p.source.slug)).sort();
+  const hash = hashEditorialInput(place);
+  if (place.editorialHash === hash) return;
 
-  const totalEventCount = places.reduce((sum, p) => sum + (p.eventCount ?? 0), 0);
-  const fallback = buildFallback(primary, totalEventCount);
+  const fallback = buildFallback(place);
 
   try {
     if (!process.env.OPENAI_API_KEY) {
-      await tx.canonicalPlace.update({
-        where: { id: canonicalID },
+      await prisma.place.update({
+        where: { id: placeID },
         data: { ...fallback, editorialHash: hash, editorialUpdatedAt: new Date() },
       });
       return;
     }
 
-    const curated = await curateCanonicalPlace({
-      canonicalID,
-      sourceSlugs,
-      names,
-      descriptions,
-      category: primary.category,
-      city: primary.city,
-      address: primary.address,
-      totalEventCount,
+    const curated = await curatePlaceEditorial({
+      placeID: place.id,
+      name: place.name,
+      description: place.description,
+      category: place.category,
+      city: place.city,
+      address: place.address,
+      webRating: place.webRating,
+      webReviewCount: place.webReviewCount,
     });
 
-    const finalScore = blendScore(curated.editorialScore, totalEventCount);
+    const finalScore = blendScore(curated.editorialScore, place.webRating, place.webReviewCount);
 
-    await tx.canonicalPlace.update({
-      where: { id: canonicalID },
+    await prisma.place.update({
+      where: { id: placeID },
       data: {
-        dedupedName: curated.dedupedName,
         summary: curated.summary,
-        vibes: uniqueCompact(curated.vibes).slice(0, 5),
-        tags: uniqueCompact(curated.tags).slice(0, 6),
+        vibes: curated.vibes.slice(0, 5),
+        tags: curated.tags.slice(0, 6),
         whyItsCool: curated.whyItsCool,
         editorialScore: finalScore,
         editorialHash: hash,
@@ -68,63 +61,57 @@ export async function refreshEditorialForCanonicalPlace(
     });
   } catch (err) {
     console.warn(
-      `[editorial-place] canonical=${canonicalID} failed: ${err instanceof Error ? err.message : String(err)}`,
+      `[editorial-place] place=${placeID} failed: ${err instanceof Error ? err.message : String(err)}`,
     );
-    await tx.canonicalPlace.update({
-      where: { id: canonicalID },
+    await prisma.place.update({
+      where: { id: placeID },
       data: { ...fallback, editorialHash: hash, editorialUpdatedAt: new Date() },
     });
   }
 }
 
-function hashEditorialInput(places: PlaceWithSource[]): string {
-  const stable = places
-    .map((p) => ({
-      sourceSlug: p.source.slug,
-      name: cleanInlineText(p.name),
-      description: stripHtmlToText(p.description),
-    }))
-    .sort((a, b) => {
-      const s = a.sourceSlug.localeCompare(b.sourceSlug);
-      return s !== 0 ? s : a.name.localeCompare(b.name);
-    });
+function hashEditorialInput(place: {
+  name: string;
+  description: string | null;
+  webRating: number | null;
+  webReviewCount: number | null;
+}): string {
+  const stable = {
+    name: place.name,
+    description: place.description,
+    webRating: place.webRating,
+    webReviewCount: place.webReviewCount,
+  };
   return crypto.createHash("sha256").update(JSON.stringify(stable)).digest("hex");
 }
 
-function uniqueCompact(input: readonly string[]): string[] {
-  const out: string[] = [];
-  const seen = new Set<string>();
-  for (const raw of input) {
-    const value = raw.trim();
-    if (!value || seen.has(value)) continue;
-    seen.add(value);
-    out.push(value);
-  }
-  return out;
+function blendScore(
+  llmScore: number,
+  webRating: number | null,
+  webReviewCount: number | null,
+): number {
+  if (!webRating) return llmScore * 0.85;
+  const ratingSignal = webRating / 5;
+  const reviewBoost = webReviewCount
+    ? Math.min(1, Math.log2((webReviewCount ?? 0) + 1) / Math.log2(200))
+    : 0;
+  return Math.min(1, llmScore * 0.5 + ratingSignal * 0.35 + reviewBoost * 0.15);
 }
 
-/**
- * Blends the LLM editorial score with an activity signal derived from
- * event count. Places that host many events get a boost; places with
- * no events get a slight penalty. The activity signal is capped and
- * logarithmic to avoid runaway scores from high-volume venues.
- */
-function blendScore(llmScore: number, totalEventCount: number): number {
-  if (totalEventCount <= 0) return llmScore * 0.8;
-  // log2(eventCount) / log2(50) gives ~1.0 at 50 events, ~0.6 at 5 events
-  const activitySignal = Math.min(1, Math.log2(totalEventCount + 1) / Math.log2(50));
-  return Math.min(1, llmScore * 0.65 + activitySignal * 0.35);
-}
-
-function buildFallback(primary: PlaceWithSource, totalEventCount: number) {
-  const summarySource = stripHtmlToText(primary.description) || cleanInlineText(primary.name);
+function buildFallback(place: {
+  name: string;
+  description: string | null;
+  category: string;
+  webRating: number | null;
+  webReviewCount: number | null;
+}) {
+  const summarySource = place.description ?? place.name;
   const summary = summarySource.length > 200 ? `${summarySource.slice(0, 197)}...` : summarySource;
-  const baseScore = blendScore(0.5, totalEventCount);
+  const baseScore = blendScore(0.5, place.webRating, place.webReviewCount);
   return {
-    dedupedName: cleanInlineText(primary.name).slice(0, 200),
     summary,
     vibes: [] as string[],
-    tags: [primary.category],
+    tags: [place.category],
     whyItsCool: null as string | null,
     editorialScore: baseScore,
   };

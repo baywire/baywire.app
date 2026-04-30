@@ -29,18 +29,21 @@ export type AggregatePlace = {
 export type PlaceAvgAggregateOutputType = {
   lat: number | null
   lng: number | null
-  eventCount: number | null
+  webRating: number | null
+  webReviewCount: number | null
+  editorialScore: number | null
 }
 
 export type PlaceSumAggregateOutputType = {
   lat: number | null
   lng: number | null
-  eventCount: number | null
+  webRating: number | null
+  webReviewCount: number | null
+  editorialScore: number | null
 }
 
 export type PlaceMinAggregateOutputType = {
   id: string | null
-  canonicalId: string | null
   sourceId: string | null
   sourcePlaceId: string | null
   name: string | null
@@ -57,8 +60,16 @@ export type PlaceMinAggregateOutputType = {
   priceRange: string | null
   sourceUrl: string | null
   contentHash: string | null
-  eventCount: number | null
-  lastEventAt: Date | null
+  searchType: string | null
+  overtureId: string | null
+  verified: boolean | null
+  webRating: number | null
+  webReviewCount: number | null
+  summary: string | null
+  whyItsCool: string | null
+  editorialScore: number | null
+  editorialHash: string | null
+  editorialUpdatedAt: Date | null
   lastSeenAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -66,7 +77,6 @@ export type PlaceMinAggregateOutputType = {
 
 export type PlaceMaxAggregateOutputType = {
   id: string | null
-  canonicalId: string | null
   sourceId: string | null
   sourcePlaceId: string | null
   name: string | null
@@ -83,8 +93,16 @@ export type PlaceMaxAggregateOutputType = {
   priceRange: string | null
   sourceUrl: string | null
   contentHash: string | null
-  eventCount: number | null
-  lastEventAt: Date | null
+  searchType: string | null
+  overtureId: string | null
+  verified: boolean | null
+  webRating: number | null
+  webReviewCount: number | null
+  summary: string | null
+  whyItsCool: string | null
+  editorialScore: number | null
+  editorialHash: string | null
+  editorialUpdatedAt: Date | null
   lastSeenAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -92,7 +110,6 @@ export type PlaceMaxAggregateOutputType = {
 
 export type PlaceCountAggregateOutputType = {
   id: number
-  canonicalId: number
   sourceId: number
   sourcePlaceId: number
   name: number
@@ -110,8 +127,18 @@ export type PlaceCountAggregateOutputType = {
   hoursJson: number
   sourceUrl: number
   contentHash: number
-  eventCount: number
-  lastEventAt: number
+  searchType: number
+  overtureId: number
+  verified: number
+  webRating: number
+  webReviewCount: number
+  summary: number
+  vibes: number
+  tags: number
+  whyItsCool: number
+  editorialScore: number
+  editorialHash: number
+  editorialUpdatedAt: number
   lastSeenAt: number
   createdAt: number
   updatedAt: number
@@ -122,18 +149,21 @@ export type PlaceCountAggregateOutputType = {
 export type PlaceAvgAggregateInputType = {
   lat?: true
   lng?: true
-  eventCount?: true
+  webRating?: true
+  webReviewCount?: true
+  editorialScore?: true
 }
 
 export type PlaceSumAggregateInputType = {
   lat?: true
   lng?: true
-  eventCount?: true
+  webRating?: true
+  webReviewCount?: true
+  editorialScore?: true
 }
 
 export type PlaceMinAggregateInputType = {
   id?: true
-  canonicalId?: true
   sourceId?: true
   sourcePlaceId?: true
   name?: true
@@ -150,8 +180,16 @@ export type PlaceMinAggregateInputType = {
   priceRange?: true
   sourceUrl?: true
   contentHash?: true
-  eventCount?: true
-  lastEventAt?: true
+  searchType?: true
+  overtureId?: true
+  verified?: true
+  webRating?: true
+  webReviewCount?: true
+  summary?: true
+  whyItsCool?: true
+  editorialScore?: true
+  editorialHash?: true
+  editorialUpdatedAt?: true
   lastSeenAt?: true
   createdAt?: true
   updatedAt?: true
@@ -159,7 +197,6 @@ export type PlaceMinAggregateInputType = {
 
 export type PlaceMaxAggregateInputType = {
   id?: true
-  canonicalId?: true
   sourceId?: true
   sourcePlaceId?: true
   name?: true
@@ -176,8 +213,16 @@ export type PlaceMaxAggregateInputType = {
   priceRange?: true
   sourceUrl?: true
   contentHash?: true
-  eventCount?: true
-  lastEventAt?: true
+  searchType?: true
+  overtureId?: true
+  verified?: true
+  webRating?: true
+  webReviewCount?: true
+  summary?: true
+  whyItsCool?: true
+  editorialScore?: true
+  editorialHash?: true
+  editorialUpdatedAt?: true
   lastSeenAt?: true
   createdAt?: true
   updatedAt?: true
@@ -185,7 +230,6 @@ export type PlaceMaxAggregateInputType = {
 
 export type PlaceCountAggregateInputType = {
   id?: true
-  canonicalId?: true
   sourceId?: true
   sourcePlaceId?: true
   name?: true
@@ -203,8 +247,18 @@ export type PlaceCountAggregateInputType = {
   hoursJson?: true
   sourceUrl?: true
   contentHash?: true
-  eventCount?: true
-  lastEventAt?: true
+  searchType?: true
+  overtureId?: true
+  verified?: true
+  webRating?: true
+  webReviewCount?: true
+  summary?: true
+  vibes?: true
+  tags?: true
+  whyItsCool?: true
+  editorialScore?: true
+  editorialHash?: true
+  editorialUpdatedAt?: true
   lastSeenAt?: true
   createdAt?: true
   updatedAt?: true
@@ -299,7 +353,6 @@ export type PlaceGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
 
 export type PlaceGroupByOutputType = {
   id: string
-  canonicalId: string | null
   sourceId: string
   sourcePlaceId: string
   name: string
@@ -317,8 +370,18 @@ export type PlaceGroupByOutputType = {
   hoursJson: runtime.JsonValue | null
   sourceUrl: string
   contentHash: string
-  eventCount: number
-  lastEventAt: Date | null
+  searchType: string | null
+  overtureId: string | null
+  verified: boolean
+  webRating: number | null
+  webReviewCount: number | null
+  summary: string | null
+  vibes: string[]
+  tags: string[]
+  whyItsCool: string | null
+  editorialScore: number | null
+  editorialHash: string | null
+  editorialUpdatedAt: Date | null
   lastSeenAt: Date
   createdAt: Date
   updatedAt: Date
@@ -349,7 +412,6 @@ export type PlaceWhereInput = {
   OR?: Prisma.PlaceWhereInput[]
   NOT?: Prisma.PlaceWhereInput | Prisma.PlaceWhereInput[]
   id?: Prisma.UuidFilter<"Place"> | string
-  canonicalId?: Prisma.UuidNullableFilter<"Place"> | string | null
   sourceId?: Prisma.UuidFilter<"Place"> | string
   sourcePlaceId?: Prisma.StringFilter<"Place"> | string
   name?: Prisma.StringFilter<"Place"> | string
@@ -367,19 +429,26 @@ export type PlaceWhereInput = {
   hoursJson?: Prisma.JsonNullableFilter<"Place">
   sourceUrl?: Prisma.StringFilter<"Place"> | string
   contentHash?: Prisma.StringFilter<"Place"> | string
-  eventCount?: Prisma.IntFilter<"Place"> | number
-  lastEventAt?: Prisma.DateTimeNullableFilter<"Place"> | Date | string | null
+  searchType?: Prisma.StringNullableFilter<"Place"> | string | null
+  overtureId?: Prisma.StringNullableFilter<"Place"> | string | null
+  verified?: Prisma.BoolFilter<"Place"> | boolean
+  webRating?: Prisma.FloatNullableFilter<"Place"> | number | null
+  webReviewCount?: Prisma.IntNullableFilter<"Place"> | number | null
+  summary?: Prisma.StringNullableFilter<"Place"> | string | null
+  vibes?: Prisma.StringNullableListFilter<"Place">
+  tags?: Prisma.StringNullableListFilter<"Place">
+  whyItsCool?: Prisma.StringNullableFilter<"Place"> | string | null
+  editorialScore?: Prisma.FloatNullableFilter<"Place"> | number | null
+  editorialHash?: Prisma.StringNullableFilter<"Place"> | string | null
+  editorialUpdatedAt?: Prisma.DateTimeNullableFilter<"Place"> | Date | string | null
   lastSeenAt?: Prisma.DateTimeFilter<"Place"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"Place"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Place"> | Date | string
   source?: Prisma.XOR<Prisma.SourceScalarRelationFilter, Prisma.SourceWhereInput>
-  canonical?: Prisma.XOR<Prisma.CanonicalPlaceNullableScalarRelationFilter, Prisma.CanonicalPlaceWhereInput> | null
-  primaryOf?: Prisma.XOR<Prisma.CanonicalPlaceNullableScalarRelationFilter, Prisma.CanonicalPlaceWhereInput> | null
 }
 
 export type PlaceOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  canonicalId?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceId?: Prisma.SortOrder
   sourcePlaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -397,27 +466,35 @@ export type PlaceOrderByWithRelationInput = {
   hoursJson?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceUrl?: Prisma.SortOrder
   contentHash?: Prisma.SortOrder
-  eventCount?: Prisma.SortOrder
-  lastEventAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  searchType?: Prisma.SortOrderInput | Prisma.SortOrder
+  overtureId?: Prisma.SortOrderInput | Prisma.SortOrder
+  verified?: Prisma.SortOrder
+  webRating?: Prisma.SortOrderInput | Prisma.SortOrder
+  webReviewCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  summary?: Prisma.SortOrderInput | Prisma.SortOrder
+  vibes?: Prisma.SortOrder
+  tags?: Prisma.SortOrder
+  whyItsCool?: Prisma.SortOrderInput | Prisma.SortOrder
+  editorialScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  editorialHash?: Prisma.SortOrderInput | Prisma.SortOrder
+  editorialUpdatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSeenAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   source?: Prisma.SourceOrderByWithRelationInput
-  canonical?: Prisma.CanonicalPlaceOrderByWithRelationInput
-  primaryOf?: Prisma.CanonicalPlaceOrderByWithRelationInput
 }
 
 export type PlaceWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  slug?: string
+  overtureId?: string
   sourceId_sourcePlaceId?: Prisma.PlaceSourceIdSourcePlaceIdCompoundUniqueInput
   AND?: Prisma.PlaceWhereInput | Prisma.PlaceWhereInput[]
   OR?: Prisma.PlaceWhereInput[]
   NOT?: Prisma.PlaceWhereInput | Prisma.PlaceWhereInput[]
-  canonicalId?: Prisma.UuidNullableFilter<"Place"> | string | null
   sourceId?: Prisma.UuidFilter<"Place"> | string
   sourcePlaceId?: Prisma.StringFilter<"Place"> | string
   name?: Prisma.StringFilter<"Place"> | string
-  slug?: Prisma.StringFilter<"Place"> | string
   description?: Prisma.StringNullableFilter<"Place"> | string | null
   category?: Prisma.EnumPlaceCategoryFilter<"Place"> | $Enums.PlaceCategory
   city?: Prisma.EnumCityFilter<"Place"> | $Enums.City
@@ -431,19 +508,25 @@ export type PlaceWhereUniqueInput = Prisma.AtLeast<{
   hoursJson?: Prisma.JsonNullableFilter<"Place">
   sourceUrl?: Prisma.StringFilter<"Place"> | string
   contentHash?: Prisma.StringFilter<"Place"> | string
-  eventCount?: Prisma.IntFilter<"Place"> | number
-  lastEventAt?: Prisma.DateTimeNullableFilter<"Place"> | Date | string | null
+  searchType?: Prisma.StringNullableFilter<"Place"> | string | null
+  verified?: Prisma.BoolFilter<"Place"> | boolean
+  webRating?: Prisma.FloatNullableFilter<"Place"> | number | null
+  webReviewCount?: Prisma.IntNullableFilter<"Place"> | number | null
+  summary?: Prisma.StringNullableFilter<"Place"> | string | null
+  vibes?: Prisma.StringNullableListFilter<"Place">
+  tags?: Prisma.StringNullableListFilter<"Place">
+  whyItsCool?: Prisma.StringNullableFilter<"Place"> | string | null
+  editorialScore?: Prisma.FloatNullableFilter<"Place"> | number | null
+  editorialHash?: Prisma.StringNullableFilter<"Place"> | string | null
+  editorialUpdatedAt?: Prisma.DateTimeNullableFilter<"Place"> | Date | string | null
   lastSeenAt?: Prisma.DateTimeFilter<"Place"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"Place"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Place"> | Date | string
   source?: Prisma.XOR<Prisma.SourceScalarRelationFilter, Prisma.SourceWhereInput>
-  canonical?: Prisma.XOR<Prisma.CanonicalPlaceNullableScalarRelationFilter, Prisma.CanonicalPlaceWhereInput> | null
-  primaryOf?: Prisma.XOR<Prisma.CanonicalPlaceNullableScalarRelationFilter, Prisma.CanonicalPlaceWhereInput> | null
-}, "id" | "sourceId_sourcePlaceId">
+}, "id" | "slug" | "overtureId" | "sourceId_sourcePlaceId">
 
 export type PlaceOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  canonicalId?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceId?: Prisma.SortOrder
   sourcePlaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -461,8 +544,18 @@ export type PlaceOrderByWithAggregationInput = {
   hoursJson?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceUrl?: Prisma.SortOrder
   contentHash?: Prisma.SortOrder
-  eventCount?: Prisma.SortOrder
-  lastEventAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  searchType?: Prisma.SortOrderInput | Prisma.SortOrder
+  overtureId?: Prisma.SortOrderInput | Prisma.SortOrder
+  verified?: Prisma.SortOrder
+  webRating?: Prisma.SortOrderInput | Prisma.SortOrder
+  webReviewCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  summary?: Prisma.SortOrderInput | Prisma.SortOrder
+  vibes?: Prisma.SortOrder
+  tags?: Prisma.SortOrder
+  whyItsCool?: Prisma.SortOrderInput | Prisma.SortOrder
+  editorialScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  editorialHash?: Prisma.SortOrderInput | Prisma.SortOrder
+  editorialUpdatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSeenAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -478,7 +571,6 @@ export type PlaceScalarWhereWithAggregatesInput = {
   OR?: Prisma.PlaceScalarWhereWithAggregatesInput[]
   NOT?: Prisma.PlaceScalarWhereWithAggregatesInput | Prisma.PlaceScalarWhereWithAggregatesInput[]
   id?: Prisma.UuidWithAggregatesFilter<"Place"> | string
-  canonicalId?: Prisma.UuidNullableWithAggregatesFilter<"Place"> | string | null
   sourceId?: Prisma.UuidWithAggregatesFilter<"Place"> | string
   sourcePlaceId?: Prisma.StringWithAggregatesFilter<"Place"> | string
   name?: Prisma.StringWithAggregatesFilter<"Place"> | string
@@ -496,8 +588,18 @@ export type PlaceScalarWhereWithAggregatesInput = {
   hoursJson?: Prisma.JsonNullableWithAggregatesFilter<"Place">
   sourceUrl?: Prisma.StringWithAggregatesFilter<"Place"> | string
   contentHash?: Prisma.StringWithAggregatesFilter<"Place"> | string
-  eventCount?: Prisma.IntWithAggregatesFilter<"Place"> | number
-  lastEventAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Place"> | Date | string | null
+  searchType?: Prisma.StringNullableWithAggregatesFilter<"Place"> | string | null
+  overtureId?: Prisma.StringNullableWithAggregatesFilter<"Place"> | string | null
+  verified?: Prisma.BoolWithAggregatesFilter<"Place"> | boolean
+  webRating?: Prisma.FloatNullableWithAggregatesFilter<"Place"> | number | null
+  webReviewCount?: Prisma.IntNullableWithAggregatesFilter<"Place"> | number | null
+  summary?: Prisma.StringNullableWithAggregatesFilter<"Place"> | string | null
+  vibes?: Prisma.StringNullableListFilter<"Place">
+  tags?: Prisma.StringNullableListFilter<"Place">
+  whyItsCool?: Prisma.StringNullableWithAggregatesFilter<"Place"> | string | null
+  editorialScore?: Prisma.FloatNullableWithAggregatesFilter<"Place"> | number | null
+  editorialHash?: Prisma.StringNullableWithAggregatesFilter<"Place"> | string | null
+  editorialUpdatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Place"> | Date | string | null
   lastSeenAt?: Prisma.DateTimeWithAggregatesFilter<"Place"> | Date | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Place"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Place"> | Date | string
@@ -521,19 +623,26 @@ export type PlaceCreateInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
-  eventCount?: number
-  lastEventAt?: Date | string | null
+  searchType?: string | null
+  overtureId?: string | null
+  verified?: boolean
+  webRating?: number | null
+  webReviewCount?: number | null
+  summary?: string | null
+  vibes?: Prisma.PlaceCreatevibesInput | string[]
+  tags?: Prisma.PlaceCreatetagsInput | string[]
+  whyItsCool?: string | null
+  editorialScore?: number | null
+  editorialHash?: string | null
+  editorialUpdatedAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
   source: Prisma.SourceCreateNestedOneWithoutPlacesInput
-  canonical?: Prisma.CanonicalPlaceCreateNestedOneWithoutPlacesInput
-  primaryOf?: Prisma.CanonicalPlaceCreateNestedOneWithoutPrimaryPlaceInput
 }
 
 export type PlaceUncheckedCreateInput = {
   id?: string
-  canonicalId?: string | null
   sourceId: string
   sourcePlaceId: string
   name: string
@@ -551,12 +660,21 @@ export type PlaceUncheckedCreateInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
-  eventCount?: number
-  lastEventAt?: Date | string | null
+  searchType?: string | null
+  overtureId?: string | null
+  verified?: boolean
+  webRating?: number | null
+  webReviewCount?: number | null
+  summary?: string | null
+  vibes?: Prisma.PlaceCreatevibesInput | string[]
+  tags?: Prisma.PlaceCreatetagsInput | string[]
+  whyItsCool?: string | null
+  editorialScore?: number | null
+  editorialHash?: string | null
+  editorialUpdatedAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
-  primaryOf?: Prisma.CanonicalPlaceUncheckedCreateNestedOneWithoutPrimaryPlaceInput
 }
 
 export type PlaceUpdateInput = {
@@ -577,19 +695,26 @@ export type PlaceUpdateInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
-  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
-  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  searchType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overtureId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  webRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  webReviewCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vibes?: Prisma.PlaceUpdatevibesInput | string[]
+  tags?: Prisma.PlaceUpdatetagsInput | string[]
+  whyItsCool?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  editorialScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  editorialHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  editorialUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   source?: Prisma.SourceUpdateOneRequiredWithoutPlacesNestedInput
-  canonical?: Prisma.CanonicalPlaceUpdateOneWithoutPlacesNestedInput
-  primaryOf?: Prisma.CanonicalPlaceUpdateOneWithoutPrimaryPlaceNestedInput
 }
 
 export type PlaceUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  canonicalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceId?: Prisma.StringFieldUpdateOperationsInput | string
   sourcePlaceId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
@@ -607,17 +732,25 @@ export type PlaceUncheckedUpdateInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
-  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
-  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  searchType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overtureId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  webRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  webReviewCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vibes?: Prisma.PlaceUpdatevibesInput | string[]
+  tags?: Prisma.PlaceUpdatetagsInput | string[]
+  whyItsCool?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  editorialScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  editorialHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  editorialUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  primaryOf?: Prisma.CanonicalPlaceUncheckedUpdateOneWithoutPrimaryPlaceNestedInput
 }
 
 export type PlaceCreateManyInput = {
   id?: string
-  canonicalId?: string | null
   sourceId: string
   sourcePlaceId: string
   name: string
@@ -635,8 +768,18 @@ export type PlaceCreateManyInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
-  eventCount?: number
-  lastEventAt?: Date | string | null
+  searchType?: string | null
+  overtureId?: string | null
+  verified?: boolean
+  webRating?: number | null
+  webReviewCount?: number | null
+  summary?: string | null
+  vibes?: Prisma.PlaceCreatevibesInput | string[]
+  tags?: Prisma.PlaceCreatetagsInput | string[]
+  whyItsCool?: string | null
+  editorialScore?: number | null
+  editorialHash?: string | null
+  editorialUpdatedAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -660,8 +803,18 @@ export type PlaceUpdateManyMutationInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
-  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
-  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  searchType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overtureId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  webRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  webReviewCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vibes?: Prisma.PlaceUpdatevibesInput | string[]
+  tags?: Prisma.PlaceUpdatetagsInput | string[]
+  whyItsCool?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  editorialScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  editorialHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  editorialUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -669,7 +822,6 @@ export type PlaceUpdateManyMutationInput = {
 
 export type PlaceUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  canonicalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceId?: Prisma.StringFieldUpdateOperationsInput | string
   sourcePlaceId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
@@ -687,8 +839,18 @@ export type PlaceUncheckedUpdateManyInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
-  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
-  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  searchType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overtureId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  webRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  webReviewCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vibes?: Prisma.PlaceUpdatevibesInput | string[]
+  tags?: Prisma.PlaceUpdatetagsInput | string[]
+  whyItsCool?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  editorialScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  editorialHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  editorialUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -711,7 +873,6 @@ export type PlaceSourceIdSourcePlaceIdCompoundUniqueInput = {
 
 export type PlaceCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  canonicalId?: Prisma.SortOrder
   sourceId?: Prisma.SortOrder
   sourcePlaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -729,8 +890,18 @@ export type PlaceCountOrderByAggregateInput = {
   hoursJson?: Prisma.SortOrder
   sourceUrl?: Prisma.SortOrder
   contentHash?: Prisma.SortOrder
-  eventCount?: Prisma.SortOrder
-  lastEventAt?: Prisma.SortOrder
+  searchType?: Prisma.SortOrder
+  overtureId?: Prisma.SortOrder
+  verified?: Prisma.SortOrder
+  webRating?: Prisma.SortOrder
+  webReviewCount?: Prisma.SortOrder
+  summary?: Prisma.SortOrder
+  vibes?: Prisma.SortOrder
+  tags?: Prisma.SortOrder
+  whyItsCool?: Prisma.SortOrder
+  editorialScore?: Prisma.SortOrder
+  editorialHash?: Prisma.SortOrder
+  editorialUpdatedAt?: Prisma.SortOrder
   lastSeenAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -739,12 +910,13 @@ export type PlaceCountOrderByAggregateInput = {
 export type PlaceAvgOrderByAggregateInput = {
   lat?: Prisma.SortOrder
   lng?: Prisma.SortOrder
-  eventCount?: Prisma.SortOrder
+  webRating?: Prisma.SortOrder
+  webReviewCount?: Prisma.SortOrder
+  editorialScore?: Prisma.SortOrder
 }
 
 export type PlaceMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  canonicalId?: Prisma.SortOrder
   sourceId?: Prisma.SortOrder
   sourcePlaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -761,8 +933,16 @@ export type PlaceMaxOrderByAggregateInput = {
   priceRange?: Prisma.SortOrder
   sourceUrl?: Prisma.SortOrder
   contentHash?: Prisma.SortOrder
-  eventCount?: Prisma.SortOrder
-  lastEventAt?: Prisma.SortOrder
+  searchType?: Prisma.SortOrder
+  overtureId?: Prisma.SortOrder
+  verified?: Prisma.SortOrder
+  webRating?: Prisma.SortOrder
+  webReviewCount?: Prisma.SortOrder
+  summary?: Prisma.SortOrder
+  whyItsCool?: Prisma.SortOrder
+  editorialScore?: Prisma.SortOrder
+  editorialHash?: Prisma.SortOrder
+  editorialUpdatedAt?: Prisma.SortOrder
   lastSeenAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -770,7 +950,6 @@ export type PlaceMaxOrderByAggregateInput = {
 
 export type PlaceMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  canonicalId?: Prisma.SortOrder
   sourceId?: Prisma.SortOrder
   sourcePlaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -787,8 +966,16 @@ export type PlaceMinOrderByAggregateInput = {
   priceRange?: Prisma.SortOrder
   sourceUrl?: Prisma.SortOrder
   contentHash?: Prisma.SortOrder
-  eventCount?: Prisma.SortOrder
-  lastEventAt?: Prisma.SortOrder
+  searchType?: Prisma.SortOrder
+  overtureId?: Prisma.SortOrder
+  verified?: Prisma.SortOrder
+  webRating?: Prisma.SortOrder
+  webReviewCount?: Prisma.SortOrder
+  summary?: Prisma.SortOrder
+  whyItsCool?: Prisma.SortOrder
+  editorialScore?: Prisma.SortOrder
+  editorialHash?: Prisma.SortOrder
+  editorialUpdatedAt?: Prisma.SortOrder
   lastSeenAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -797,12 +984,9 @@ export type PlaceMinOrderByAggregateInput = {
 export type PlaceSumOrderByAggregateInput = {
   lat?: Prisma.SortOrder
   lng?: Prisma.SortOrder
-  eventCount?: Prisma.SortOrder
-}
-
-export type PlaceNullableScalarRelationFilter = {
-  is?: Prisma.PlaceWhereInput | null
-  isNot?: Prisma.PlaceWhereInput | null
+  webRating?: Prisma.SortOrder
+  webReviewCount?: Prisma.SortOrder
+  editorialScore?: Prisma.SortOrder
 }
 
 export type PlaceCreateNestedManyWithoutSourceInput = {
@@ -847,66 +1031,34 @@ export type PlaceUncheckedUpdateManyWithoutSourceNestedInput = {
   deleteMany?: Prisma.PlaceScalarWhereInput | Prisma.PlaceScalarWhereInput[]
 }
 
+export type PlaceCreatevibesInput = {
+  set: string[]
+}
+
+export type PlaceCreatetagsInput = {
+  set: string[]
+}
+
 export type EnumPlaceCategoryFieldUpdateOperationsInput = {
   set?: $Enums.PlaceCategory
 }
 
-export type PlaceCreateNestedOneWithoutPrimaryOfInput = {
-  create?: Prisma.XOR<Prisma.PlaceCreateWithoutPrimaryOfInput, Prisma.PlaceUncheckedCreateWithoutPrimaryOfInput>
-  connectOrCreate?: Prisma.PlaceCreateOrConnectWithoutPrimaryOfInput
-  connect?: Prisma.PlaceWhereUniqueInput
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
 }
 
-export type PlaceCreateNestedManyWithoutCanonicalInput = {
-  create?: Prisma.XOR<Prisma.PlaceCreateWithoutCanonicalInput, Prisma.PlaceUncheckedCreateWithoutCanonicalInput> | Prisma.PlaceCreateWithoutCanonicalInput[] | Prisma.PlaceUncheckedCreateWithoutCanonicalInput[]
-  connectOrCreate?: Prisma.PlaceCreateOrConnectWithoutCanonicalInput | Prisma.PlaceCreateOrConnectWithoutCanonicalInput[]
-  createMany?: Prisma.PlaceCreateManyCanonicalInputEnvelope
-  connect?: Prisma.PlaceWhereUniqueInput | Prisma.PlaceWhereUniqueInput[]
+export type PlaceUpdatevibesInput = {
+  set?: string[]
+  push?: string | string[]
 }
 
-export type PlaceUncheckedCreateNestedManyWithoutCanonicalInput = {
-  create?: Prisma.XOR<Prisma.PlaceCreateWithoutCanonicalInput, Prisma.PlaceUncheckedCreateWithoutCanonicalInput> | Prisma.PlaceCreateWithoutCanonicalInput[] | Prisma.PlaceUncheckedCreateWithoutCanonicalInput[]
-  connectOrCreate?: Prisma.PlaceCreateOrConnectWithoutCanonicalInput | Prisma.PlaceCreateOrConnectWithoutCanonicalInput[]
-  createMany?: Prisma.PlaceCreateManyCanonicalInputEnvelope
-  connect?: Prisma.PlaceWhereUniqueInput | Prisma.PlaceWhereUniqueInput[]
-}
-
-export type PlaceUpdateOneWithoutPrimaryOfNestedInput = {
-  create?: Prisma.XOR<Prisma.PlaceCreateWithoutPrimaryOfInput, Prisma.PlaceUncheckedCreateWithoutPrimaryOfInput>
-  connectOrCreate?: Prisma.PlaceCreateOrConnectWithoutPrimaryOfInput
-  upsert?: Prisma.PlaceUpsertWithoutPrimaryOfInput
-  disconnect?: Prisma.PlaceWhereInput | boolean
-  delete?: Prisma.PlaceWhereInput | boolean
-  connect?: Prisma.PlaceWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.PlaceUpdateToOneWithWhereWithoutPrimaryOfInput, Prisma.PlaceUpdateWithoutPrimaryOfInput>, Prisma.PlaceUncheckedUpdateWithoutPrimaryOfInput>
-}
-
-export type PlaceUpdateManyWithoutCanonicalNestedInput = {
-  create?: Prisma.XOR<Prisma.PlaceCreateWithoutCanonicalInput, Prisma.PlaceUncheckedCreateWithoutCanonicalInput> | Prisma.PlaceCreateWithoutCanonicalInput[] | Prisma.PlaceUncheckedCreateWithoutCanonicalInput[]
-  connectOrCreate?: Prisma.PlaceCreateOrConnectWithoutCanonicalInput | Prisma.PlaceCreateOrConnectWithoutCanonicalInput[]
-  upsert?: Prisma.PlaceUpsertWithWhereUniqueWithoutCanonicalInput | Prisma.PlaceUpsertWithWhereUniqueWithoutCanonicalInput[]
-  createMany?: Prisma.PlaceCreateManyCanonicalInputEnvelope
-  set?: Prisma.PlaceWhereUniqueInput | Prisma.PlaceWhereUniqueInput[]
-  disconnect?: Prisma.PlaceWhereUniqueInput | Prisma.PlaceWhereUniqueInput[]
-  delete?: Prisma.PlaceWhereUniqueInput | Prisma.PlaceWhereUniqueInput[]
-  connect?: Prisma.PlaceWhereUniqueInput | Prisma.PlaceWhereUniqueInput[]
-  update?: Prisma.PlaceUpdateWithWhereUniqueWithoutCanonicalInput | Prisma.PlaceUpdateWithWhereUniqueWithoutCanonicalInput[]
-  updateMany?: Prisma.PlaceUpdateManyWithWhereWithoutCanonicalInput | Prisma.PlaceUpdateManyWithWhereWithoutCanonicalInput[]
-  deleteMany?: Prisma.PlaceScalarWhereInput | Prisma.PlaceScalarWhereInput[]
-}
-
-export type PlaceUncheckedUpdateManyWithoutCanonicalNestedInput = {
-  create?: Prisma.XOR<Prisma.PlaceCreateWithoutCanonicalInput, Prisma.PlaceUncheckedCreateWithoutCanonicalInput> | Prisma.PlaceCreateWithoutCanonicalInput[] | Prisma.PlaceUncheckedCreateWithoutCanonicalInput[]
-  connectOrCreate?: Prisma.PlaceCreateOrConnectWithoutCanonicalInput | Prisma.PlaceCreateOrConnectWithoutCanonicalInput[]
-  upsert?: Prisma.PlaceUpsertWithWhereUniqueWithoutCanonicalInput | Prisma.PlaceUpsertWithWhereUniqueWithoutCanonicalInput[]
-  createMany?: Prisma.PlaceCreateManyCanonicalInputEnvelope
-  set?: Prisma.PlaceWhereUniqueInput | Prisma.PlaceWhereUniqueInput[]
-  disconnect?: Prisma.PlaceWhereUniqueInput | Prisma.PlaceWhereUniqueInput[]
-  delete?: Prisma.PlaceWhereUniqueInput | Prisma.PlaceWhereUniqueInput[]
-  connect?: Prisma.PlaceWhereUniqueInput | Prisma.PlaceWhereUniqueInput[]
-  update?: Prisma.PlaceUpdateWithWhereUniqueWithoutCanonicalInput | Prisma.PlaceUpdateWithWhereUniqueWithoutCanonicalInput[]
-  updateMany?: Prisma.PlaceUpdateManyWithWhereWithoutCanonicalInput | Prisma.PlaceUpdateManyWithWhereWithoutCanonicalInput[]
-  deleteMany?: Prisma.PlaceScalarWhereInput | Prisma.PlaceScalarWhereInput[]
+export type PlaceUpdatetagsInput = {
+  set?: string[]
+  push?: string | string[]
 }
 
 export type PlaceCreateWithoutSourceInput = {
@@ -927,18 +1079,25 @@ export type PlaceCreateWithoutSourceInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
-  eventCount?: number
-  lastEventAt?: Date | string | null
+  searchType?: string | null
+  overtureId?: string | null
+  verified?: boolean
+  webRating?: number | null
+  webReviewCount?: number | null
+  summary?: string | null
+  vibes?: Prisma.PlaceCreatevibesInput | string[]
+  tags?: Prisma.PlaceCreatetagsInput | string[]
+  whyItsCool?: string | null
+  editorialScore?: number | null
+  editorialHash?: string | null
+  editorialUpdatedAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
-  canonical?: Prisma.CanonicalPlaceCreateNestedOneWithoutPlacesInput
-  primaryOf?: Prisma.CanonicalPlaceCreateNestedOneWithoutPrimaryPlaceInput
 }
 
 export type PlaceUncheckedCreateWithoutSourceInput = {
   id?: string
-  canonicalId?: string | null
   sourcePlaceId: string
   name: string
   slug: string
@@ -955,12 +1114,21 @@ export type PlaceUncheckedCreateWithoutSourceInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
-  eventCount?: number
-  lastEventAt?: Date | string | null
+  searchType?: string | null
+  overtureId?: string | null
+  verified?: boolean
+  webRating?: number | null
+  webReviewCount?: number | null
+  summary?: string | null
+  vibes?: Prisma.PlaceCreatevibesInput | string[]
+  tags?: Prisma.PlaceCreatetagsInput | string[]
+  whyItsCool?: string | null
+  editorialScore?: number | null
+  editorialHash?: string | null
+  editorialUpdatedAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
-  primaryOf?: Prisma.CanonicalPlaceUncheckedCreateNestedOneWithoutPrimaryPlaceInput
 }
 
 export type PlaceCreateOrConnectWithoutSourceInput = {
@@ -994,7 +1162,6 @@ export type PlaceScalarWhereInput = {
   OR?: Prisma.PlaceScalarWhereInput[]
   NOT?: Prisma.PlaceScalarWhereInput | Prisma.PlaceScalarWhereInput[]
   id?: Prisma.UuidFilter<"Place"> | string
-  canonicalId?: Prisma.UuidNullableFilter<"Place"> | string | null
   sourceId?: Prisma.UuidFilter<"Place"> | string
   sourcePlaceId?: Prisma.StringFilter<"Place"> | string
   name?: Prisma.StringFilter<"Place"> | string
@@ -1012,220 +1179,25 @@ export type PlaceScalarWhereInput = {
   hoursJson?: Prisma.JsonNullableFilter<"Place">
   sourceUrl?: Prisma.StringFilter<"Place"> | string
   contentHash?: Prisma.StringFilter<"Place"> | string
-  eventCount?: Prisma.IntFilter<"Place"> | number
-  lastEventAt?: Prisma.DateTimeNullableFilter<"Place"> | Date | string | null
+  searchType?: Prisma.StringNullableFilter<"Place"> | string | null
+  overtureId?: Prisma.StringNullableFilter<"Place"> | string | null
+  verified?: Prisma.BoolFilter<"Place"> | boolean
+  webRating?: Prisma.FloatNullableFilter<"Place"> | number | null
+  webReviewCount?: Prisma.IntNullableFilter<"Place"> | number | null
+  summary?: Prisma.StringNullableFilter<"Place"> | string | null
+  vibes?: Prisma.StringNullableListFilter<"Place">
+  tags?: Prisma.StringNullableListFilter<"Place">
+  whyItsCool?: Prisma.StringNullableFilter<"Place"> | string | null
+  editorialScore?: Prisma.FloatNullableFilter<"Place"> | number | null
+  editorialHash?: Prisma.StringNullableFilter<"Place"> | string | null
+  editorialUpdatedAt?: Prisma.DateTimeNullableFilter<"Place"> | Date | string | null
   lastSeenAt?: Prisma.DateTimeFilter<"Place"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"Place"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Place"> | Date | string
 }
 
-export type PlaceCreateWithoutPrimaryOfInput = {
-  id?: string
-  sourcePlaceId: string
-  name: string
-  slug: string
-  description?: string | null
-  category?: $Enums.PlaceCategory
-  city?: $Enums.City
-  address?: string | null
-  lat?: number | null
-  lng?: number | null
-  imageUrl?: string | null
-  websiteUrl?: string | null
-  phoneNumber?: string | null
-  priceRange?: string | null
-  hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  sourceUrl: string
-  contentHash: string
-  eventCount?: number
-  lastEventAt?: Date | string | null
-  lastSeenAt?: Date | string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  source: Prisma.SourceCreateNestedOneWithoutPlacesInput
-  canonical?: Prisma.CanonicalPlaceCreateNestedOneWithoutPlacesInput
-}
-
-export type PlaceUncheckedCreateWithoutPrimaryOfInput = {
-  id?: string
-  canonicalId?: string | null
-  sourceId: string
-  sourcePlaceId: string
-  name: string
-  slug: string
-  description?: string | null
-  category?: $Enums.PlaceCategory
-  city?: $Enums.City
-  address?: string | null
-  lat?: number | null
-  lng?: number | null
-  imageUrl?: string | null
-  websiteUrl?: string | null
-  phoneNumber?: string | null
-  priceRange?: string | null
-  hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  sourceUrl: string
-  contentHash: string
-  eventCount?: number
-  lastEventAt?: Date | string | null
-  lastSeenAt?: Date | string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-}
-
-export type PlaceCreateOrConnectWithoutPrimaryOfInput = {
-  where: Prisma.PlaceWhereUniqueInput
-  create: Prisma.XOR<Prisma.PlaceCreateWithoutPrimaryOfInput, Prisma.PlaceUncheckedCreateWithoutPrimaryOfInput>
-}
-
-export type PlaceCreateWithoutCanonicalInput = {
-  id?: string
-  sourcePlaceId: string
-  name: string
-  slug: string
-  description?: string | null
-  category?: $Enums.PlaceCategory
-  city?: $Enums.City
-  address?: string | null
-  lat?: number | null
-  lng?: number | null
-  imageUrl?: string | null
-  websiteUrl?: string | null
-  phoneNumber?: string | null
-  priceRange?: string | null
-  hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  sourceUrl: string
-  contentHash: string
-  eventCount?: number
-  lastEventAt?: Date | string | null
-  lastSeenAt?: Date | string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  source: Prisma.SourceCreateNestedOneWithoutPlacesInput
-  primaryOf?: Prisma.CanonicalPlaceCreateNestedOneWithoutPrimaryPlaceInput
-}
-
-export type PlaceUncheckedCreateWithoutCanonicalInput = {
-  id?: string
-  sourceId: string
-  sourcePlaceId: string
-  name: string
-  slug: string
-  description?: string | null
-  category?: $Enums.PlaceCategory
-  city?: $Enums.City
-  address?: string | null
-  lat?: number | null
-  lng?: number | null
-  imageUrl?: string | null
-  websiteUrl?: string | null
-  phoneNumber?: string | null
-  priceRange?: string | null
-  hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  sourceUrl: string
-  contentHash: string
-  eventCount?: number
-  lastEventAt?: Date | string | null
-  lastSeenAt?: Date | string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  primaryOf?: Prisma.CanonicalPlaceUncheckedCreateNestedOneWithoutPrimaryPlaceInput
-}
-
-export type PlaceCreateOrConnectWithoutCanonicalInput = {
-  where: Prisma.PlaceWhereUniqueInput
-  create: Prisma.XOR<Prisma.PlaceCreateWithoutCanonicalInput, Prisma.PlaceUncheckedCreateWithoutCanonicalInput>
-}
-
-export type PlaceCreateManyCanonicalInputEnvelope = {
-  data: Prisma.PlaceCreateManyCanonicalInput | Prisma.PlaceCreateManyCanonicalInput[]
-  skipDuplicates?: boolean
-}
-
-export type PlaceUpsertWithoutPrimaryOfInput = {
-  update: Prisma.XOR<Prisma.PlaceUpdateWithoutPrimaryOfInput, Prisma.PlaceUncheckedUpdateWithoutPrimaryOfInput>
-  create: Prisma.XOR<Prisma.PlaceCreateWithoutPrimaryOfInput, Prisma.PlaceUncheckedCreateWithoutPrimaryOfInput>
-  where?: Prisma.PlaceWhereInput
-}
-
-export type PlaceUpdateToOneWithWhereWithoutPrimaryOfInput = {
-  where?: Prisma.PlaceWhereInput
-  data: Prisma.XOR<Prisma.PlaceUpdateWithoutPrimaryOfInput, Prisma.PlaceUncheckedUpdateWithoutPrimaryOfInput>
-}
-
-export type PlaceUpdateWithoutPrimaryOfInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  sourcePlaceId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  slug?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  category?: Prisma.EnumPlaceCategoryFieldUpdateOperationsInput | $Enums.PlaceCategory
-  city?: Prisma.EnumCityFieldUpdateOperationsInput | $Enums.City
-  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  priceRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  contentHash?: Prisma.StringFieldUpdateOperationsInput | string
-  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
-  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  source?: Prisma.SourceUpdateOneRequiredWithoutPlacesNestedInput
-  canonical?: Prisma.CanonicalPlaceUpdateOneWithoutPlacesNestedInput
-}
-
-export type PlaceUncheckedUpdateWithoutPrimaryOfInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  canonicalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sourceId?: Prisma.StringFieldUpdateOperationsInput | string
-  sourcePlaceId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  slug?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  category?: Prisma.EnumPlaceCategoryFieldUpdateOperationsInput | $Enums.PlaceCategory
-  city?: Prisma.EnumCityFieldUpdateOperationsInput | $Enums.City
-  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  priceRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  contentHash?: Prisma.StringFieldUpdateOperationsInput | string
-  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
-  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type PlaceUpsertWithWhereUniqueWithoutCanonicalInput = {
-  where: Prisma.PlaceWhereUniqueInput
-  update: Prisma.XOR<Prisma.PlaceUpdateWithoutCanonicalInput, Prisma.PlaceUncheckedUpdateWithoutCanonicalInput>
-  create: Prisma.XOR<Prisma.PlaceCreateWithoutCanonicalInput, Prisma.PlaceUncheckedCreateWithoutCanonicalInput>
-}
-
-export type PlaceUpdateWithWhereUniqueWithoutCanonicalInput = {
-  where: Prisma.PlaceWhereUniqueInput
-  data: Prisma.XOR<Prisma.PlaceUpdateWithoutCanonicalInput, Prisma.PlaceUncheckedUpdateWithoutCanonicalInput>
-}
-
-export type PlaceUpdateManyWithWhereWithoutCanonicalInput = {
-  where: Prisma.PlaceScalarWhereInput
-  data: Prisma.XOR<Prisma.PlaceUpdateManyMutationInput, Prisma.PlaceUncheckedUpdateManyWithoutCanonicalInput>
-}
-
 export type PlaceCreateManySourceInput = {
   id?: string
-  canonicalId?: string | null
   sourcePlaceId: string
   name: string
   slug: string
@@ -1242,8 +1214,18 @@ export type PlaceCreateManySourceInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl: string
   contentHash: string
-  eventCount?: number
-  lastEventAt?: Date | string | null
+  searchType?: string | null
+  overtureId?: string | null
+  verified?: boolean
+  webRating?: number | null
+  webReviewCount?: number | null
+  summary?: string | null
+  vibes?: Prisma.PlaceCreatevibesInput | string[]
+  tags?: Prisma.PlaceCreatetagsInput | string[]
+  whyItsCool?: string | null
+  editorialScore?: number | null
+  editorialHash?: string | null
+  editorialUpdatedAt?: Date | string | null
   lastSeenAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1267,18 +1249,25 @@ export type PlaceUpdateWithoutSourceInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
-  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
-  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  searchType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overtureId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  webRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  webReviewCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vibes?: Prisma.PlaceUpdatevibesInput | string[]
+  tags?: Prisma.PlaceUpdatetagsInput | string[]
+  whyItsCool?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  editorialScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  editorialHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  editorialUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  canonical?: Prisma.CanonicalPlaceUpdateOneWithoutPlacesNestedInput
-  primaryOf?: Prisma.CanonicalPlaceUpdateOneWithoutPrimaryPlaceNestedInput
 }
 
 export type PlaceUncheckedUpdateWithoutSourceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  canonicalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourcePlaceId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1295,17 +1284,25 @@ export type PlaceUncheckedUpdateWithoutSourceInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
-  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
-  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  searchType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overtureId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  webRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  webReviewCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vibes?: Prisma.PlaceUpdatevibesInput | string[]
+  tags?: Prisma.PlaceUpdatetagsInput | string[]
+  whyItsCool?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  editorialScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  editorialHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  editorialUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  primaryOf?: Prisma.CanonicalPlaceUncheckedUpdateOneWithoutPrimaryPlaceNestedInput
 }
 
 export type PlaceUncheckedUpdateManyWithoutSourceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  canonicalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourcePlaceId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1322,114 +1319,18 @@ export type PlaceUncheckedUpdateManyWithoutSourceInput = {
   hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
   contentHash?: Prisma.StringFieldUpdateOperationsInput | string
-  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
-  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type PlaceCreateManyCanonicalInput = {
-  id?: string
-  sourceId: string
-  sourcePlaceId: string
-  name: string
-  slug: string
-  description?: string | null
-  category?: $Enums.PlaceCategory
-  city?: $Enums.City
-  address?: string | null
-  lat?: number | null
-  lng?: number | null
-  imageUrl?: string | null
-  websiteUrl?: string | null
-  phoneNumber?: string | null
-  priceRange?: string | null
-  hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  sourceUrl: string
-  contentHash: string
-  eventCount?: number
-  lastEventAt?: Date | string | null
-  lastSeenAt?: Date | string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-}
-
-export type PlaceUpdateWithoutCanonicalInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  sourcePlaceId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  slug?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  category?: Prisma.EnumPlaceCategoryFieldUpdateOperationsInput | $Enums.PlaceCategory
-  city?: Prisma.EnumCityFieldUpdateOperationsInput | $Enums.City
-  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  priceRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  contentHash?: Prisma.StringFieldUpdateOperationsInput | string
-  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
-  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  source?: Prisma.SourceUpdateOneRequiredWithoutPlacesNestedInput
-  primaryOf?: Prisma.CanonicalPlaceUpdateOneWithoutPrimaryPlaceNestedInput
-}
-
-export type PlaceUncheckedUpdateWithoutCanonicalInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  sourceId?: Prisma.StringFieldUpdateOperationsInput | string
-  sourcePlaceId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  slug?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  category?: Prisma.EnumPlaceCategoryFieldUpdateOperationsInput | $Enums.PlaceCategory
-  city?: Prisma.EnumCityFieldUpdateOperationsInput | $Enums.City
-  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  priceRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  contentHash?: Prisma.StringFieldUpdateOperationsInput | string
-  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
-  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  primaryOf?: Prisma.CanonicalPlaceUncheckedUpdateOneWithoutPrimaryPlaceNestedInput
-}
-
-export type PlaceUncheckedUpdateManyWithoutCanonicalInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  sourceId?: Prisma.StringFieldUpdateOperationsInput | string
-  sourcePlaceId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  slug?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  category?: Prisma.EnumPlaceCategoryFieldUpdateOperationsInput | $Enums.PlaceCategory
-  city?: Prisma.EnumCityFieldUpdateOperationsInput | $Enums.City
-  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  lat?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  lng?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  websiteUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  priceRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hoursJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  sourceUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  contentHash?: Prisma.StringFieldUpdateOperationsInput | string
-  eventCount?: Prisma.IntFieldUpdateOperationsInput | number
-  lastEventAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  searchType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  overtureId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  verified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  webRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  webReviewCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vibes?: Prisma.PlaceUpdatevibesInput | string[]
+  tags?: Prisma.PlaceUpdatetagsInput | string[]
+  whyItsCool?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  editorialScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  editorialHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  editorialUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1439,7 +1340,6 @@ export type PlaceUncheckedUpdateManyWithoutCanonicalInput = {
 
 export type PlaceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  canonicalId?: boolean
   sourceId?: boolean
   sourcePlaceId?: boolean
   name?: boolean
@@ -1457,19 +1357,26 @@ export type PlaceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   hoursJson?: boolean
   sourceUrl?: boolean
   contentHash?: boolean
-  eventCount?: boolean
-  lastEventAt?: boolean
+  searchType?: boolean
+  overtureId?: boolean
+  verified?: boolean
+  webRating?: boolean
+  webReviewCount?: boolean
+  summary?: boolean
+  vibes?: boolean
+  tags?: boolean
+  whyItsCool?: boolean
+  editorialScore?: boolean
+  editorialHash?: boolean
+  editorialUpdatedAt?: boolean
   lastSeenAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   source?: boolean | Prisma.SourceDefaultArgs<ExtArgs>
-  canonical?: boolean | Prisma.Place$canonicalArgs<ExtArgs>
-  primaryOf?: boolean | Prisma.Place$primaryOfArgs<ExtArgs>
 }, ExtArgs["result"]["place"]>
 
 export type PlaceSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  canonicalId?: boolean
   sourceId?: boolean
   sourcePlaceId?: boolean
   name?: boolean
@@ -1487,18 +1394,26 @@ export type PlaceSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   hoursJson?: boolean
   sourceUrl?: boolean
   contentHash?: boolean
-  eventCount?: boolean
-  lastEventAt?: boolean
+  searchType?: boolean
+  overtureId?: boolean
+  verified?: boolean
+  webRating?: boolean
+  webReviewCount?: boolean
+  summary?: boolean
+  vibes?: boolean
+  tags?: boolean
+  whyItsCool?: boolean
+  editorialScore?: boolean
+  editorialHash?: boolean
+  editorialUpdatedAt?: boolean
   lastSeenAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   source?: boolean | Prisma.SourceDefaultArgs<ExtArgs>
-  canonical?: boolean | Prisma.Place$canonicalArgs<ExtArgs>
 }, ExtArgs["result"]["place"]>
 
 export type PlaceSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  canonicalId?: boolean
   sourceId?: boolean
   sourcePlaceId?: boolean
   name?: boolean
@@ -1516,18 +1431,26 @@ export type PlaceSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   hoursJson?: boolean
   sourceUrl?: boolean
   contentHash?: boolean
-  eventCount?: boolean
-  lastEventAt?: boolean
+  searchType?: boolean
+  overtureId?: boolean
+  verified?: boolean
+  webRating?: boolean
+  webReviewCount?: boolean
+  summary?: boolean
+  vibes?: boolean
+  tags?: boolean
+  whyItsCool?: boolean
+  editorialScore?: boolean
+  editorialHash?: boolean
+  editorialUpdatedAt?: boolean
   lastSeenAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   source?: boolean | Prisma.SourceDefaultArgs<ExtArgs>
-  canonical?: boolean | Prisma.Place$canonicalArgs<ExtArgs>
 }, ExtArgs["result"]["place"]>
 
 export type PlaceSelectScalar = {
   id?: boolean
-  canonicalId?: boolean
   sourceId?: boolean
   sourcePlaceId?: boolean
   name?: boolean
@@ -1545,38 +1468,41 @@ export type PlaceSelectScalar = {
   hoursJson?: boolean
   sourceUrl?: boolean
   contentHash?: boolean
-  eventCount?: boolean
-  lastEventAt?: boolean
+  searchType?: boolean
+  overtureId?: boolean
+  verified?: boolean
+  webRating?: boolean
+  webReviewCount?: boolean
+  summary?: boolean
+  vibes?: boolean
+  tags?: boolean
+  whyItsCool?: boolean
+  editorialScore?: boolean
+  editorialHash?: boolean
+  editorialUpdatedAt?: boolean
   lastSeenAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type PlaceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "canonicalId" | "sourceId" | "sourcePlaceId" | "name" | "slug" | "description" | "category" | "city" | "address" | "lat" | "lng" | "imageUrl" | "websiteUrl" | "phoneNumber" | "priceRange" | "hoursJson" | "sourceUrl" | "contentHash" | "eventCount" | "lastEventAt" | "lastSeenAt" | "createdAt" | "updatedAt", ExtArgs["result"]["place"]>
+export type PlaceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sourceId" | "sourcePlaceId" | "name" | "slug" | "description" | "category" | "city" | "address" | "lat" | "lng" | "imageUrl" | "websiteUrl" | "phoneNumber" | "priceRange" | "hoursJson" | "sourceUrl" | "contentHash" | "searchType" | "overtureId" | "verified" | "webRating" | "webReviewCount" | "summary" | "vibes" | "tags" | "whyItsCool" | "editorialScore" | "editorialHash" | "editorialUpdatedAt" | "lastSeenAt" | "createdAt" | "updatedAt", ExtArgs["result"]["place"]>
 export type PlaceInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   source?: boolean | Prisma.SourceDefaultArgs<ExtArgs>
-  canonical?: boolean | Prisma.Place$canonicalArgs<ExtArgs>
-  primaryOf?: boolean | Prisma.Place$primaryOfArgs<ExtArgs>
 }
 export type PlaceIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   source?: boolean | Prisma.SourceDefaultArgs<ExtArgs>
-  canonical?: boolean | Prisma.Place$canonicalArgs<ExtArgs>
 }
 export type PlaceIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   source?: boolean | Prisma.SourceDefaultArgs<ExtArgs>
-  canonical?: boolean | Prisma.Place$canonicalArgs<ExtArgs>
 }
 
 export type $PlacePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Place"
   objects: {
     source: Prisma.$SourcePayload<ExtArgs>
-    canonical: Prisma.$CanonicalPlacePayload<ExtArgs> | null
-    primaryOf: Prisma.$CanonicalPlacePayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    canonicalId: string | null
     sourceId: string
     sourcePlaceId: string
     name: string
@@ -1594,8 +1520,18 @@ export type $PlacePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     hoursJson: runtime.JsonValue | null
     sourceUrl: string
     contentHash: string
-    eventCount: number
-    lastEventAt: Date | null
+    searchType: string | null
+    overtureId: string | null
+    verified: boolean
+    webRating: number | null
+    webReviewCount: number | null
+    summary: string | null
+    vibes: string[]
+    tags: string[]
+    whyItsCool: string | null
+    editorialScore: number | null
+    editorialHash: string | null
+    editorialUpdatedAt: Date | null
     lastSeenAt: Date
     createdAt: Date
     updatedAt: Date
@@ -1994,8 +1930,6 @@ readonly fields: PlaceFieldRefs;
 export interface Prisma__PlaceClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   source<T extends Prisma.SourceDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SourceDefaultArgs<ExtArgs>>): Prisma.Prisma__SourceClient<runtime.Types.Result.GetResult<Prisma.$SourcePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  canonical<T extends Prisma.Place$canonicalArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Place$canonicalArgs<ExtArgs>>): Prisma.Prisma__CanonicalPlaceClient<runtime.Types.Result.GetResult<Prisma.$CanonicalPlacePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  primaryOf<T extends Prisma.Place$primaryOfArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Place$primaryOfArgs<ExtArgs>>): Prisma.Prisma__CanonicalPlaceClient<runtime.Types.Result.GetResult<Prisma.$CanonicalPlacePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2026,7 +1960,6 @@ export interface Prisma__PlaceClient<T, Null = never, ExtArgs extends runtime.Ty
  */
 export interface PlaceFieldRefs {
   readonly id: Prisma.FieldRef<"Place", 'String'>
-  readonly canonicalId: Prisma.FieldRef<"Place", 'String'>
   readonly sourceId: Prisma.FieldRef<"Place", 'String'>
   readonly sourcePlaceId: Prisma.FieldRef<"Place", 'String'>
   readonly name: Prisma.FieldRef<"Place", 'String'>
@@ -2044,8 +1977,18 @@ export interface PlaceFieldRefs {
   readonly hoursJson: Prisma.FieldRef<"Place", 'Json'>
   readonly sourceUrl: Prisma.FieldRef<"Place", 'String'>
   readonly contentHash: Prisma.FieldRef<"Place", 'String'>
-  readonly eventCount: Prisma.FieldRef<"Place", 'Int'>
-  readonly lastEventAt: Prisma.FieldRef<"Place", 'DateTime'>
+  readonly searchType: Prisma.FieldRef<"Place", 'String'>
+  readonly overtureId: Prisma.FieldRef<"Place", 'String'>
+  readonly verified: Prisma.FieldRef<"Place", 'Boolean'>
+  readonly webRating: Prisma.FieldRef<"Place", 'Float'>
+  readonly webReviewCount: Prisma.FieldRef<"Place", 'Int'>
+  readonly summary: Prisma.FieldRef<"Place", 'String'>
+  readonly vibes: Prisma.FieldRef<"Place", 'String[]'>
+  readonly tags: Prisma.FieldRef<"Place", 'String[]'>
+  readonly whyItsCool: Prisma.FieldRef<"Place", 'String'>
+  readonly editorialScore: Prisma.FieldRef<"Place", 'Float'>
+  readonly editorialHash: Prisma.FieldRef<"Place", 'String'>
+  readonly editorialUpdatedAt: Prisma.FieldRef<"Place", 'DateTime'>
   readonly lastSeenAt: Prisma.FieldRef<"Place", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"Place", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Place", 'DateTime'>
@@ -2447,44 +2390,6 @@ export type PlaceDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Limit how many Places to delete.
    */
   limit?: number
-}
-
-/**
- * Place.canonical
- */
-export type Place$canonicalArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the CanonicalPlace
-   */
-  select?: Prisma.CanonicalPlaceSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the CanonicalPlace
-   */
-  omit?: Prisma.CanonicalPlaceOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.CanonicalPlaceInclude<ExtArgs> | null
-  where?: Prisma.CanonicalPlaceWhereInput
-}
-
-/**
- * Place.primaryOf
- */
-export type Place$primaryOfArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the CanonicalPlace
-   */
-  select?: Prisma.CanonicalPlaceSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the CanonicalPlace
-   */
-  omit?: Prisma.CanonicalPlaceOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.CanonicalPlaceInclude<ExtArgs> | null
-  where?: Prisma.CanonicalPlaceWhereInput
 }
 
 /**

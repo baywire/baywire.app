@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import {
   CalendarDays,
   Clock,
@@ -89,35 +90,12 @@ export function EventDetailBody({
           : "rounded-card border border-ink-100 shadow-sm dark:border-ink-700",
       )}
     >
-      {event.imageUrl ? (
-        <div
-          className={cn(
-            "relative w-full overflow-hidden bg-sand-100",
-            imageLayout === "dialog"
-              ? "h-36 max-h-36 min-h-0 sm:h-40 sm:max-h-40"
-              : "aspect-video",
-          )}
-        >
-          <Image
-            src={event.imageUrl}
-            alt=""
-            fill
-            priority={priorityImage}
-            sizes={imageLayout === "dialog" ? "560px" : "(min-width: 1024px) 960px, 100vw"}
-            className="object-cover"
-            unoptimized
-          />
-        </div>
-      ) : (
-        <div
-          className={cn(
-            "flex items-center justify-center bg-linear-to-br from-gulf-100 via-sand-100 to-sunset-100 font-display text-3xl text-ink-500",
-            imageLayout === "dialog" ? "h-32 max-h-32 sm:h-36" : "aspect-video",
-          )}
-        >
-          {cityLabel(event.city)}
-        </div>
-      )}
+      <EventDetailImage
+        imageUrl={event.imageUrl}
+        city={cityLabel(event.city)}
+        imageLayout={imageLayout}
+        priorityImage={priorityImage}
+      />
 
       <div className="space-y-6 p-6 sm:p-8">
         {!hideTitle && imageLayout === "dialog" && (
@@ -242,5 +220,64 @@ export function EventDetailBody({
         )}
       </div>
     </article>
+  );
+}
+
+function EventDetailImagePlaceholder({
+  city,
+  imageLayout,
+}: {
+  city: string;
+  imageLayout: "default" | "dialog";
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-center bg-linear-to-br from-gulf-100 via-sand-100 to-sunset-100 font-display text-3xl text-ink-500",
+        imageLayout === "dialog" ? "h-32 max-h-32 sm:h-36" : "aspect-video",
+      )}
+    >
+      {city}
+    </div>
+  );
+}
+
+function EventDetailImage({
+  imageUrl,
+  city,
+  imageLayout,
+  priorityImage,
+}: {
+  imageUrl: string | null;
+  city: string;
+  imageLayout: "default" | "dialog";
+  priorityImage?: boolean;
+}) {
+  const [imgFailed, setImgFailed] = useState(false);
+
+  if (!imageUrl || imgFailed) {
+    return <EventDetailImagePlaceholder city={city} imageLayout={imageLayout} />;
+  }
+
+  return (
+    <div
+      className={cn(
+        "relative w-full overflow-hidden bg-sand-100",
+        imageLayout === "dialog"
+          ? "h-36 max-h-36 min-h-0 sm:h-40 sm:max-h-40"
+          : "aspect-video",
+      )}
+    >
+      <Image
+        src={imageUrl}
+        alt=""
+        fill
+        priority={priorityImage}
+        sizes={imageLayout === "dialog" ? "560px" : "(min-width: 1024px) 960px, 100vw"}
+        className="object-cover"
+        unoptimized
+        onError={() => setImgFailed(true)}
+      />
+    </div>
   );
 }

@@ -13,7 +13,8 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:studio": "prisma studio",
     "scrape:local": "tsx scripts/scrape-local.ts",
-    "canonical:backfill": "tsx scripts/backfill-canonical.ts",
+    "discover:places": "tsx scripts/discover-places.ts",
+    "reconcile:places": "tsx scripts/reconcile-places.ts",
     "editorial:backfill": "tsx scripts/backfill-editorial.ts",
     "cleanup:expired": "tsx scripts/cleanup-expired.ts"
   },

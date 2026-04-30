@@ -15,8 +15,9 @@ import { setPlanOrderCookie } from "@/lib/cookies/browser";
 import { insertChronologically } from "@/lib/plan/order";
 
 import type { AppEvent } from "@/lib/events/types";
+import type { SearchMode, SearchResponse } from "@/lib/search/types";
 
-export type HomeMobileView = "feed" | "plan";
+export type HomeMobileView = "feed" | "places" | "plan";
 
 function eventMapFromList(events: AppEvent[]): Map<string, AppEvent> {
   const m = new Map<string, AppEvent>();
@@ -38,6 +39,15 @@ export interface HomePlanContextValue {
   setPlanOrder: (next: string[] | ((p: string[]) => string[])) => void;
   planEventsById: ReadonlyMap<string, AppEvent>;
   togglePlan: (e: AppEvent) => void;
+  isSearchOpen: boolean;
+  openSearch: () => void;
+  closeSearch: () => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  searchMode: SearchMode;
+  setSearchMode: (mode: SearchMode) => void;
+  searchResponse: SearchResponse | null;
+  setSearchResponse: (response: SearchResponse | null) => void;
 }
 
 const HomePlanContext = createContext<HomePlanContextValue | null>(null);
@@ -73,6 +83,10 @@ export function HomePlanProvider({
   const [planEventsById, setPlanEventsById] = useState(() =>
     eventMapFromList(initialPlanEvents),
   );
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchMode, setSearchMode] = useState<SearchMode>("idle");
+  const [searchResponse, setSearchResponse] = useState<SearchResponse | null>(null);
   const eventsRef = useRef(planEventsById);
   useEffect(() => {
     eventsRef.current = planEventsById;
@@ -108,6 +122,9 @@ export function HomePlanProvider({
     setPlanOrderCookie(planOrder);
   }, [planOrder]);
 
+  const openSearch = useCallback(() => setIsSearchOpen(true), []);
+  const closeSearch = useCallback(() => setIsSearchOpen(false), []);
+
   const value = useMemo<HomePlanContextValue>(
     () => ({
       drawerOpen,
@@ -121,8 +138,17 @@ export function HomePlanProvider({
       setPlanOrder,
       planEventsById,
       togglePlan,
+      isSearchOpen,
+      openSearch,
+      closeSearch,
+      searchQuery,
+      setSearchQuery,
+      searchMode,
+      setSearchMode,
+      searchResponse,
+      setSearchResponse,
     }),
-    [drawerOpen, mobileView, toggleDrawer, showFeed, showPlan, planOrder, planEventsById, togglePlan],
+    [drawerOpen, mobileView, toggleDrawer, showFeed, showPlan, planOrder, planEventsById, togglePlan, isSearchOpen, openSearch, closeSearch, searchQuery, searchMode, searchResponse],
   );
 
   return <HomePlanContext.Provider value={value}>{children}</HomePlanContext.Provider>;

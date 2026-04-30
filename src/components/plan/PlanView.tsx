@@ -3,10 +3,10 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { AlertTriangle, ChevronDown, ChevronUp, Clock, ListOrdered, MapPin, Tag, Trash2 } from "lucide-react";
-import Image from "next/image";
 
 import { EmptyState } from "@/components/EmptyState";
 import { EventDialog } from "@/components/event/EventDialog";
+import { FallbackImage } from "@/components/FallbackImage";
 import { useHomePlan } from "@/components/plan/homePlanContext";
 
 import type { AppEvent } from "@/lib/events/types";
@@ -202,27 +202,7 @@ function PlanEventRow({
         onClick={onViewDetails}
         className="flex w-full items-start gap-3 rounded-t-lg px-3 py-2.5 text-left transition hover:bg-ink-50/60 dark:hover:bg-ink-800/40"
       >
-        <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
-          {event.imageUrl ? (
-            <Image
-              src={event.imageUrl}
-              alt=""
-              fill
-              sizes="48px"
-              className="object-cover"
-              unoptimized
-            />
-          ) : (
-            <div
-              aria-hidden
-              className="flex size-full items-center justify-center bg-linear-to-br from-gulf-100 via-sand-100 to-sunset-100 text-ink-500"
-            >
-              <span className="font-display text-[10px] font-semibold uppercase tracking-tight">
-                {city.replace(/[^A-Za-z]/g, "").slice(0, 3)}
-              </span>
-            </div>
-          )}
-        </div>
+        <PlanEventThumb imageUrl={event.imageUrl} city={city} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-ink-900 dark:text-sand-50">
             {event.title}
@@ -292,6 +272,40 @@ function PlanEventRow({
           <Trash2 className="size-3.5" />
         </button>
       </div>
+    </div>
+  );
+}
+
+function PlanEventThumbPlaceholder({ city }: { city: string }) {
+  return (
+    <div
+      aria-hidden
+      className="flex size-full items-center justify-center bg-linear-to-br from-gulf-100 via-sand-100 to-sunset-100 text-ink-500"
+    >
+      <span className="font-display text-[10px] font-semibold uppercase tracking-tight">
+        {city.replace(/[^A-Za-z]/g, "").slice(0, 3)}
+      </span>
+    </div>
+  );
+}
+
+function PlanEventThumb({ imageUrl, city }: { imageUrl: string | null; city: string }) {
+  const placeholder = <PlanEventThumbPlaceholder city={city} />;
+  return (
+    <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
+      {imageUrl ? (
+        <FallbackImage
+          src={imageUrl}
+          alt=""
+          fill
+          sizes="48px"
+          className="object-cover"
+          unoptimized
+          fallback={placeholder}
+        />
+      ) : (
+        placeholder
+      )}
     </div>
   );
 }
