@@ -8,6 +8,7 @@ import type { ExtractedEvent } from "@/lib/extract/schema";
 import { extractEvent } from "@/lib/extract/openai";
 import { ADAPTERS, getAdapter } from "@/lib/scrapers";
 import type { SourceAdapter } from "@/lib/scrapers";
+import { acquireBrowser, releaseBrowser } from "@/lib/scrapers/browser";
 import { filterEnabledAdapters } from "@/lib/sources/enabled";
 import { getScrapeWindow, overlapsWindow } from "@/lib/time/window";
 
@@ -45,26 +46,50 @@ export async function runScrape(opts: RunOptions = {}): Promise<SourceStats[]> {
 
   if (targets.length === 0) return [];
 
-  const settled = await Promise.allSettled(
-    targets.map((adapter) => runSingleSource(adapter, opts.signal)),
-  );
+  // Launch browser if any target adapter requires it
+  const needsBrowser = targets.some((a) => a.needsBrowser);
+  if (needsBrowser) {
+    try {
+      await acquireBrowser();
+    } catch (err) {
+      console.warn(
+        `[run] browser launch failed — browser-dependent sources will error: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+  }
 
-  return settled.map((res, idx) => {
-    if (res.status === "fulfilled") return res.value;
-    const adapter = targets[idx];
-    return {
-      slug: adapter.slug,
-      label: adapter.label,
-      ok: false,
-      seen: 0,
-      inserted: 0,
-      updated: 0,
-      skipped: 0,
-      structuredHits: 0,
-      error: res.reason instanceof Error ? res.reason.message : String(res.reason),
-      durationMs: 0,
-    } satisfies SourceStats;
-  });
+  try {
+    const settled = await Promise.allSettled(
+      targets.map((adapter) => runSingleSource(adapter, opts.signal)),
+    );
+
+    return settled.map((res, idx) => {
+      if (res.status === "fulfilled") return res.value;
+      const adapter = targets[idx];
+      return {
+        slug: adapter.slug,
+        label: adapter.label,
+        ok: false,
+        seen: 0,
+        inserted: 0,
+        updated: 0,
+        skipped: 0,
+        structuredHits: 0,
+        error: res.reason instanceof Error ? res.reason.message : String(res.reason),
+        durationMs: 0,
+      } satisfies SourceStats;
+    });
+  } finally {
+    if (needsBrowser) {
+      await releaseBrowser().catch((err) => {
+        console.warn(
+          `[run] browser close failed: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      });
+    }
+  }
 }
 
 async function defaultEnabledAdapters(): Promise<SourceAdapter[]> {
@@ -121,6 +146,12 @@ async function runSingleSource(
       }`,
     );
 
+    if (items.length === 0) {
+      console.warn(
+        `[run:warn] slug=${adapter.slug} msg="list returned 0 events — possible WAF block or site change"`,
+      );
+    }
+
     const limit = pLimit(EXTRACTION_CONCURRENCY);
     let llmHits = 0;
     let errors = 0;
@@ -128,7 +159,11 @@ async function runSingleSource(
     await Promise.all(
       limited.map((item) =>
         limit(async () => {
-          if (signal?.aborted) return;
+          if (signal?.aborted) {
+            stats.skipped += 1;
+            console.log(`[item] slug=${adapter.slug} outcome=skipped reason=aborted url=${item.url}`);
+            return;
+          }
           const itemStart = Date.now();
           try {
             const result = await processItem({
@@ -144,9 +179,10 @@ async function runSingleSource(
             else stats.skipped += 1;
             if (result.structured) stats.structuredHits += 1;
             else llmHits += 1;
+            const reasonSuffix = result.reason ? ` reason=${result.reason}` : "";
             console.log(
               `[item] slug=${adapter.slug} outcome=${result.outcome} path=${result.structured ? "structured" : "llm"
-              } ms=${Date.now() - itemStart} url=${item.url}`,
+              }${reasonSuffix} ms=${Date.now() - itemStart} url=${item.url}`,
             );
           } catch (err) {
             stats.skipped += 1;
@@ -223,10 +259,12 @@ interface ProcessArgs {
 }
 
 type ProcessOutcome = "inserted" | "updated" | "skipped";
+type SkipReason = "hash_match" | "short_html" | "not_event" | "normalize_failed" | "out_of_window";
 
 interface ProcessResult {
   outcome: ProcessOutcome;
   structured: boolean;
+  reason?: SkipReason;
 }
 
 async function processItem(args: ProcessArgs): Promise<ProcessResult> {
@@ -236,11 +274,11 @@ async function processItem(args: ProcessArgs): Promise<ProcessResult> {
     try {
       const structured = await adapter.tryStructured(item, signal);
       if (structured) {
-        const outcome = await persistStructured(args, structured.event, {
+        const persisted = await persistStructured(args, structured.event, {
           canonicalUrl: structured.canonicalUrl ?? item.url,
           contentHash: structured.contentHash ?? hashStructured(structured.event),
         });
-        return { outcome, structured: true };
+        return { outcome: persisted.outcome, structured: true, reason: persisted.reason };
       }
     } catch (err) {
       console.warn(
@@ -253,7 +291,7 @@ async function processItem(args: ProcessArgs): Promise<ProcessResult> {
   const fetched = await adapter.fetchAndReduce(item, signal);
   const reducedHtml = fetched.reducedHtml;
   if (!reducedHtml || reducedHtml.length < 200) {
-    return { outcome: "skipped", structured: false };
+    return { outcome: "skipped", structured: false, reason: "short_html" };
   }
 
   const contentHash = sha256(reducedHtml);
@@ -270,7 +308,7 @@ async function processItem(args: ProcessArgs): Promise<ProcessResult> {
       where: { id: existing.id },
       data: { lastSeenAt: new Date() },
     });
-    return { outcome: "skipped", structured: false };
+    return { outcome: "skipped", structured: false, reason: "hash_match" };
   }
 
   const extraction = await extractEvent({
@@ -280,7 +318,7 @@ async function processItem(args: ProcessArgs): Promise<ProcessResult> {
   });
 
   if (!extraction.isEvent || !extraction.event) {
-    return { outcome: "skipped", structured: false };
+    return { outcome: "skipped", structured: false, reason: "not_event" };
   }
 
   const normalized = normalizeExtractedEvent({
@@ -290,7 +328,7 @@ async function processItem(args: ProcessArgs): Promise<ProcessResult> {
     contentHash,
     extracted: extraction.event,
   });
-  if (!normalized.ok) return { outcome: "skipped", structured: false };
+  if (!normalized.ok) return { outcome: "skipped", structured: false, reason: "normalize_failed" };
 
   if (
     !overlapsWindow(
@@ -300,7 +338,7 @@ async function processItem(args: ProcessArgs): Promise<ProcessResult> {
       args.windowEnd,
     )
   ) {
-    return { outcome: "skipped", structured: false };
+    return { outcome: "skipped", structured: false, reason: "out_of_window" };
   }
 
   const data: Prisma.EventUncheckedCreateInput = normalized.row;
@@ -325,11 +363,16 @@ interface PersistOpts {
   contentHash: string;
 }
 
+interface PersistResult {
+  outcome: ProcessOutcome;
+  reason?: SkipReason;
+}
+
 async function persistStructured(
   args: ProcessArgs,
   extracted: ExtractedEvent,
   opts: PersistOpts,
-): Promise<ProcessOutcome> {
+): Promise<PersistResult> {
   const { sourceId, item } = args;
 
   const existing = await prisma.event.findUnique({
@@ -344,7 +387,7 @@ async function persistStructured(
       where: { id: existing.id },
       data: { lastSeenAt: new Date() },
     });
-    return "skipped";
+    return { outcome: "skipped", reason: "hash_match" };
   }
 
   const normalized = normalizeExtractedEvent({
@@ -354,7 +397,7 @@ async function persistStructured(
     contentHash: opts.contentHash,
     extracted,
   });
-  if (!normalized.ok) return "skipped";
+  if (!normalized.ok) return { outcome: "skipped", reason: "normalize_failed" };
 
   if (
     !overlapsWindow(
@@ -364,7 +407,7 @@ async function persistStructured(
       args.windowEnd,
     )
   ) {
-    return "skipped";
+    return { outcome: "skipped", reason: "out_of_window" };
   }
 
   const writeResult = await writeEvent(sourceId, item.sourceEventId, normalized.row, existing);
@@ -377,7 +420,7 @@ async function persistStructured(
     );
   }
   await tryUpsertPlace(sourceId, normalized.row);
-  return writeResult.outcome;
+  return { outcome: writeResult.outcome };
 }
 
 async function writeEvent(

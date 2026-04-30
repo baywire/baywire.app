@@ -47,16 +47,20 @@ Baywire pulls candidate events from ten high-signal sources daily. Each source r
 | `side_splitters`           | sidesplitterscomedy.com             | HTML + LLM          | Comedy club; listings link out to OvationTix         |
 | `dont_tell_comedy`         | donttellcomedy.com                  | HTML + LLM          | Pop-up “secret” comedy shows                         |
 | `funny_bone_tampa`         | tampa.funnybone.com                 | HTML + LLM          | Funny Bone Tampa show listings                        |
-| `straz_center`             | strazcenter.org                     | HTML + LLM (WAF)    | Set `STRAZCENTER_SCRAPE_COOKIE` if Incapsula blocks  |
+| `straz_center`             | strazcenter.org                     | HTML + LLM          | Playwright solves Incapsula challenge automatically   |
 | `tampa_theatre`            | tampatheatre.org                    | HTML + LLM          | Live events page + detail pages                      |
 
-**Deferred:** `feverup.com/en/tampa` (JS SPA, no public JSON-LD/sitemap),
-`unation.com` (Cloudflare bot challenge), and
-`dunedin.gov/Community/City-Calendar` (Akamai edge block on HTML, no public
-ICS/JSON-LD endpoint discovered). These will be re-enabled by adding a
-`tryStructured` slot pointed at any structured surface they expose; we
-explicitly do **not** ship Playwright/headless browsers for them. Status is
-tracked inline in [`src/lib/scrapers/index.ts`](src/lib/scrapers/index.ts).
+**Browser-powered sources:** The following adapters use Playwright (headless Chromium)
+to bypass WAF challenges or render JS-heavy pages:
+
+| Slug | Site | Strategy | Notes |
+|------|------|----------|-------|
+| `dunedin_gov` | dunedinfl.net | Browser render + AI listings | Akamai; JS-rendered calendar |
+| `unation` | unation.com | Browser render | Cloudflare bot challenge |
+| `feverup` | feverup.com | Browser render + AI listings | Full SPA |
+| `straz_center` | strazcenter.org | Browser cookies | Incapsula WAF |
+| `funny_bone_tampa` | tampa.funnybone.com | Browser cookies | DataDome WAF |
+| `visit_tampa_bay` | visittampabay.com | Browser render (listing only) | JS-rendered calendar |
 
 ## Local setup
 

@@ -89,6 +89,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
       - name: Run scrape
         id: scrape
         run: |
@@ -127,10 +130,10 @@ jobs:
             echo "| ---- | -------- | ------- | ------- | ---------- | -------- |"
             echo "| $seen | $inserted | $updated | $skipped | $structured | ${duration}ms |"
             echo ""
-            echo "<details><summary>Fetch breakdown ($(grep -c '^\[fetch\]' scrape.log) requests)</summary>"
+            echo "<details><summary>Fetch breakdown ($(grep -c '^\[fetch' scrape.log) requests)</summary>"
             echo ""
             echo "\`\`\`"
-            grep -E '^\[fetch\]' scrape.log | tail -50 || true
+            grep -E '^\[fetch' scrape.log | tail -50 || true
             echo "\`\`\`"
             echo ""
             echo "</details>"

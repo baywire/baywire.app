@@ -140,7 +140,10 @@ export const ticketmasterAdapter: SourceAdapter = {
       let parsed: TicketmasterListResponse;
       try {
         parsed = JSON.parse(body) as TicketmasterListResponse;
-      } catch {
+      } catch (err) {
+        console.warn(
+          `[${SLUG}] warn="listing JSON parse failed" page=${page} bytes=${body.length} error="${err instanceof Error ? err.message : String(err)}"`,
+        );
         break;
       }
 

@@ -1,4 +1,5 @@
-import { politeFetch, politeFetchWithMeta } from "./fetch";
+import { solveCookies } from "./browser";
+import { politeFetch } from "./fetch";
 import { loadHtml } from "./parse";
 import { reduceHtml } from "./reduce";
 import { extractJsonLdEvents, jsonLdEventToExtracted } from "./structured";
@@ -8,18 +9,37 @@ const SLUG = "funny_bone_tampa";
 const BASE = "https://tampa.funnybone.com";
 const HOME_URL = `${BASE}/`;
 const LIST_URL = `${BASE}/shows/`;
-const GOOGLE_REFERER = "https://www.google.com/";
 
-let warmupCookie: { value: string; expiresAt: number } | null = null;
-const WARMUP_TTL_MS = 10 * 60_000;
+let cachedCookies: { value: string; expiresAt: number } | null = null;
+const COOKIE_TTL_MS = 10 * 60_000;
+
+async function getCookies(signal?: AbortSignal): Promise<string | undefined> {
+  if (cachedCookies && cachedCookies.expiresAt > Date.now()) {
+    return cachedCookies.value;
+  }
+
+  try {
+    const cookies = await solveCookies(HOME_URL, { signal, label: `${SLUG}:cookies` });
+    if (cookies) {
+      cachedCookies = { value: cookies, expiresAt: Date.now() + COOKIE_TTL_MS };
+    }
+    return cookies;
+  } catch (err) {
+    console.warn(
+      `[${SLUG}] cookie solve failed: ${err instanceof Error ? err.message : String(err)}`,
+    );
+    return undefined;
+  }
+}
 
 export const funnyBoneTampaAdapter: SourceAdapter = {
   slug: SLUG,
   label: "Tampa Funny Bone",
   baseUrl: BASE,
+  needsBrowser: "cookies",
 
   async listEvents({ signal }) {
-    const cookie = await requestCookieHeader(signal);
+    const cookie = await getCookies(signal);
     const html = await politeFetch(LIST_URL, {
       signal,
       referer: HOME_URL,
@@ -27,18 +47,11 @@ export const funnyBoneTampaAdapter: SourceAdapter = {
       headers: cookie ? { Cookie: cookie } : undefined,
     });
 
-    if (looksLikeDataDomeChallenge(html)) {
-      console.warn(
-        `[${SLUG}] DataDome blocked listing page. Set FUNNYBONE_SCRAPE_COOKIE or expect 0 events.`,
-      );
-      return [];
-    }
-
     return parseListingHtml(html);
   },
 
   async tryStructured(item, signal): Promise<StructuredEvent | null> {
-    const cookie = await requestCookieHeader(signal);
+    const cookie = await getCookies(signal);
     const html = await politeFetch(item.url, {
       signal,
       referer: LIST_URL,
@@ -65,7 +78,7 @@ export const funnyBoneTampaAdapter: SourceAdapter = {
   },
 
   async fetchAndReduce(item, signal) {
-    const cookie = await requestCookieHeader(signal);
+    const cookie = await getCookies(signal);
     const html = await politeFetch(item.url, {
       signal,
       referer: LIST_URL,
@@ -78,35 +91,6 @@ export const funnyBoneTampaAdapter: SourceAdapter = {
     };
   },
 };
-
-async function requestCookieHeader(signal: AbortSignal | undefined): Promise<string | undefined> {
-  const fromEnv = process.env.FUNNYBONE_SCRAPE_COOKIE?.trim();
-  if (warmupCookie && warmupCookie.expiresAt > Date.now()) {
-    return mergeCookieHeader(fromEnv, warmupCookie.value);
-  }
-
-  let warm: string | undefined;
-  try {
-    const meta = await politeFetchWithMeta(HOME_URL, {
-      signal,
-      referer: GOOGLE_REFERER,
-      label: `${SLUG}:warmup`,
-      timeoutMs: 20_000,
-      retries: 0,
-    });
-    if (meta.clientCookieHeader) {
-      warmupCookie = {
-        value: meta.clientCookieHeader,
-        expiresAt: Date.now() + WARMUP_TTL_MS,
-      };
-      warm = meta.clientCookieHeader;
-    }
-  } catch {
-    // Best-effort; we can still use FUNNYBONE_SCRAPE_COOKIE only.
-  }
-
-  return mergeCookieHeader(fromEnv, warm);
-}
 
 function parseListingHtml(html: string): ListingItem[] {
   const $ = loadHtml(html);
@@ -127,12 +111,9 @@ function parseListingHtml(html: string): ListingItem[] {
 function parseEventId(url: string): string | null {
   try {
     const u = new URL(url);
-
-    // Single event: /event/<slug>/tampa-funny-bone/
     const single = u.pathname.match(/^\/event\/([^/]+)\/tampa-funny-bone\/?$/);
     if (single?.[1]) return single[1];
 
-    // Multi-show series: /events/category/series/<slug>/tampa-funny-bone/
     const series = u.pathname.match(
       /^\/events\/category\/series\/([^/]+)\/tampa-funny-bone\/?$/,
     );
@@ -144,10 +125,6 @@ function parseEventId(url: string): string | null {
   }
 }
 
-function looksLikeDataDomeChallenge(html: string): boolean {
-  return /captcha-delivery\.com/i.test(html) || /datadome/i.test(html);
-}
-
 function absolutize(href: string, base: string): string {
   try {
     return new URL(href, base).toString();
@@ -155,26 +132,3 @@ function absolutize(href: string, base: string): string {
     return href;
   }
 }
-
-function mergeCookieHeader(
-  a: string | null | undefined,
-  b: string | null | undefined,
-): string | undefined {
-  const map = new Map<string, string>();
-  for (const part of [a, b]) {
-    if (!part?.trim()) continue;
-    for (const pair of part.split(";")) {
-      const bit = pair.trim();
-      if (!bit) continue;
-      const eq = bit.indexOf("=");
-      if (eq === -1) continue;
-      const name = bit.slice(0, eq).trim();
-      const value = bit.slice(eq + 1).trim();
-      if (!name) continue;
-      map.set(name, value);
-    }
-  }
-  if (map.size === 0) return undefined;
-  return [...map.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
-}
-

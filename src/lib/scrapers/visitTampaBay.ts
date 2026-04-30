@@ -1,3 +1,4 @@
+import { browserFetch, hasBrowser } from "./browser";
 import { politeFetch } from "./fetch";
 import { loadHtml } from "./parse";
 import { reduceHtml } from "./reduce";
@@ -8,10 +9,10 @@ const ORIGIN = "https://www.visittampabay.com";
 const LISTING_URL = `${ORIGIN}/events/`;
 
 /**
- * Visit Tampa Bay (Simpleview CMS). The dynamic event calendar is JS-rendered,
- * but server-rendered detail pages live at `/tampa-events/{section}/{slug}/`
- * (e.g. festival pages with year-specific dates). Category indexes and utility
- * paths under `/tampa-events/` are excluded.
+ * Visit Tampa Bay (Simpleview CMS). The dynamic event calendar is JS-rendered.
+ * When a browser is available we render the listing to capture all dynamically-
+ * loaded event cards. Detail pages are server-rendered with JSON-LD and work
+ * fine with plain politeFetch.
  */
 const SKIP_SECTIONS = new Set([
   "all-events",
@@ -25,13 +26,27 @@ export const visitTampaBayAdapter: SourceAdapter = {
   slug: SLUG,
   label: "Visit Tampa Bay",
   baseUrl: ORIGIN,
+  needsBrowser: "render",
 
   async listEvents({ signal }) {
-    const html = await politeFetch(LISTING_URL, {
-      signal,
-      referer: "https://www.google.com/",
-      label: `${SLUG}:list`,
-    });
+    let html: string;
+
+    if (hasBrowser()) {
+      const result = await browserFetch(LISTING_URL, {
+        signal,
+        label: `${SLUG}:list`,
+        waitUntil: "networkidle",
+        timeoutMs: 30_000,
+      });
+      html = result.html;
+    } else {
+      html = await politeFetch(LISTING_URL, {
+        signal,
+        referer: "https://www.google.com/",
+        label: `${SLUG}:list`,
+      });
+    }
+
     return parseListing(html);
   },
 

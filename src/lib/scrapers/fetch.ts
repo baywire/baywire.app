@@ -188,7 +188,7 @@ export async function politeFetchWithMeta(
 
         if (!res.ok) {
           if (RETRYABLE_STATUSES.has(res.status) && attempt < retries) {
-            logFetch("warn", parsed, res.status, durationMs, opts, "retry=true");
+            logFetch("warn", parsed, res.status, durationMs, opts, `attempt=${attempt + 1}/${retries + 1} retry=true`);
             await sleep(500 * 2 ** attempt);
             continue;
           }
@@ -210,24 +210,36 @@ export async function politeFetchWithMeta(
         const totalMs = Date.now() - startedAt;
         if (debugEnabled()) await captureBody(parsed.host, res.status, body);
         logFetch("log", parsed, res.status, totalMs, opts, `bytes=${body.length}`);
+
+        const ct = res.headers.get("content-type") ?? "";
+        if (body.length < 500 && /text\/html/i.test(ct)) {
+          logFetch("warn", parsed, res.status, totalMs, opts, `bytes=${body.length} warn="response suspiciously small for HTML"`);
+        } else if (body.length > 0 && looksLikeBinary(body)) {
+          logFetch("warn", parsed, res.status, totalMs, opts, `bytes=${body.length} warn="response looks binary — possible encoding issue"`);
+        }
+
         return { body, clientCookieHeader };
       } catch (err) {
         lastError = err;
         if (err instanceof DOMException && err.name === "AbortError" && opts.signal?.aborted) {
           throw err;
         }
+        const errMsg = err instanceof Error ? err.message : String(err);
         if (attempt === retries) {
           if (!(err instanceof Error && /^HTTP /.test(err.message))) {
             console.warn(
               `[fetch] host=${parsed.host} path=${parsed.pathname} status=ERR ms=${
                 Date.now() - startedAt
-              }${opts.label ? ` label=${opts.label}` : ""} error="${
-                err instanceof Error ? err.message : String(err)
-              }"`,
+              } attempt=${attempt + 1}/${retries + 1}${opts.label ? ` label=${opts.label}` : ""} error="${errMsg}"`,
             );
           }
           break;
         }
+        console.warn(
+          `[fetch] host=${parsed.host} path=${parsed.pathname} status=ERR ms=${
+            Date.now() - startedAt
+          } attempt=${attempt + 1}/${retries + 1}${opts.label ? ` label=${opts.label}` : ""} error="${errMsg}" retry=true`,
+        );
         await sleep(500 * 2 ** attempt);
       } finally {
         clearTimeout(timer);
@@ -271,4 +283,15 @@ function composeSignal(a: AbortSignal, b?: AbortSignal): AbortSignal {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+function looksLikeBinary(body: string): boolean {
+  const sample = body.slice(0, 100);
+  let nonPrintable = 0;
+  for (let i = 0; i < sample.length; i++) {
+    const c = sample.charCodeAt(i);
+    if (c < 0x20 && c !== 0x09 && c !== 0x0a && c !== 0x0d) nonPrintable++;
+    else if (c === 0xfffd) nonPrintable++;
+  }
+  return nonPrintable / sample.length > 0.3;
 }

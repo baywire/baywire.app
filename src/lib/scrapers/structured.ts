@@ -84,7 +84,10 @@ export function extractJsonLdEvents(html: string): SchemaOrgEvent[] {
     let parsed: unknown;
     try {
       parsed = JSON.parse(txt);
-    } catch {
+    } catch (err) {
+      console.warn(
+        `[structured] warn="invalid JSON-LD block" bytes=${txt.length} error="${err instanceof Error ? err.message : String(err)}"`,
+      );
       return;
     }
     walkJsonLd(parsed, out);

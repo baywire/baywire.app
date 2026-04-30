@@ -34,7 +34,10 @@ export const eventbriteAdapter: SourceAdapter = {
             referer: "https://www.google.com/",
             label: `${SLUG}:list:${city.key}:p${page}`,
           });
-        } catch {
+        } catch (err) {
+          console.warn(
+            `[${SLUG}] warn="page fetch failed" city=${city.key} page=${page} error="${err instanceof Error ? err.message : String(err)}"`,
+          );
           break;
         }
         const items = parseListingHtml(html);

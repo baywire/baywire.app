@@ -1,4 +1,5 @@
-import { politeFetch, politeFetchWithMeta } from "./fetch";
+import { solveCookies } from "./browser";
+import { politeFetch } from "./fetch";
 import { loadHtml } from "./parse";
 import { reduceHtml } from "./reduce";
 import { extractJsonLdEvents, jsonLdEventToExtracted } from "./structured";
@@ -6,23 +7,42 @@ import type { ListingItem, SourceAdapter, StructuredEvent } from "./types";
 
 const SLUG = "straz_center";
 const HOME_URL = "https://www.strazcenter.org/";
-const GOOGLE_REFERER = "https://www.google.com/";
 
 const LIST_URLS: readonly string[] = [
   "https://www.strazcenter.org/tickets-events/find-an-event/",
   "https://www.strazcenter.org/calendar/",
 ];
 
-let strazWarmupCookie: { value: string; expiresAt: number } | null = null;
-const WARMUP_TTL_MS = 10 * 60_000;
+let cachedCookies: { value: string; expiresAt: number } | null = null;
+const COOKIE_TTL_MS = 10 * 60_000;
+
+async function getCookies(signal?: AbortSignal): Promise<string | undefined> {
+  if (cachedCookies && cachedCookies.expiresAt > Date.now()) {
+    return cachedCookies.value;
+  }
+
+  try {
+    const cookies = await solveCookies(HOME_URL, { signal, label: `${SLUG}:cookies` });
+    if (cookies) {
+      cachedCookies = { value: cookies, expiresAt: Date.now() + COOKIE_TTL_MS };
+    }
+    return cookies;
+  } catch (err) {
+    console.warn(
+      `[${SLUG}] cookie solve failed: ${err instanceof Error ? err.message : String(err)}`,
+    );
+    return undefined;
+  }
+}
 
 export const strazCenterAdapter: SourceAdapter = {
   slug: SLUG,
   label: "Straz Center",
   baseUrl: "https://www.strazcenter.org",
+  needsBrowser: "cookies",
 
   async listEvents({ signal }) {
-    const cookie = await strazRequestCookieHeader(signal);
+    const cookie = await getCookies(signal);
     const baseFetchOpts = {
       signal,
       referer: HOME_URL,
@@ -40,21 +60,11 @@ export const strazCenterAdapter: SourceAdapter = {
       if (items.length > 0) return items;
     }
 
-    const last = await politeFetch(LIST_URLS[0] ?? HOME_URL, {
-      ...baseFetchOpts,
-      label: `${SLUG}:list-probe`,
-      headers: cookie ? { Cookie: cookie } : undefined,
-    });
-    if (looksLikeWafInterstitial(last)) {
-      console.warn(
-        `[${SLUG}] Incapsula blocked listing pages. Set STRAZCENTER_SCRAPE_COOKIE (copy Cookie header from a real browser session on strazcenter.org) or expect 0 events from this source.`,
-      );
-    }
     return [];
   },
 
   async tryStructured(item, signal): Promise<StructuredEvent | null> {
-    const cookie = await strazRequestCookieHeader(signal);
+    const cookie = await getCookies(signal);
     const html = await politeFetch(item.url, {
       signal,
       referer: HOME_URL,
@@ -83,7 +93,7 @@ export const strazCenterAdapter: SourceAdapter = {
   },
 
   async fetchAndReduce(item, signal) {
-    const cookie = await strazRequestCookieHeader(signal);
+    const cookie = await getCookies(signal);
     const html = await politeFetch(item.url, {
       signal,
       referer: HOME_URL,
@@ -98,40 +108,6 @@ export const strazCenterAdapter: SourceAdapter = {
     };
   },
 };
-
-/**
- * Incapsula often needs (1) a valid `Cookie` from a real browser, and/or
- * (2) a prior same-site request that returns `Set-Cookie`. We merge env +
- * short-lived warm-up cookies and reuse for ~10 minutes.
- */
-async function strazRequestCookieHeader(signal: AbortSignal | undefined): Promise<string | undefined> {
-  const fromEnv = process.env.STRAZCENTER_SCRAPE_COOKIE?.trim();
-  if (strazWarmupCookie && strazWarmupCookie.expiresAt > Date.now()) {
-    return mergeCookieHeader(fromEnv, strazWarmupCookie.value);
-  }
-
-  let warm: string | undefined;
-  try {
-    const meta = await politeFetchWithMeta(HOME_URL, {
-      signal,
-      referer: GOOGLE_REFERER,
-      label: `${SLUG}:warmup`,
-      timeoutMs: 20_000,
-      retries: 0,
-    });
-    if (meta.clientCookieHeader) {
-      strazWarmupCookie = {
-        value: meta.clientCookieHeader,
-        expiresAt: Date.now() + WARMUP_TTL_MS,
-      };
-      warm = meta.clientCookieHeader;
-    }
-  } catch {
-    // Best-effort; we can still use STRAZCENTER_SCRAPE_COOKIE only.
-  }
-
-  return mergeCookieHeader(fromEnv, warm);
-}
 
 function parseListingHtml(html: string): ListingItem[] {
   const $ = loadHtml(html);
@@ -166,37 +142,4 @@ function absolutize(href: string, base: string): string {
   } catch {
     return href;
   }
-}
-
-function looksLikeWafInterstitial(html: string): boolean {
-  if (/incapsula/i.test(html) || /_incapsula_resource/i.test(html)) return true;
-  // Incapsula challenge stubs can be as small as ~200 bytes and may not
-  // contain the word "incapsula" when heavily compressed or truncated.
-  if (html.length < 500 && /<iframe/i.test(html)) return true;
-  return false;
-}
-
-/**
- * Merges `Cookie` request header values; later segments win on same cookie name.
- */
-function mergeCookieHeader(
-  a: string | null | undefined,
-  b: string | null | undefined,
-): string | undefined {
-  const map = new Map<string, string>();
-  for (const part of [a, b]) {
-    if (!part?.trim()) continue;
-    for (const pair of part.split(";")) {
-      const bit = pair.trim();
-      if (!bit) continue;
-      const eq = bit.indexOf("=");
-      if (eq === -1) continue;
-      const name = bit.slice(0, eq).trim();
-      const value = bit.slice(eq + 1).trim();
-      if (!name) continue;
-      map.set(name, value);
-    }
-  }
-  if (map.size === 0) return undefined;
-  return [...map.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
 }

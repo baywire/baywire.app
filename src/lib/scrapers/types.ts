@@ -29,6 +29,12 @@ export interface SourceAdapter {
   slug: string;
   label: string;
   baseUrl: string;
+  /**
+   * When set, the orchestrator ensures a Playwright browser is available.
+   * - `"cookies"` — adapter calls `solveCookies()` then uses `politeFetch`.
+   * - `"render"`  — adapter calls `browserFetch()` for JS-rendered pages.
+   */
+  needsBrowser?: "cookies" | "render";
   /** Lists candidate event URLs for the given window. */
   listEvents(args: {
     windowStart: Date;
