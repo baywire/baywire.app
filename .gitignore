@@ -23,6 +23,4 @@ prisma/migrations/migration_lock.toml.bak
 
 next-env.d.ts
 
-src/generated/
-
 tsconfig.tsbuildinfo
