@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { ChevronDown } from "lucide-react";
 
-import { SegmentedList, SegmentedTab } from "@/components/ui";
+import { SegmentedList, SegmentedTab } from "@/design-system";
 import { CITIES, type CityKey } from "@/lib/cities";
 import { cn } from "@/lib/utils";
 

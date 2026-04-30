@@ -4,10 +4,9 @@ import { useMemo } from "react";
 
 import { Bookmark } from "lucide-react";
 
-import { EmptyState } from "@/components/EmptyState";
+import { Button, EmptyState, Heading, StickyDayHeading, Text } from "@/design-system";
 import { EventCard } from "@/components/EventCard";
 import { useHome } from "@/components/home/homeState";
-import { Button } from "@/components/ui";
 
 import { eventMatchesTopTags } from "@/lib/events/tagOptions";
 import { groupEventsByDay } from "@/lib/events/grouping";
@@ -81,25 +80,22 @@ export function EventsList() {
       <div id="saved-for-later" className="min-w-0 space-y-10 scroll-mt-28">
         {savedUpcoming.length > 0 ? (
           <section className="min-w-0" aria-labelledby="saved-heading">
-            <h2
-              id="saved-heading"
-              className="font-display text-xl font-semibold text-ink-900 dark:text-sand-50"
-            >
+            <Heading level="subsection" id="saved-heading">
               <span className="inline-flex items-center gap-2">
                 <Bookmark className="size-5 text-gulf-500" aria-hidden />
                 Saved for later
               </span>
-              <span className="ml-2 text-sm font-medium text-ink-500 dark:text-ink-300">
+              <Text variant="muted" as="span" className="ml-2 font-medium">
                 (upcoming only)
-              </span>
-            </h2>
-            <p className="mt-1 text-sm text-ink-500 dark:text-ink-300">
+              </Text>
+            </Heading>
+            <Text variant="muted" className="mt-1">
               Shortlist to compare. Add to <span className="font-medium text-ink-700 dark:text-ink-200">My plan</span> when
-              you’re ready to order your day. Stored in this browser for 7 days; past times drop off.
-            </p>
+              you're ready to order your day. Stored in this browser for 7 days; past times drop off.
+            </Text>
             {savedStartingWithin24hCount > 0 && (
               <p className="mt-1 text-sm font-medium text-sunset-600 dark:text-sunset-300">
-                {savedStartingWithin24hCount} starting within 24 hours — don’t snooze.
+                {savedStartingWithin24hCount} starting within 24 hours — don't snooze.
               </p>
             )}
             <div className="mt-4 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -148,13 +144,13 @@ export function EventsList() {
 
       {!showEmpty && featured && (
         <div className="min-w-0">
-          <h2 className="font-display text-2xl font-semibold text-ink-900 dark:text-sand-50">
+          <Heading level="section">
             Standout picks
-          </h2>
-          <p className="mt-1 text-sm text-ink-500 dark:text-ink-300">
+          </Heading>
+          <Text variant="muted" className="mt-1">
             Curation-ranked highlights for {windowMeta.label.toLowerCase()}
             {topTags.size > 0 ? " (among your tag picks)." : "."}
-          </p>
+          </Text>
           <div className="mt-4 space-y-4">
             <EventCard
               event={featured}
@@ -196,9 +192,9 @@ export function EventsList() {
       )}
 
       {!showEmpty && (
-        <h2 className="font-display text-2xl font-semibold text-ink-900 dark:text-sand-50">
+        <Heading level="section">
           All upcoming
-        </h2>
+        </Heading>
       )}
 
       {!showEmpty &&
@@ -207,15 +203,12 @@ export function EventsList() {
           if (list.length === 0) return null;
           return (
             <section className="min-w-0" key={group.key} aria-labelledby={`day-${group.key}`}>
-              <h2
-                id={`day-${group.key}`}
-                className="sticky top-14 z-30 -mx-4 bg-sand-50/85 px-4 py-2 font-display text-xl font-semibold text-ink-900 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:p-0 sm:text-2xl dark:bg-ink-900/80 dark:text-sand-50"
-              >
+              <StickyDayHeading id={`day-${group.key}`}>
                 {group.label}
-                <span className="ml-2 text-sm font-medium text-ink-500 dark:text-ink-300">
+                <Text variant="muted" as="span" className="ml-2 font-medium">
                   {list.length} event{list.length === 1 ? "" : "s"}
-                </span>
-              </h2>
+                </Text>
+              </StickyDayHeading>
               <div className="mt-4 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {list.map((event) => (
                   <div key={event.id} className="min-w-0">

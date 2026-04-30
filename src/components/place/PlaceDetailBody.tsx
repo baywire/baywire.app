@@ -8,49 +8,28 @@ import {
   Globe,
   MapPin,
   Phone,
-  Tag,
+  Tag as TagIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import type { AppPlace } from "@/lib/places/types";
 
-import { ExternalPillLink } from "@/components/ui";
+import {
+  Callout,
+  Chip,
+  ExternalPillLink,
+  Eyebrow,
+  Heading,
+  MetaRow,
+  Tag,
+  Text,
+  detailSheetClasses,
+  navLinkEmphasisClass,
+} from "@/design-system";
 
+import { CATEGORY_LABELS, VIBE_LABELS } from "@/lib/places/labels";
 import { cityLabel } from "@/lib/cities";
 import { cn } from "@/lib/utils";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  restaurant: "Restaurant",
-  brewery: "Brewery",
-  bar: "Bar",
-  cafe: "Café",
-  bakery: "Bakery",
-  museum: "Museum",
-  gallery: "Gallery",
-  park: "Park",
-  beach: "Beach",
-  shop: "Shop",
-  venue: "Venue",
-  attraction: "Attraction",
-  other: "Place",
-};
-
-const VIBE_LABELS: Record<string, string> = {
-  dog_friendly: "Dog Friendly",
-  outdoor_seating: "Outdoor Seating",
-  kid_friendly: "Kid Friendly",
-  family: "Family",
-  late_night: "Late Night",
-  romantic: "Romantic",
-  hidden_gem: "Hidden Gem",
-  waterfront: "Waterfront",
-  live_music: "Live Music",
-  craft_beer: "Craft Beer",
-  brunch: "Brunch",
-  vegan_friendly: "Vegan Friendly",
-  pet_friendly: "Pet Friendly",
-  scenic_views: "Scenic Views",
-};
 
 function DetailRow({
   icon,
@@ -63,10 +42,10 @@ function DetailRow({
 }) {
   return (
     <div>
-      <dt className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500 dark:text-ink-300">
+      <Eyebrow as="dt" tone="ink" className="flex items-center gap-2">
         {icon}
         {label}
-      </dt>
+      </Eyebrow>
       <dd className="mt-1 text-sm text-ink-900 dark:text-sand-50">{dd}</dd>
     </div>
   );
@@ -94,9 +73,7 @@ export function PlaceDetailBody({
     <article
       className={cn(
         "overflow-hidden bg-white dark:bg-ink-900/80",
-        imageLayout === "dialog"
-          ? "border-0 shadow-none"
-          : "rounded-card border border-ink-100 shadow-sm dark:border-ink-700",
+        imageLayout === "dialog" ? "border-0 shadow-none" : detailSheetClasses(),
       )}
     >
       <PlaceDetailImage
@@ -108,60 +85,45 @@ export function PlaceDetailBody({
 
       <div className="space-y-6 p-6 sm:p-8">
         {imageLayout === "dialog" && (
-          <h1
-            id={titleId}
-            className="font-display text-2xl font-semibold leading-tight text-ink-900 sm:text-3xl dark:text-sand-50"
-          >
+          <Heading level="section" as="h1" id={titleId} className="leading-tight sm:text-3xl">
             {place.name}
-          </h1>
+          </Heading>
         )}
 
-        <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wide text-gulf-600 dark:text-gulf-200">
-          <span className="inline-flex items-center gap-1 rounded-full bg-gulf-50 px-2 py-0.5 dark:bg-gulf-700/40">
-            <MapPin className="size-3" />
-            {city}
-          </span>
-          <span className="inline-flex items-center rounded-full bg-sunset-200 px-2 py-0.5 text-sunset-600 dark:bg-sunset-500/20 dark:text-sunset-300">
-            {categoryLabel}
-          </span>
-          {place.priceRange && (
-            <span className="inline-flex items-center rounded-full bg-sand-100 px-2 py-0.5 text-sand-700 dark:bg-sand-700/30 dark:text-sand-100">
-              {place.priceRange}
-            </span>
-          )}
-        </div>
+        <MetaRow>
+          <Chip tone="gulf" icon={<MapPin className="size-3" />}>{city}</Chip>
+          <Chip tone="sunset">{categoryLabel}</Chip>
+          {place.priceRange && <Chip tone="sand">{place.priceRange}</Chip>}
+        </MetaRow>
 
         {imageLayout === "default" && (
-          <h1 className="font-display text-3xl font-semibold leading-tight text-ink-900 sm:text-4xl dark:text-sand-50">
+          <Heading level="page" as="h1" className="leading-tight sm:text-4xl">
             {place.name}
-          </h1>
+          </Heading>
         )}
 
         {place.whyItsCool && (
-          <p className="rounded-card border border-ink-200 bg-white/80 px-3 py-2 text-sm text-ink-700 dark:border-ink-600 dark:bg-ink-900/70 dark:text-sand-100">
+          <Callout size="compact">
             <span className="font-semibold text-gulf-700 dark:text-gulf-200">Why this pick:</span>{" "}
             {place.whyItsCool}
-          </p>
+          </Callout>
         )}
 
         {(place.summary ?? place.description) && (
-          <p className="whitespace-pre-line text-base leading-relaxed text-ink-700 dark:text-sand-100">
+          <Text variant="prose">
             {place.summary ?? place.description}
-          </p>
+          </Text>
         )}
 
         {place.vibes.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 text-sm text-ink-500 dark:text-ink-300">
-            <Tag className="size-4" />
+          <Text variant="muted" as="div" className="flex flex-wrap items-center gap-2">
+            <TagIcon className="size-4" />
             {place.vibes.map((vibe) => (
-              <span
-                key={vibe}
-                className="rounded-full bg-gulf-50 px-2 py-0.5 text-xs font-medium text-gulf-700 dark:bg-gulf-700/30 dark:text-gulf-200"
-              >
+              <Tag key={vibe}>
                 {VIBE_LABELS[vibe] ?? vibe.replaceAll("_", " ")}
-              </span>
+              </Tag>
             ))}
-          </div>
+          </Text>
         )}
 
         <dl className="grid gap-4 sm:grid-cols-2">
@@ -172,7 +134,7 @@ export function PlaceDetailBody({
                   href={mapUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-gulf-600 underline-offset-4 hover:underline dark:text-gulf-200"
+                  className={cn("underline-offset-4 hover:underline", navLinkEmphasisClass)}
                 >
                   {place.address}
                 </a>
@@ -185,7 +147,7 @@ export function PlaceDetailBody({
             <DetailRow icon={<Phone className="size-4" />} label="Phone">
               <a
                 href={`tel:${place.phoneNumber}`}
-                className="text-gulf-600 underline-offset-4 hover:underline dark:text-gulf-200"
+                className={cn("underline-offset-4 hover:underline", navLinkEmphasisClass)}
               >
                 {place.phoneNumber}
               </a>
@@ -197,7 +159,7 @@ export function PlaceDetailBody({
                 href={place.websiteUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-gulf-600 underline-offset-4 hover:underline dark:text-gulf-200"
+                className={cn("inline-flex items-center gap-1 underline-offset-4 hover:underline", navLinkEmphasisClass)}
               >
                 Visit website
                 <ExternalLink className="size-3" />

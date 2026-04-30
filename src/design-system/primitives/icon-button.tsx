@@ -4,7 +4,7 @@ import { type ComponentProps, type ReactNode, forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { iconButtonClasses } from "./variants";
+import { iconButtonClasses } from "../variants";
 
 export type IconButtonProps = Omit<ComponentProps<"button">, "className"> & {
   size?: "sm" | "md";

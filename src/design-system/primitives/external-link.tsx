@@ -4,7 +4,7 @@ import { type ComponentProps } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { externalCtaClasses } from "./variants";
+import { externalCtaClasses } from "../variants";
 
 export type ExternalPillLinkProps = Omit<ComponentProps<"a">, "className"> & {
   variant: "primary" | "outline";

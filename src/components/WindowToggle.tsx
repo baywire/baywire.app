@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 
-import { SegmentedList, SegmentedTab } from "@/components/ui";
+import { SegmentedList, SegmentedTab } from "@/design-system";
 
 import type { WindowKey } from "@/lib/time/window";
 

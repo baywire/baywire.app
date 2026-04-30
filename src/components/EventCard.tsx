@@ -2,10 +2,20 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { ArrowUpRight, Bookmark, Clock, ListOrdered, MapPin, Tag, Ticket } from "lucide-react";
+import { Bookmark, Clock, ListOrdered, MapPin, Tag as TagIcon, Ticket } from "lucide-react";
 
+import {
+  Callout,
+  CardAffordance,
+  CardTitle,
+  Chip,
+  IconButton,
+  MetaRow,
+  Tag,
+  Text,
+  cardShellClasses,
+} from "@/design-system";
 import { EventDialog } from "@/components/event/EventDialog";
-import { IconButton } from "@/components/ui";
 
 import type { AppEvent } from "@/lib/events/types";
 
@@ -43,12 +53,7 @@ export function EventCard({
   const sourceCount = 1 + corroboratingSources.length;
 
   return (
-    <article
-      className={cn(
-        "group relative flex min-w-0 max-w-full flex-col overflow-hidden rounded-card border border-ink-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-ink-700 dark:bg-ink-900/80",
-        isFeature && "lg:min-h-0 lg:flex-row",
-      )}
-    >
+    <article className={cardShellClasses(cn(isFeature && "lg:min-h-0 lg:flex-row"))}>
       <button
         type="button"
         onClick={() => setDialogOpen(true)}
@@ -92,18 +97,12 @@ export function EventCard({
             e.stopPropagation();
             plan.onToggle(e);
           }}
-          className={cn(
-            "absolute",
-            bookmark ? "left-4 top-14" : "left-4 top-4",
-          )}
+          className={cn("absolute", bookmark ? "left-4 top-14" : "left-4 top-4")}
           aria-pressed={plan.inPlan}
           aria-label={plan.inPlan ? "Remove from My plan" : "Add to My plan"}
         >
           <ListOrdered
-            className={cn(
-              "size-4 text-sand-100",
-              plan.inPlan && "text-gulf-200",
-            )}
+            className={cn("size-4 text-sand-100", plan.inPlan && "text-gulf-200")}
             strokeWidth={2.25}
           />
         </IconButton>
@@ -112,58 +111,36 @@ export function EventCard({
       <EventCardImage imageUrl={event.imageUrl} city={city} isFeature={isFeature} />
 
       <div className="flex min-w-0 flex-1 flex-col gap-3 p-5">
-        <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wide text-gulf-600 dark:text-gulf-200">
-          <span className="inline-flex items-center gap-1 rounded-full bg-gulf-50 px-2 py-0.5 dark:bg-gulf-700/40">
-            <MapPin className="size-3" />
-            {city}
-          </span>
+        <MetaRow>
+          <Chip tone="gulf" icon={<MapPin className="size-3" />}>{city}</Chip>
           {price && (
-            <span
-              className={cn(
-                "inline-flex items-center rounded-full px-2 py-0.5",
-                event.isFree
-                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-700/30 dark:text-emerald-200"
-                  : "bg-sand-100 text-sand-700 dark:bg-sand-700/30 dark:text-sand-100",
-              )}
-            >
-              {price}
-            </span>
+            <Chip tone={event.isFree ? "emerald" : "sand"}>{price}</Chip>
           )}
           {event.ticketStatus === "sold_out" && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-red-700 dark:bg-red-700/30 dark:text-red-200">
-              Sold out
-            </span>
+            <Chip tone="red">Sold out</Chip>
           )}
           {event.ticketUrl && event.ticketStatus !== "sold_out" && !event.isFree && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gulf-50 px-2 py-0.5 text-gulf-700 dark:bg-gulf-700/30 dark:text-gulf-200">
-              <Ticket className="size-3" />
-              Tickets
-            </span>
+            <Chip tone="gulf" icon={<Ticket className="size-3" />}>Tickets</Chip>
           )}
-        </div>
+        </MetaRow>
 
-        <h3
-          className={cn(
-            "min-w-0 wrap-break-word font-display text-lg font-semibold leading-snug text-ink-900 group-hover:text-gulf-600 dark:text-sand-50 dark:group-hover:text-gulf-200",
-            isFeature && "text-2xl lg:text-3xl",
-          )}
-        >
+        <CardTitle interactive className={cn(isFeature && "text-2xl lg:text-3xl")}>
           {event.title}
-        </h3>
+        </CardTitle>
 
         {event.description && (
-          <p className="line-clamp-3 text-sm text-ink-500 dark:text-ink-300">
+          <Text variant="muted" className="line-clamp-3">
             {event.description}
-          </p>
+          </Text>
         )}
         {isFeature && event.whyItsCool && (
-          <p className="rounded-card border border-ink-200 bg-white/80 px-3 py-2 text-sm text-ink-700 dark:border-ink-600 dark:bg-ink-900/70 dark:text-sand-100">
+          <Callout size="compact">
             <span className="font-semibold text-gulf-700 dark:text-gulf-200">Why this pick:</span>{" "}
             {event.whyItsCool}
-          </p>
+          </Callout>
         )}
         {sourceCount > 1 && (
-          <p className="text-xs text-ink-500 dark:text-ink-300">
+          <Text variant="meta">
             Also listed on {sourceCount} sources
             {corroboratingSources.length > 0
               ? ` (${corroboratingSources
@@ -171,10 +148,10 @@ export function EventCard({
                   .map((slug) => slug.replaceAll("_", " "))
                   .join(", ")}${corroboratingSources.length > 2 ? ", ..." : ""})`
               : ""}
-          </p>
+          </Text>
         )}
 
-        <div className="mt-auto flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-500 dark:text-ink-300">
+        <Text variant="muted" as="div" className="mt-auto flex flex-wrap gap-x-4 gap-y-1">
           <span className="inline-flex items-center gap-1.5">
             <Clock className="size-4" />
             {time}
@@ -185,28 +162,18 @@ export function EventCard({
               {event.venueName}
             </span>
           )}
-        </div>
+        </Text>
 
         {event.categories.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 text-xs text-ink-500 dark:text-ink-300">
-            <Tag className="size-3" />
+          <Text variant="meta" as="div" className="flex flex-wrap items-center gap-1.5">
+            <TagIcon className="size-3" />
             {event.categories.slice(0, 3).map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-ink-50 px-2 py-0.5 capitalize dark:bg-ink-700/60"
-              >
-                {tag}
-              </span>
+              <Tag key={tag}>{tag}</Tag>
             ))}
-          </div>
+          </Text>
         )}
 
-        <span
-          aria-hidden
-          className="pointer-events-none absolute right-4 top-4 z-20 flex size-9 items-center justify-center rounded-full bg-ink-900 text-sand-100 opacity-0 shadow-[0_2px_12px_rgba(0,0,0,0.55),0_0_0_1px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.1)] transition group-hover:opacity-100"
-        >
-          <ArrowUpRight className="size-4" />
-        </span>
+        <CardAffordance />
       </div>
     </article>
   );

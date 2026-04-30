@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
+import { TextLink } from "@/design-system";
 import { EventDetailBody } from "@/components/event/EventDetailBody";
 import { AddToPlanButton } from "@/components/plan/AddToPlanButton";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -48,13 +48,10 @@ export default async function EventDetailPage({ params }: RouteParams) {
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-16 pt-6 sm:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-900 dark:text-ink-300 dark:hover:text-sand-50"
-          >
+          <TextLink href="/" className="inline-flex items-center gap-1.5 text-sm">
             <ArrowLeft className="size-4" />
             Back to events
-          </Link>
+          </TextLink>
           <AddToPlanButton event={event} initialInPlan={initialInPlan} />
         </div>
 

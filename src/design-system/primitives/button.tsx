@@ -4,7 +4,7 @@ import { type ComponentProps } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { buttonClasses } from "./variants";
+import { buttonClasses } from "../variants";
 
 export type ButtonProps = Omit<ComponentProps<"button">, "className"> & {
   variant?: "primary" | "secondary" | "ghost";

@@ -1,6 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 
+import { Heading, Text, buttonClasses } from "@/design-system";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 
@@ -9,15 +10,13 @@ export default function NotFound() {
     <div className="flex min-h-dvh flex-col">
       <SiteHeader />
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center px-4 text-center">
-        <h1 className="font-display text-4xl font-semibold text-ink-900 dark:text-sand-50">
-          Place not found
-        </h1>
-        <p className="mt-2 text-ink-500 dark:text-ink-300">
+        <Heading level="page" className="text-4xl">Place not found</Heading>
+        <Text variant="muted" className="mt-2">
           This place may have been removed, or the link is wrong.
-        </p>
+        </Text>
         <Link
           href={"/places" as Route}
-          className="mt-6 rounded-full bg-ink-900 px-5 py-2.5 text-sm font-semibold text-sand-50 hover:bg-ink-700 dark:bg-sand-50 dark:text-ink-900"
+          className={buttonClasses({ variant: "primary", size: "md", className: "mt-6" })}
         >
           Back to places
         </Link>

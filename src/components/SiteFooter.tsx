@@ -1,6 +1,7 @@
-import Link from "next/link";
 import type { Route } from "next";
 import { prisma } from "@/lib/db/client";
+import { TextLink, navLinkClass } from "@/design-system";
+import { cn } from "@/lib/utils";
 
 export async function SiteFooter() {
   const sources = await prisma.source.findMany({
@@ -25,7 +26,7 @@ export async function SiteFooter() {
                 href={source.baseUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="underline decoration-dotted underline-offset-3 hover:text-gulf-600 dark:hover:text-gulf-200"
+                className={cn(navLinkClass, "underline decoration-dotted underline-offset-3")}
               >
                 {source.label}
               </a>
@@ -38,12 +39,13 @@ export async function SiteFooter() {
           and ticketing on the source page before attending.
         </p>
         <p>
-          <Link
+          <TextLink
             href={"/about" as Route}
-            className="underline decoration-dotted underline-offset-3 hover:text-gulf-600 dark:hover:text-gulf-200"
+            emphasize
+            className="underline decoration-dotted underline-offset-3"
           >
             How we curate
-          </Link>
+          </TextLink>
         </p>
         <p className="text-[11px] text-ink-400 dark:text-ink-400">
           © {new Date().getFullYear()} Baywire

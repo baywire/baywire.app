@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Clock, MapPin, Sparkles, Tag } from "lucide-react";
+import { Clock, MapPin, Sparkles, Tag as TagIcon } from "lucide-react";
+
+import { Tag, Text } from "@/design-system";
 
 import { FallbackImage } from "@/components/FallbackImage";
 
@@ -45,7 +47,7 @@ export function SearchResultRow({
           <p className="truncate text-sm font-semibold text-ink-900 dark:text-sand-50">
             {event.title}
           </p>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-500 dark:text-ink-300">
+          <Text variant="meta" as="p" className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
             <span className="inline-flex items-center gap-1">
               <Clock className="size-3" />
               {time}
@@ -59,17 +61,12 @@ export function SearchResultRow({
                 {price}
               </span>
             )}
-          </p>
+          </Text>
           {event.categories.length > 0 && (
             <div className="mt-1 flex items-center gap-1">
-              <Tag className="size-2.5 text-ink-400 dark:text-ink-400" />
+              <TagIcon className="size-2.5 text-ink-400 dark:text-ink-400" />
               {event.categories.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full bg-ink-100 px-1.5 py-0.5 text-[11px] capitalize text-ink-600 dark:bg-ink-700/60 dark:text-ink-200"
-                >
-                  {tag}
-                </span>
+                <Tag key={tag} size="xs">{tag}</Tag>
               ))}
             </div>
           )}

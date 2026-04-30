@@ -2,7 +2,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { Radio } from "lucide-react";
 
-import { TextLink } from "@/components/ui";
+import { TextLink } from "@/design-system";
 
 interface SiteHeaderProps {
   showPlanLink?: boolean;

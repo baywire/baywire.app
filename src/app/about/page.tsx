@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
+import { Eyebrow, Heading, Text, TextLink } from "@/design-system";
 import { SiteHeader } from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
@@ -40,16 +40,12 @@ export default function AboutPage() {
       <SiteHeader showPlanLink={false} showNavLinks={false} />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10 sm:px-6">
         <div className="rounded-2xl border border-ink-100 bg-white p-6 shadow-sm dark:border-ink-700 dark:bg-ink-900/70 sm:p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gulf-600 dark:text-gulf-200">
-            Baywire trust
-          </p>
-          <h1 className="mt-2 font-display text-3xl font-semibold text-ink-900 dark:text-sand-50">
-            How we curate
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-600 dark:text-ink-200">
+          <Eyebrow className="tracking-[0.16em]">Baywire trust</Eyebrow>
+          <Heading level="page" className="mt-2">How we curate</Heading>
+          <Text className="mt-3 max-w-2xl">
             Baywire is designed to surface what is actually worth doing across Tampa Bay, not to
             repeat every source listing verbatim.
-          </p>
+          </Text>
 
           <section className="mt-8 space-y-4">
             {STEPS.map((step, idx) => (
@@ -57,34 +53,31 @@ export default function AboutPage() {
                 key={step.title}
                 className="rounded-xl border border-ink-100 bg-sand-50/70 p-4 dark:border-ink-700 dark:bg-ink-800/60"
               >
-                <h2 className="font-display text-xl font-semibold text-ink-900 dark:text-sand-50">
+                <Heading level="subsection">
                   {idx + 1}. {step.title}
-                </h2>
-                <p className="mt-1 text-sm leading-relaxed text-ink-600 dark:text-ink-200">
-                  {step.body}
-                </p>
+                </Heading>
+                <Text className="mt-1">{step.body}</Text>
               </article>
             ))}
           </section>
 
           <section className="mt-8">
-            <h2 className="font-display text-xl font-semibold text-ink-900 dark:text-sand-50">
-              Limits and verification
-            </h2>
-            <ul className="mt-3 space-y-2 text-sm leading-relaxed text-ink-600 dark:text-ink-200">
+            <Heading level="subsection">Limits and verification</Heading>
+            <Text as="ul" className="mt-3 space-y-2">
               {LIMITS.map((item) => (
                 <li key={item}>- {item}</li>
               ))}
-            </ul>
+            </Text>
           </section>
 
-          <p className="mt-8 text-sm text-ink-700 dark:text-sand-100">
-            <Link
+          <p className="mt-8 text-sm">
+            <TextLink
               href="/"
-              className="text-gulf-700 underline decoration-dotted underline-offset-3 dark:text-gulf-200"
+              emphasize
+              className="underline decoration-dotted underline-offset-3"
             >
               Back to events
-            </Link>
+            </TextLink>
           </p>
         </div>
       </main>

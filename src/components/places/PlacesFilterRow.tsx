@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 
 import { CityFilterPlaces } from "@/components/places/CityFilterPlaces";
-import { FilterChip } from "@/components/ui";
+import { FilterChip } from "@/design-system";
 import { usePlaces } from "@/components/places/PlacesProvider";
 
 import type { CityKey } from "@/lib/cities";

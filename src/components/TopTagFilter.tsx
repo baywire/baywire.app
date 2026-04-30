@@ -1,6 +1,6 @@
 "use client";
 
-import { FilterChip } from "@/components/ui";
+import { Button, FilterChip, Tag } from "@/design-system";
 
 import { cn } from "@/lib/utils";
 
@@ -12,9 +12,6 @@ interface TopTagFilterProps {
   onChange: (next: Set<string>) => void;
 }
 
-/**
- * Multi-select of category tags. Selection is persisted by the parent (cookie).
- */
 export function TopTagFilter({ options, selected, onChange }: TopTagFilterProps) {
   if (options.length === 0) return null;
 
@@ -46,7 +43,8 @@ export function TopTagFilter({ options, selected, onChange }: TopTagFilterProps)
               onClick={() => toggle(tag)}
             >
               {tag}
-              <span
+              <Tag
+                size="xs"
                 className={cn(
                   "ml-1.5 tabular-nums",
                   isOn
@@ -55,18 +53,19 @@ export function TopTagFilter({ options, selected, onChange }: TopTagFilterProps)
                 )}
               >
                 {count}
-              </span>
+              </Tag>
             </FilterChip>
           );
         })}
         {selected.size > 0 && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={clearAll}
-            className="ml-2 text-sm font-medium text-gulf-600 underline-offset-2 hover:underline dark:text-gulf-300"
+            className="ml-2 text-gulf-600 underline-offset-2 hover:underline dark:text-gulf-300"
           >
             Clear
-          </button>
+          </Button>
         )}
       </div>
     </div>

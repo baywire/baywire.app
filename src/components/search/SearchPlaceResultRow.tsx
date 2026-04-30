@@ -2,29 +2,16 @@
 
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { MapPin, Sparkles, Tag } from "lucide-react";
+import { MapPin, Sparkles, Tag as TagIcon } from "lucide-react";
 
 import { FallbackImage } from "@/components/FallbackImage";
 
+import { Chip, Tag, Text } from "@/design-system";
+
+import { CATEGORY_LABELS, VIBE_LABELS } from "@/lib/places/labels";
 import type { AppPlace } from "@/lib/places/types";
 import { cityLabel } from "@/lib/cities";
 import { cn } from "@/lib/utils";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  restaurant: "Restaurant",
-  brewery: "Brewery",
-  bar: "Bar",
-  cafe: "Café",
-  bakery: "Bakery",
-  museum: "Museum",
-  gallery: "Gallery",
-  park: "Park",
-  beach: "Beach",
-  shop: "Shop",
-  venue: "Venue",
-  attraction: "Attraction",
-  other: "Place",
-};
 
 interface SearchPlaceResultRowProps {
   place: AppPlace;
@@ -55,18 +42,16 @@ export function SearchPlaceResultRow({ place, onClose, reason }: SearchPlaceResu
         <p className="truncate text-sm font-semibold text-ink-900 dark:text-sand-50">
           {place.name}
         </p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-500 dark:text-ink-300">
+        <Text variant="meta" as="p" className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
           <span className="inline-flex items-center gap-1">
             <MapPin className="size-3" />
             {city}
           </span>
-          <span className="inline-flex items-center rounded-full bg-sunset-200 px-2 py-0.5 text-sunset-600 dark:bg-sunset-500/20 dark:text-sunset-300">
-            {categoryLabel}
-          </span>
+          <Chip tone="sunset">{categoryLabel}</Chip>
           {place.priceRange && (
             <span className="text-ink-400">{place.priceRange}</span>
           )}
-        </p>
+        </Text>
         {(place.summary ?? place.description) && (
           <p className="mt-0.5 line-clamp-1 text-xs text-ink-400 dark:text-ink-400">
             {place.summary ?? place.description}
@@ -74,14 +59,11 @@ export function SearchPlaceResultRow({ place, onClose, reason }: SearchPlaceResu
         )}
         {place.vibes.length > 0 && (
           <div className="mt-1 flex items-center gap-1">
-            <Tag className="size-2.5 text-ink-400 dark:text-ink-400" />
+            <TagIcon className="size-2.5 text-ink-400 dark:text-ink-400" />
             {place.vibes.slice(0, 3).map((vibe) => (
-              <span
-                key={vibe}
-                className="rounded-full bg-ink-100 px-1.5 py-0.5 text-[11px] text-ink-600 dark:bg-ink-700/60 dark:text-ink-200"
-              >
-                {vibe.replaceAll("_", " ")}
-              </span>
+              <Tag key={vibe} size="xs">
+                {VIBE_LABELS[vibe] ?? vibe.replaceAll("_", " ")}
+              </Tag>
             ))}
           </div>
         )}

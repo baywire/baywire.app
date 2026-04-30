@@ -5,10 +5,10 @@ import { type ComponentProps } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { inAppPillLinkClass, navLinkClass, navLinkEmphasisClass } from "./variants";
+import { inAppPillLinkClass, navLinkClass, navLinkEmphasisClass } from "../variants";
 
 export type TextLinkProps = Omit<ComponentProps<typeof Link>, "className"> & {
-  /** Uses gulf accent (e.g. “My plan” in the site header). */
+  /** Uses gulf accent (e.g. "My plan" in the site header). */
   emphasize?: boolean;
   className?: string;
 };
@@ -26,7 +26,7 @@ export type PillLinkProps = Omit<ComponentProps<typeof Link>, "className"> & {
   className?: string;
 };
 
-/** In-app navigation that looks like a compact pill (e.g. event dialog “Page”). */
+/** In-app navigation that looks like a compact pill (e.g. event dialog "Page"). */
 export function PillLink({ className, ...props }: PillLinkProps) {
   return <Link className={cn(inAppPillLinkClass, className)} {...props} />;
 }

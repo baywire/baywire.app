@@ -1,0 +1,48 @@
+export const CATEGORY_LABELS: Record<string, string> = {
+  restaurant: "Restaurant",
+  brewery: "Brewery",
+  bar: "Bar",
+  cafe: "Café",
+  bakery: "Bakery",
+  museum: "Museum",
+  gallery: "Gallery",
+  park: "Park",
+  beach: "Beach",
+  shop: "Shop",
+  venue: "Venue",
+  attraction: "Attraction",
+  other: "Place",
+};
+
+export const CATEGORY_LABELS_PLURAL: Record<string, string> = {
+  restaurant: "Restaurants",
+  brewery: "Breweries",
+  bar: "Bars",
+  cafe: "Cafés",
+  bakery: "Bakeries",
+  museum: "Museums",
+  gallery: "Galleries",
+  park: "Parks",
+  beach: "Beaches",
+  shop: "Shops",
+  venue: "Venues",
+  attraction: "Attractions",
+  other: "Other",
+};
+
+export const VIBE_LABELS: Record<string, string> = {
+  dog_friendly: "Dog Friendly",
+  outdoor_seating: "Outdoor Seating",
+  kid_friendly: "Kid Friendly",
+  family: "Family",
+  late_night: "Late Night",
+  romantic: "Romantic",
+  hidden_gem: "Hidden Gem",
+  waterfront: "Waterfront",
+  live_music: "Live Music",
+  craft_beer: "Craft Beer",
+  brunch: "Brunch",
+  vegan_friendly: "Vegan Friendly",
+  pet_friendly: "Pet Friendly",
+  scenic_views: "Scenic Views",
+};

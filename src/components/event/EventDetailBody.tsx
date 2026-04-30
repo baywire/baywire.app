@@ -7,14 +7,24 @@ import {
   Clock,
   ExternalLink,
   MapPin,
-  Tag,
+  Tag as TagIcon,
   Ticket,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import type { AppEvent } from "@/lib/events/types";
 
-import { ExternalPillLink } from "@/components/ui";
+import {
+  Chip,
+  ExternalPillLink,
+  Eyebrow,
+  Heading,
+  MetaRow,
+  Tag,
+  Text,
+  detailSheetClasses,
+  navLinkEmphasisClass,
+} from "@/design-system";
 
 import { cityLabel } from "@/lib/cities";
 import { formatLocal, formatTimeRange } from "@/lib/time/window";
@@ -40,10 +50,10 @@ function DetailRow({
 }) {
   return (
     <div>
-      <dt className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500 dark:text-ink-300">
+      <Eyebrow as="dt" tone="ink" className="flex items-center gap-2">
         {icon}
         {label}
-      </dt>
+      </Eyebrow>
       <dd className="mt-1 text-sm text-ink-900 dark:text-sand-50">{dd}</dd>
     </div>
   );
@@ -57,13 +67,9 @@ export function EventDetailBody({
   titleId,
 }: {
   event: AppEvent;
-  /** Next/Image priority (full page or first open). */
   priorityImage?: boolean;
-  /** When the title is already shown elsewhere (rare). */
   hideTitle?: boolean;
-  /** `dialog` caps image height so the modal stays scannable. */
   imageLayout?: "default" | "dialog";
-  /** `aria-labelledby` for the event dialog. */
   titleId?: string;
 }) {
   const dayLabel = formatLocal(event.startAt, {
@@ -85,9 +91,7 @@ export function EventDetailBody({
     <article
       className={cn(
         "overflow-hidden bg-white dark:bg-ink-900/80",
-        imageLayout === "dialog"
-          ? "border-0 shadow-none"
-          : "rounded-card border border-ink-100 shadow-sm dark:border-ink-700",
+        imageLayout === "dialog" ? "border-0 shadow-none" : detailSheetClasses(),
       )}
     >
       <EventDetailImage
@@ -99,42 +103,25 @@ export function EventDetailBody({
 
       <div className="space-y-6 p-6 sm:p-8">
         {!hideTitle && imageLayout === "dialog" && (
-          <h1
-            id={titleId}
-            className="font-display text-2xl font-semibold leading-tight text-ink-900 sm:text-3xl dark:text-sand-50"
-          >
+          <Heading level="section" as="h1" id={titleId} className="leading-tight sm:text-3xl">
             {event.title}
-          </h1>
+          </Heading>
         )}
 
-        <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wide text-gulf-600 dark:text-gulf-200">
-          <span className="inline-flex items-center gap-1 rounded-full bg-gulf-50 px-2 py-0.5 dark:bg-gulf-700/40">
-            <MapPin className="size-3" />
-            {cityLabel(event.city)}
-          </span>
+        <MetaRow>
+          <Chip tone="gulf" icon={<MapPin className="size-3" />}>{cityLabel(event.city)}</Chip>
           {price && (
-            <span
-              className={
-                event.isFree
-                  ? "inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700 dark:bg-emerald-700/30 dark:text-emerald-200"
-                  : "inline-flex items-center gap-1 rounded-full bg-sand-100 px-2 py-0.5 text-sand-700 dark:bg-sand-700/30 dark:text-sand-100"
-              }
-            >
-              <Ticket className="size-3" />
+            <Chip tone={event.isFree ? "emerald" : "sand"} icon={<Ticket className="size-3" />}>
               {price}
-            </span>
+            </Chip>
           )}
-          {ticketStatus === "sold_out" && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-red-700 dark:bg-red-700/30 dark:text-red-200">
-              Sold out
-            </span>
-          )}
-        </div>
+          {ticketStatus === "sold_out" && <Chip tone="red">Sold out</Chip>}
+        </MetaRow>
 
         {!hideTitle && imageLayout === "default" && (
-          <h1 className="font-display text-3xl font-semibold leading-tight text-ink-900 sm:text-4xl dark:text-sand-50">
+          <Heading level="page" as="h1" className="leading-tight sm:text-4xl">
             {event.title}
-          </h1>
+          </Heading>
         )}
 
         <dl className="grid gap-4 sm:grid-cols-2">
@@ -156,7 +143,7 @@ export function EventDetailBody({
                   href={mapUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-gulf-600 underline-offset-4 hover:underline dark:text-gulf-200"
+                  className={cn("underline-offset-4 hover:underline", navLinkEmphasisClass)}
                 >
                   {event.address}
                 </a>
@@ -168,23 +155,16 @@ export function EventDetailBody({
         </dl>
 
         {event.description && (
-          <p className="whitespace-pre-line text-base leading-relaxed text-ink-700 dark:text-sand-100">
-            {event.description}
-          </p>
+          <Text variant="prose">{event.description}</Text>
         )}
 
         {event.categories.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 text-sm text-ink-500 dark:text-ink-300">
-            <Tag className="size-4" />
+          <Text variant="muted" as="div" className="flex flex-wrap items-center gap-2">
+            <TagIcon className="size-4" />
             {event.categories.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-ink-50 px-2 py-0.5 capitalize dark:bg-ink-700/60"
-              >
-                {tag}
-              </span>
+              <Tag key={tag}>{tag}</Tag>
             ))}
-          </div>
+          </Text>
         )}
 
         {(ticketUrl || sourceUrl) && (
@@ -214,9 +194,9 @@ export function EventDetailBody({
         )}
 
         {event.onSaleAt && new Date(event.onSaleAt) > new Date() && (
-          <p className="text-sm text-ink-500 dark:text-ink-300">
+          <Text variant="muted">
             Tickets on sale {formatLocal(event.onSaleAt, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-          </p>
+          </Text>
         )}
       </div>
     </article>

@@ -7,7 +7,7 @@ import { Loader2, MapPin, Search, Sparkles, X } from "lucide-react";
 import { SearchResultRow } from "@/components/search/SearchResultRow";
 import { SearchPlaceResultRow } from "@/components/search/SearchPlaceResultRow";
 import { useHomePlan } from "@/components/plan/homePlanContext";
-import { Button, IconButton } from "@/components/ui";
+import { Button, IconButton, Text, modalScrimClasses } from "@/design-system";
 
 import { search } from "@/lib/search/actions";
 
@@ -115,7 +115,7 @@ export function SearchDialog() {
     <div className="fixed inset-0 z-120 flex items-start justify-center p-3 sm:p-6 sm:pt-[8vh]" role="presentation">
       <button
         type="button"
-        className="absolute inset-0 bg-ink-900/60 backdrop-blur-[3px] dark:bg-black/70"
+        className={modalScrimClasses("bg-ink-900/60 backdrop-blur-[3px] dark:bg-black/70")}
         aria-label="Close search"
         onClick={closeSearch}
       />
@@ -135,9 +135,9 @@ export function SearchDialog() {
             className="w-full min-w-0 bg-transparent text-sm text-ink-900 outline-none placeholder:text-ink-400 dark:text-sand-50 dark:placeholder:text-ink-500"
           />
           {searchQuery.length > 0 && (
-            <button type="button" onClick={clearAll} className="shrink-0 text-xs text-ink-400 transition hover:text-ink-700 dark:text-ink-400 dark:hover:text-ink-200">
+            <Button variant="ghost" size="sm" onClick={clearAll} className="shrink-0 text-xs">
               Clear
-            </button>
+            </Button>
           )}
           <IconButton
             type="button"
@@ -232,11 +232,11 @@ export function SearchDialog() {
 
           {!hasResults && searchMode !== "loading" && queryReady && (
             <div className="px-4 py-8 text-center">
-              <p className="text-sm text-ink-500 dark:text-ink-300">
+              <Text variant="muted">
                 No results match &ldquo;{searchQuery.trim()}&rdquo;
-              </p>
+              </Text>
               <div className="mt-3">
-                <Button type="button" variant="ghost" onClick={clearAll}>
+                <Button variant="ghost" onClick={clearAll}>
                   Clear search
                 </Button>
               </div>

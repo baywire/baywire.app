@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 
-import { FilterChip } from "@/components/ui";
+import { FilterChip } from "@/design-system";
 
 import { CITIES, isCityKey, type CityKey } from "@/lib/cities";
 import { cn } from "@/lib/utils";

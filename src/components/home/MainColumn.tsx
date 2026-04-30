@@ -1,6 +1,6 @@
 import { HomeFilterRow, HomeProvider, HomeTagFilterRow } from "@/components/home/HomeProvider";
 import { EventsList } from "@/components/home/EventsList";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@/design-system/composites";
 import { HeroIntro } from "@/components/HeroIntro";
 import { SiteFooter } from "@/components/SiteFooter";
 import { HomePlanClient, HomeWithPlanLayout } from "@/components/plan/HomePlanClient";
@@ -21,7 +21,7 @@ import type { WindowKey } from "@/lib/time/window";
 import { cookies } from "next/headers";
 import Link from "next/link";
 
-import { buttonClasses } from "@/components/ui";
+import { buttonClasses } from "@/design-system";
 
 interface MainColumnProps {
   window: WindowKey;

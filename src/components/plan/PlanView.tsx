@@ -2,9 +2,9 @@
 
 import { useCallback, useMemo, useState } from "react";
 
-import { AlertTriangle, ChevronDown, ChevronUp, Clock, ListOrdered, MapPin, Tag, Trash2 } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, Clock, ListOrdered, MapPin, Tag as TagIcon, Trash2 } from "lucide-react";
 
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState, Heading, IconButton, Tag, Text } from "@/design-system";
 import { EventDialog } from "@/components/event/EventDialog";
 import { FallbackImage } from "@/components/FallbackImage";
 import { useHomePlan } from "@/components/plan/homePlanContext";
@@ -117,12 +117,9 @@ export function PlanView() {
         return (
           <section key={group.key} aria-labelledby={`plan-day-${group.key}`}>
             <div className="border-b border-ink-200/80 pb-2 dark:border-ink-600/80">
-              <h2
-                id={`plan-day-${group.key}`}
-                className="font-display text-2xl font-semibold text-ink-900 dark:text-sand-50"
-              >
+              <Heading level="section" id={`plan-day-${group.key}`}>
                 {group.label}
-              </h2>
+              </Heading>
               {conflictsOnDay > 0 && (
                 <p className="mt-1 text-sm font-medium text-sunset-600 dark:text-sunset-300">
                   {conflictsOnDay} event{conflictsOnDay === 1 ? "" : "s"} on this day overlap in time — see details on each card below.
@@ -207,7 +204,7 @@ function PlanEventRow({
           <p className="truncate text-sm font-semibold text-ink-900 dark:text-sand-50">
             {event.title}
           </p>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-500 dark:text-ink-300">
+          <Text variant="meta" as="p" className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
             <span className="inline-flex items-center gap-1">
               <Clock className="size-3" />
               {time}
@@ -221,17 +218,12 @@ function PlanEventRow({
                 {price}
               </span>
             )}
-          </p>
+          </Text>
           {event.categories.length > 0 && (
             <div className="mt-1 flex items-center gap-1">
-              <Tag className="size-2.5 text-ink-400" />
+              <TagIcon className="size-2.5 text-ink-400" />
               {event.categories.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full bg-ink-100 px-1.5 py-0.5 text-[11px] capitalize text-ink-600 dark:bg-ink-700/60 dark:text-ink-200"
-                >
-                  {tag}
-                </span>
+                <Tag key={tag} size="xs">{tag}</Tag>
               ))}
             </div>
           )}
@@ -245,32 +237,35 @@ function PlanEventRow({
       )}
 
       <div className="flex items-center gap-1 border-t border-ink-100 px-2 py-1.5 dark:border-ink-700">
-        <button
-          type="button"
+        <IconButton
+          size="sm"
+          surface="plain"
           onClick={onUp}
           disabled={!canUp}
-          className="flex size-7 items-center justify-center rounded text-ink-500 hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-ink-800 dark:text-ink-300"
+          className="rounded text-ink-500 hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-ink-800 dark:text-ink-300"
           aria-label="Move up in plan"
         >
           <ChevronUp className="size-4" />
-        </button>
-        <button
-          type="button"
+        </IconButton>
+        <IconButton
+          size="sm"
+          surface="plain"
           onClick={onDown}
           disabled={!canDown}
-          className="flex size-7 items-center justify-center rounded text-ink-500 hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-ink-800 dark:text-ink-300"
+          className="rounded text-ink-500 hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-ink-800 dark:text-ink-300"
           aria-label="Move down in plan"
         >
           <ChevronDown className="size-4" />
-        </button>
-        <button
-          type="button"
+        </IconButton>
+        <IconButton
+          size="sm"
+          surface="plain"
           onClick={onRemove}
-          className="ml-auto flex size-7 items-center justify-center rounded text-ink-400 hover:bg-sunset-50 hover:text-sunset-600 dark:hover:bg-sunset-500/10 dark:hover:text-sunset-300"
+          className="ml-auto rounded text-ink-400 hover:bg-sunset-50 hover:text-sunset-600 dark:hover:bg-sunset-500/10 dark:hover:text-sunset-300"
           aria-label="Remove from plan"
         >
           <Trash2 className="size-3.5" />
-        </button>
+        </IconButton>
       </div>
     </div>
   );

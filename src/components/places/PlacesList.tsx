@@ -2,11 +2,11 @@
 
 import { useMemo } from "react";
 
-import { EmptyState } from "@/components/EmptyState";
+import { Button, EmptyState, Heading, StickyDayHeading, Text } from "@/design-system";
 import { PlaceCard } from "@/components/PlaceCard";
 import { usePlaces } from "@/components/places/PlacesProvider";
-import { Button } from "@/components/ui";
 
+import { CATEGORY_LABELS_PLURAL } from "@/lib/places/labels";
 import type { AppPlace } from "@/lib/places/types";
 
 const STANDOUT_MIN_SCORE = 0.6;
@@ -28,21 +28,6 @@ const CATEGORY_ORDER = [
   "other",
 ];
 
-const CATEGORY_LABELS: Record<string, string> = {
-  restaurant: "Restaurants",
-  brewery: "Breweries",
-  bar: "Bars",
-  cafe: "Cafés",
-  bakery: "Bakeries",
-  museum: "Museums",
-  gallery: "Galleries",
-  park: "Parks",
-  beach: "Beaches",
-  shop: "Shops",
-  venue: "Venues",
-  attraction: "Attractions",
-  other: "Other",
-};
 
 interface CategoryGroup {
   key: string;
@@ -62,7 +47,7 @@ function groupByCategory(places: AppPlace[]): CategoryGroup[] {
     .filter((key) => map.has(key))
     .map((key) => ({
       key,
-      label: CATEGORY_LABELS[key] ?? key,
+      label: CATEGORY_LABELS_PLURAL[key] ?? key,
       places: map.get(key)!,
     }));
 }
@@ -120,12 +105,12 @@ export function PlacesList() {
     <div className="min-w-0 space-y-10 scroll-mt-28">
       {featured && (
         <div className="min-w-0">
-          <h2 className="font-display text-2xl font-semibold text-ink-900 dark:text-sand-50">
+          <Heading level="section">
             Standout picks
-          </h2>
-          <p className="mt-1 text-sm text-ink-500 dark:text-ink-300">
+          </Heading>
+          <Text variant="muted" className="mt-1">
             Top-rated spots curated by our AI.
-          </p>
+          </Text>
           <div className="mt-4 space-y-4">
             <PlaceCard place={featured} variant="feature" />
             {standoutPlaces.length > 1 && (
@@ -144,15 +129,12 @@ export function PlacesList() {
       {showGrouped ? (
         groups.map((group) => (
           <section className="min-w-0" key={group.key} aria-labelledby={`cat-${group.key}`}>
-            <h2
-              id={`cat-${group.key}`}
-              className="sticky top-14 z-30 -mx-4 bg-sand-50/85 px-4 py-2 font-display text-xl font-semibold text-ink-900 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:p-0 sm:text-2xl dark:bg-ink-900/80 dark:text-sand-50"
-            >
+            <StickyDayHeading id={`cat-${group.key}`}>
               {group.label}
-              <span className="ml-2 text-sm font-medium text-ink-500 dark:text-ink-300">
+              <Text variant="muted" as="span" className="ml-2 font-medium">
                 {group.places.length} {group.places.length === 1 ? "place" : "places"}
-              </span>
-            </h2>
+              </Text>
+            </StickyDayHeading>
             <div className="mt-4 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {group.places.map((place) => (
                 <div key={place.id} className="min-w-0">
@@ -165,9 +147,9 @@ export function PlacesList() {
       ) : (
         remaining.length > 0 && (
           <section className="min-w-0">
-            <h2 className="font-display text-2xl font-semibold text-ink-900 dark:text-sand-50">
+            <Heading level="section">
               All places
-            </h2>
+            </Heading>
             <div className="mt-4 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {remaining.map((place) => (
                 <div key={place.id} className="min-w-0">

@@ -1,49 +1,17 @@
 import type { Route } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Clock, ExternalLink, Globe, MapPin, Phone, Tag } from "lucide-react";
+import { ArrowLeft, Clock, ExternalLink as ExternalLinkIcon, Globe, MapPin, Phone, Tag as TagIcon } from "lucide-react";
 
 import type { Metadata } from "next";
 
+import { Callout, Chip, Heading, MetaRow, Tag, Text, TextLink, navLinkClass } from "@/design-system";
+import { cn } from "@/lib/utils";
 import { PlaceDetailHeroImage } from "@/components/PlaceDetailHeroImage";
-
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { CATEGORY_LABELS, VIBE_LABELS } from "@/lib/places/labels";
 import { cityLabel } from "@/lib/cities";
 import { getPlaceBySlug } from "@/lib/db/queriesPlaces";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  restaurant: "Restaurant",
-  brewery: "Brewery",
-  bar: "Bar",
-  cafe: "Café",
-  bakery: "Bakery",
-  museum: "Museum",
-  gallery: "Gallery",
-  park: "Park",
-  beach: "Beach",
-  shop: "Shop",
-  venue: "Venue",
-  attraction: "Attraction",
-  other: "Place",
-};
-
-const VIBE_LABELS: Record<string, string> = {
-  dog_friendly: "Dog Friendly",
-  outdoor_seating: "Outdoor Seating",
-  kid_friendly: "Kid Friendly",
-  family: "Family",
-  late_night: "Late Night",
-  romantic: "Romantic",
-  hidden_gem: "Hidden Gem",
-  waterfront: "Waterfront",
-  live_music: "Live Music",
-  craft_beer: "Craft Beer",
-  brunch: "Brunch",
-  vegan_friendly: "Vegan Friendly",
-  pet_friendly: "Pet Friendly",
-  scenic_views: "Scenic Views",
-};
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -80,76 +48,59 @@ export default async function PlaceDetailPage({ params }: RouteParams) {
       <SiteHeader />
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-16 pt-6 sm:px-6">
-        <Link
-          href={"/places" as Route}
-          className="inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-900 dark:text-ink-300 dark:hover:text-sand-50"
-        >
+        <TextLink href={"/places" as Route} className="inline-flex items-center gap-1.5 text-sm">
           <ArrowLeft className="size-4" />
           Back to places
-        </Link>
+        </TextLink>
 
         <div className="mt-6 flex flex-col gap-6">
           <PlaceDetailHeroImage imageUrl={place.imageUrl} name={place.name} categoryLabel={categoryLabel} />
 
-          <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wide text-gulf-600 dark:text-gulf-200">
-            <span className="inline-flex items-center gap-1 rounded-full bg-gulf-50 px-2.5 py-1 dark:bg-gulf-700/40">
-              <MapPin className="size-3" />
-              {city}
-            </span>
-            <span className="inline-flex items-center rounded-full bg-sunset-200 px-2 py-0.5 text-sunset-600 dark:bg-sunset-500/20 dark:text-sunset-300">
-              {categoryLabel}
-            </span>
-            {place.priceRange && (
-              <span className="inline-flex items-center rounded-full bg-sand-100 px-2.5 py-1 text-sand-700 dark:bg-sand-700/30 dark:text-sand-100">
-                {place.priceRange}
-              </span>
-            )}
-          </div>
+          <MetaRow>
+            <Chip tone="gulf" icon={<MapPin className="size-3" />}>{city}</Chip>
+            <Chip tone="sunset">{categoryLabel}</Chip>
+            {place.priceRange && <Chip tone="sand">{place.priceRange}</Chip>}
+          </MetaRow>
 
-          <h1 className="font-display text-3xl font-bold text-ink-900 dark:text-sand-50 sm:text-4xl">
+          <Heading level="page" className="font-bold sm:text-4xl">
             {place.name}
-          </h1>
+          </Heading>
 
           {place.whyItsCool && (
-            <p className="rounded-card border border-ink-200 bg-white/80 px-4 py-3 text-sm text-ink-700 dark:border-ink-600 dark:bg-ink-900/70 dark:text-sand-100">
+            <Callout>
               <span className="font-semibold text-gulf-700 dark:text-gulf-200">
                 Why this pick:
               </span>{" "}
               {place.whyItsCool}
-            </p>
+            </Callout>
           )}
 
           {(place.summary ?? place.description) && (
-            <p className="whitespace-pre-line text-ink-600 dark:text-ink-300">
+            <Text variant="prose">
               {place.summary ?? place.description}
-            </p>
+            </Text>
           )}
 
-          {/* Vibes */}
           {place.vibes.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
-              <Tag className="size-4 text-ink-400" />
+              <TagIcon className="size-4 text-ink-400" />
               {place.vibes.map((vibe) => (
-                <span
-                  key={vibe}
-                  className="rounded-full bg-gulf-50 px-3 py-1 text-xs font-medium text-gulf-700 dark:bg-gulf-700/30 dark:text-gulf-200"
-                >
+                <Tag key={vibe}>
                   {VIBE_LABELS[vibe] ?? vibe.replaceAll("_", " ")}
-                </span>
+                </Tag>
               ))}
             </div>
           )}
 
-          {/* Details grid */}
           <div className="grid gap-4 rounded-card border border-ink-100 bg-sand-50/50 p-5 sm:grid-cols-2 dark:border-ink-700 dark:bg-ink-800/50">
             {place.address && (
-              <div className="flex items-start gap-3 text-sm text-ink-600 dark:text-ink-300">
+              <Text variant="default" as="div" className="flex items-start gap-3">
                 <MapPin className="mt-0.5 size-4 shrink-0 text-ink-400" />
                 <span>{place.address}</span>
-              </div>
+              </Text>
             )}
             {place.phoneNumber && (
-              <div className="flex items-center gap-3 text-sm text-ink-600 dark:text-ink-300">
+              <Text variant="default" as="div" className="flex items-center gap-3">
                 <Phone className="size-4 shrink-0 text-ink-400" />
                 <a
                   href={`tel:${place.phoneNumber}`}
@@ -157,10 +108,10 @@ export default async function PlaceDetailPage({ params }: RouteParams) {
                 >
                   {place.phoneNumber}
                 </a>
-              </div>
+              </Text>
             )}
             {place.websiteUrl && (
-              <div className="flex items-center gap-3 text-sm text-ink-600 dark:text-ink-300">
+              <Text variant="default" as="div" className="flex items-center gap-3">
                 <Globe className="size-4 shrink-0 text-ink-400" />
                 <a
                   href={place.websiteUrl}
@@ -169,30 +120,29 @@ export default async function PlaceDetailPage({ params }: RouteParams) {
                   className="relative z-20 inline-flex items-center gap-1 underline-offset-2 hover:underline"
                 >
                   Visit website
-                  <ExternalLink className="size-3" />
+                  <ExternalLinkIcon className="size-3" />
                 </a>
-              </div>
+              </Text>
             )}
             {hours.length > 0 && (
-              <div className="flex items-start gap-3 text-sm text-ink-600 dark:text-ink-300">
+              <Text variant="default" as="div" className="flex items-start gap-3">
                 <Clock className="mt-0.5 size-4 shrink-0 text-ink-400" />
                 <div className="flex flex-col gap-0.5">
                   {hours.map((h, i) => (
                     <span key={i}>{h}</span>
                   ))}
                 </div>
-              </div>
+              </Text>
             )}
           </div>
 
-          {/* Source link */}
           <a
             href={place.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-ink-500 underline-offset-2 hover:text-ink-900 hover:underline dark:text-ink-300 dark:hover:text-sand-50"
+            className={cn("inline-flex items-center gap-1.5 text-sm underline-offset-2 hover:underline", navLinkClass)}
           >
-            <ExternalLink className="size-4" />
+            <ExternalLinkIcon className="size-4" />
             View on source
           </a>
         </div>
