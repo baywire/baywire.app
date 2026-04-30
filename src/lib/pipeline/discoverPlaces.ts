@@ -4,7 +4,7 @@ import { Prisma } from "@/prisma/client";
 import { prisma } from "@/lib/db/client";
 import { PLACE_CATEGORIES, type PlaceCategoryValue } from "@/lib/extract/schemaPlace";
 import type { CityKey } from "@/lib/cities";
-import { isCityKey } from "@/lib/cities";
+import { isCityKey, nearestCity } from "@/lib/cities";
 import { discoverPlaces, deduplicateCandidates, type SearchType, type DiscoverOptions, type DiscoveredPlace } from "@/lib/places/discover";
 import { enrichPlaces, type EnrichedPlace } from "@/lib/places/enrich";
 import { resolveImages } from "@/lib/places/images";
@@ -217,7 +217,7 @@ async function ensureDiscoverSource() {
 async function upsertPlace(sourceId: string, place: VerifiedPlace): Promise<string> {
   const slug = generateSlug(place.name, place.cityKey);
   const category = resolveCategory(place.category, place.searchType);
-  const cityKey = resolveCityKey(place.cityKey);
+  const cityKey = nearestCity(place.lat ?? null, place.lng ?? null) ?? resolveCityKey(place.cityKey);
   const contentHash = hashContent(place);
   const sourceUrl = place.websiteUrl ?? `https://baywire.app/place/${slug}`;
 

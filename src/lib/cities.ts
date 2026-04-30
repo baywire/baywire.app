@@ -96,3 +96,34 @@ export function cityLabel(key: CityKey): string {
 export function isCityKey(value: string): value is CityKey {
   return (CITY_KEYS as readonly string[]).includes(value);
 }
+
+/**
+ * Returns the nearest CityKey for a given lat/lng based on Haversine distance.
+ * Returns null if coords are missing/invalid.
+ */
+export function nearestCity(lat: number | null, lng: number | null): CityKey | null {
+  if (lat == null || lng == null || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+  let best: CityKey = "other";
+  let bestDist = Infinity;
+
+  for (const city of CITIES) {
+    const d = haversineKm(lat, lng, city.lat, city.lng);
+    if (d < bestDist) {
+      bestDist = d;
+      best = city.key;
+    }
+  }
+
+  return best;
+}
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const toRad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * toRad;
+  const dLng = (lng2 - lng1) * toRad;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * toRad) * Math.cos(lat2 * toRad) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}

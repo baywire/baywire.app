@@ -50,7 +50,8 @@ const DAY_ALIASES: Record<string, string> = {
   sunday: "Sun", sun: "Sun", su: "Sun",
 };
 
-const TIME_RE = /(\d{1,2})(?::(\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)?/gi;
+// Only match numbers that look like times: either have :MM or am/pm (or both)
+const TIME_RE = /(\d{1,2}):(\d{2})\s*(am|pm|a\.m\.|p\.m\.)?|(\d{1,2})\s*(am|pm|a\.m\.|p\.m\.)/gi;
 
 /**
  * Normalizes hours JSON from the wild into a consistent array format.
@@ -82,17 +83,23 @@ function normalizeHourEntry(entry: string): string | null {
   }
 
   // Normalize times to lowercase am/pm with consistent format
-  result = result.replace(TIME_RE, (_match, hour: string, min: string | undefined, period: string | undefined) => {
-    const h = hour.padStart(1, "0");
-    const m = min ?? "00";
-    const p = period ? period.replace(/\./g, "").toLowerCase() : "";
-    return `${h}:${m}${p}`;
-  });
+  result = result.replace(
+    TIME_RE,
+    (_match, h1: string | undefined, min: string | undefined, p1: string | undefined, h2: string | undefined, p2: string | undefined) => {
+      const hour = h1 ?? h2 ?? "0";
+      const m = min ?? "00";
+      const rawP = p1 ?? p2 ?? "";
+      const p = rawP ? rawP.replace(/\./g, "").toLowerCase() : "";
+      return `${hour}:${m}${p}`;
+    },
+  );
 
-  // Clean up separators
+  // Clean up separators: normalize dashes, collapse whitespace
   result = result
     .replace(/\s*[-–—]\s*/g, "-")
-    .replace(/\s*:\s*/g, ": ")
+    .replace(/(\d):(\d)/g, "$1\x00$2") // protect time colons
+    .replace(/\s*:\s*/g, " ")           // day-time separator → space
+    .replace(/\x00/g, ":")              // restore time colons
     .replace(/\s{2,}/g, " ")
     .trim();
 

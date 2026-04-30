@@ -12,6 +12,7 @@ import {
   isPlausibleImageUrl,
   isValidTampaBayCoords,
 } from "../src/lib/places/normalize";
+import { nearestCity } from "../src/lib/cities";
 import type { DiscoveredPlace } from "../src/lib/places/discover";
 import type { SearchType } from "../src/lib/places/discover";
 import { refreshEditorialForPlace } from "../src/lib/pipeline/editorialPlace";
@@ -26,6 +27,7 @@ interface ReconcileStats {
   phoneNormalized: number;
   hoursNormalized: number;
   coordsFixed: number;
+  cityReassigned: number;
   editorialRefreshed: number;
 }
 
@@ -75,6 +77,7 @@ async function main() {
     phoneNormalized: 0,
     hoursNormalized: 0,
     coordsFixed: 0,
+    cityReassigned: 0,
     editorialRefreshed: 0,
   };
 
@@ -127,11 +130,18 @@ async function main() {
       updates.imageUrl = null;
     }
 
+    // Reassign city based on coordinates
+    const correctCity = nearestCity(place.lat, place.lng);
+    if (correctCity && correctCity !== place.city) {
+      updates.city = correctCity;
+      stats.cityReassigned++;
+    }
+
     if (Object.keys(updates).length > 0 && !opts.dryRun) {
       await prisma.place.update({ where: { id: place.id }, data: updates });
     }
   }
-  console.log(`[reconcile] Normalized: ${stats.phoneNormalized} phones, ${stats.hoursNormalized} hours`);
+  console.log(`[reconcile] Normalized: ${stats.phoneNormalized} phones, ${stats.hoursNormalized} hours, ${stats.cityReassigned} cities reassigned`);
 
   // Phase 2: Identify places needing re-enrichment
   const needsEnrich = places.filter((p) => {
